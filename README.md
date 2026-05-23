@@ -15,11 +15,18 @@ EduMind Agent 是一个面向《面向对象技术与方法》结课设计的团
 
 - Node.js 20 或更高版本
 - 不需要 `npm install`，项目只使用 Node.js 内置模块和浏览器原生能力
+- 如果本机没有全局 Node.js，可以使用项目内便携运行时：`start-local.cmd`、`test-local.cmd`、`verify-lmstudio-local.cmd`
 
 ## 启动
 
 ```bash
 npm start
+```
+
+或在 Windows 下直接双击/执行：
+
+```bat
+start-local.cmd
 ```
 
 默认地址：
@@ -43,6 +50,7 @@ teacher@edumind.local / 教师
 set LLM_PROVIDER=lmstudio
 set LLM_MODEL=qwen3.5-9b-glm5.1-distill-v1
 set LLM_ENDPOINT=http://172.25.160.1:1234
+set LLM_TIMEOUT_MS=90000
 set LLM_MAX_TOKENS=1024
 npm start
 ```
@@ -58,6 +66,13 @@ npm run start:mock
 ```bash
 npm test
 npm run test:lmstudio
+```
+
+如果使用项目内便携 Node.js：
+
+```bat
+test-local.cmd
+verify-lmstudio-local.cmd
 ```
 
 `npm test` 验证登录、学习流程、Mock AI 与 LM Studio Provider 配置；`npm run test:lmstudio` 会真实请求 LM Studio 本地模型，用于提交前确认 AI 接入可用。

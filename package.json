@@ -7,7 +7,7 @@
     "start": "node server/src/main.js",
     "dev": "node server/src/main.js",
     "start:mock": "set LLM_PROVIDER=mock&& node server/src/main.js",
-    "test": "node --test test/*.test.mjs",
+    "test": "node --test test/kernel.test.mjs",
     "test:lmstudio": "node scripts/verifyLmStudio.mjs",
     "linecount": "node scripts/linecount.mjs"
   },

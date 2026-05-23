@@ -80,6 +80,7 @@ test("default config points to the team LM Studio model", () => {
   assert.equal(config.llm.provider, "lmstudio");
   assert.equal(config.llm.model, "qwen3.5-9b-glm5.1-distill-v1");
   assert.equal(config.llm.endpoint, "http://172.25.160.1:1234/v1/chat/completions");
+  assert.equal(config.llm.timeoutMs, 90000);
   assert.equal(config.llm.maxTokens, 1024);
 });
 

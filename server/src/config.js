@@ -17,7 +17,7 @@ export function loadConfig(env = process.env) {
       endpoint: env.LLM_ENDPOINT || "http://172.25.160.1:1234/v1/chat/completions",
       model: env.LLM_MODEL || "qwen3.5-9b-glm5.1-distill-v1",
       apiKey: env.LLM_API_KEY || "",
-      timeoutMs: Number(env.LLM_TIMEOUT_MS || 12000),
+      timeoutMs: Number(env.LLM_TIMEOUT_MS || 90000),
       maxTokens: Number(env.LLM_MAX_TOKENS || 1024)
     }
   };

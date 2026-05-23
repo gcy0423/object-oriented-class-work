@@ -120,5 +120,17 @@
       "createdAt": "2026-05-23"
     }
   ],
-  "activityLogs": []
+  "activityLogs": [
+    {
+      "id": "log_1779530112446_9127",
+      "createdAt": "2026-05-23T09:55:12.446Z",
+      "updatedAt": "2026-05-23T09:55:12.446Z",
+      "actorId": "user_student",
+      "type": "ai.ask",
+      "summary": "AI 回答问题：Confirm briefly that Edu",
+      "payload": {
+        "provider": "lmstudio:qwen3.5-9b-glm5.1-distill-v1"
+      }
+    }
+  ]
 }
