@@ -1,0 +1,124 @@
+{
+  "users": [
+    {
+      "id": "user_student",
+      "name": "林知夏",
+      "role": "student",
+      "email": "student@edumind.local",
+      "avatar": "夏",
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    },
+    {
+      "id": "user_teacher",
+      "name": "周老师",
+      "role": "teacher",
+      "email": "teacher@edumind.local",
+      "avatar": "周",
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    }
+  ],
+  "courses": [
+    {
+      "id": "course_ood",
+      "title": "面向对象技术与方法",
+      "teacherId": "user_teacher",
+      "description": "围绕 UML、类设计、架构分层和设计模式完成项目化学习。",
+      "tags": [
+        "UML",
+        "OOP",
+        "Design Pattern"
+      ],
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    },
+    {
+      "id": "course_ai",
+      "title": "人工智能应用实践",
+      "teacherId": "user_teacher",
+      "description": "学习 LLM 应用接入、提示词工程和智能体工作流。",
+      "tags": [
+        "LLM",
+        "Agent",
+        "Prompt"
+      ],
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    }
+  ],
+  "goals": [
+    {
+      "id": "goal_demo",
+      "ownerId": "user_student",
+      "courseId": "course_ood",
+      "title": "完成结课设计文档和可运行系统",
+      "targetDate": "2026-06-21",
+      "priority": "high",
+      "status": "active",
+      "progress": 45,
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task_model",
+      "goalId": "goal_demo",
+      "ownerId": "user_student",
+      "title": "整理领域模型与用例图",
+      "status": "done",
+      "estimateMinutes": 120,
+      "dueDate": "2026-05-30",
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    },
+    {
+      "id": "task_ai",
+      "goalId": "goal_demo",
+      "ownerId": "user_student",
+      "title": "接入 AI 学习问答服务",
+      "status": "doing",
+      "estimateMinutes": 180,
+      "dueDate": "2026-06-05",
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    },
+    {
+      "id": "task_doc",
+      "goalId": "goal_demo",
+      "ownerId": "user_student",
+      "title": "撰写系统设计文档",
+      "status": "todo",
+      "estimateMinutes": 240,
+      "dueDate": "2026-06-15",
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    }
+  ],
+  "notes": [
+    {
+      "id": "note_uml",
+      "ownerId": "user_student",
+      "courseId": "course_ood",
+      "title": "UML 复习摘要",
+      "content": "用例图强调参与者与系统边界；类图强调类、属性、方法和关系；顺序图强调对象交互时间顺序。",
+      "tags": [
+        "UML",
+        "复习"
+      ],
+      "createdAt": "2026-05-23",
+      "updatedAt": "2026-05-23"
+    }
+  ],
+  "messages": [
+    {
+      "id": "msg_welcome",
+      "roomId": "room_ood",
+      "authorId": "user_teacher",
+      "content": "本周重点完成需求分析和领域模型草图。",
+      "createdAt": "2026-05-23"
+    }
+  ],
+  "activityLogs": []
+}
