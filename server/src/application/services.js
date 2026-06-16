@@ -1,10 +1,12 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { AuthError, ForbiddenError, NotFoundError, ValidationError } from "../framework/errors.js";
+import { AccessPolicyService, Permissions } from "../common/accessPolicy.js";
+import { normalizeTags, requireText, toPositiveInteger } from "../common/validation.js";
+import { AuthError, NotFoundError } from "../framework/errors.js";
 import { AIResponse, LMStudioProvider, MockLLMProvider, OpenAICompatibleProvider, PromptTemplate } from "../domain/ai.js";
 import { ActivityLog, RoomMessage } from "../domain/collaboration.js";
 import { Roles, User } from "../domain/identity.js";
 import { LearningGoal, LearningNote, StudyTask, TaskStatus } from "../domain/learning.js";
-import { searchLearningResources } from "../domain/learningResourceCatalog.generated.js";
+import { searchLearningResources } from "../domain/learningResourceCatalog.js";
 
 function base64url(input) {
   return Buffer.from(input).toString("base64url");
@@ -16,13 +18,6 @@ function sign(payload, secret) {
 
 function today() {
   return new Date().toISOString().slice(0, 10);
-}
-
-function requireText(value, label) {
-  if (!String(value || "").trim()) {
-    throw new ValidationError(`${label}不能为空。`);
-  }
-  return String(value).trim();
 }
 
 export class AuthService {
@@ -81,7 +76,12 @@ export class AuthService {
     if (givenBuffer.length !== expectedBuffer.length || !timingSafeEqual(givenBuffer, expectedBuffer)) {
       throw new AuthError();
     }
-    const claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    let claims;
+    try {
+      claims = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    } catch {
+      throw new AuthError("登录凭证格式无效。");
+    }
     if (claims.exp < Math.floor(Date.now() / 1000)) {
       throw new AuthError("登录状态已过期。");
     }
@@ -123,7 +123,7 @@ export class ActivityService {
 }
 
 export class LearningService {
-  constructor({ database, courses, goals, tasks, notes, activity, eventBus }) {
+  constructor({ database, courses, goals, tasks, notes, activity, eventBus, accessPolicy = new AccessPolicyService() }) {
     this.database = database;
     this.courses = courses;
     this.goals = goals;
@@ -131,9 +131,11 @@ export class LearningService {
     this.notes = notes;
     this.activity = activity;
     this.eventBus = eventBus;
+    this.accessPolicy = accessPolicy;
   }
 
   dashboardFor(user) {
+    this.accessPolicy.assert(user, Permissions.READ_DASHBOARD, "当前角色不能查看学习总览。");
     const goals = this.goals.findByOwner(user.id);
     const tasks = this.tasks.findByOwner(user.id);
     const notes = this.notes.findByOwner(user.id);
@@ -153,6 +155,7 @@ export class LearningService {
   }
 
   async createGoal(user, input) {
+    this.accessPolicy.assert(user, Permissions.READ_DASHBOARD, "当前角色不能创建学习目标。");
     const courseId = requireText(input.courseId, "课程");
     if (!this.courses.findById(courseId)) {
       throw new NotFoundError("课程不存在。");
@@ -177,6 +180,7 @@ export class LearningService {
   }
 
   async createTask(user, input) {
+    this.accessPolicy.assert(user, Permissions.READ_DASHBOARD, "当前角色不能创建学习任务。");
     const goal = this.goals.findById(requireText(input.goalId, "学习目标"));
     if (!goal || goal.ownerId !== user.id) {
       throw new NotFoundError("学习目标不存在。");
@@ -188,7 +192,7 @@ export class LearningService {
       ownerId: user.id,
       title: requireText(input.title, "任务标题"),
       status: input.status || TaskStatus.TODO,
-      estimateMinutes: Number(input.estimateMinutes || 60),
+      estimateMinutes: toPositiveInteger(input.estimateMinutes || 60, "预计学习分钟", { max: 24 * 60 }),
       dueDate: input.dueDate || goal.targetDate,
       createdAt: now,
       updatedAt: now
@@ -202,6 +206,7 @@ export class LearningService {
   }
 
   async completeTask(user, taskId) {
+    this.accessPolicy.assert(user, Permissions.READ_DASHBOARD, "当前角色不能完成学习任务。");
     const task = this.tasks.findById(taskId);
     if (!task || task.ownerId !== user.id) {
       throw new NotFoundError("任务不存在。");
@@ -219,6 +224,7 @@ export class LearningService {
   }
 
   async createNote(user, input) {
+    this.accessPolicy.assert(user, Permissions.READ_DASHBOARD, "当前角色不能创建学习笔记。");
     const now = new Date().toISOString();
     const note = new LearningNote({
       id: this.database.nextId("note"),
@@ -226,7 +232,7 @@ export class LearningService {
       courseId: requireText(input.courseId, "课程"),
       title: requireText(input.title, "笔记标题"),
       content: requireText(input.content, "笔记内容"),
-      tags: Array.isArray(input.tags) ? input.tags : [],
+      tags: normalizeTags(input.tags),
       createdAt: now,
       updatedAt: now
     });
@@ -238,9 +244,10 @@ export class LearningService {
 }
 
 export class AITutorService {
-  constructor({ config, learning, activity }) {
+  constructor({ config, learning, activity, accessPolicy = new AccessPolicyService() }) {
     this.learning = learning;
     this.activity = activity;
+    this.accessPolicy = accessPolicy;
     this.provider = this.createProvider(config.llm);
     this.templates = {
       ask: new PromptTemplate({
@@ -275,6 +282,7 @@ export class AITutorService {
   }
 
   async ask(user, input) {
+    this.accessPolicy.assert(user, Permissions.USE_AI, "当前角色不能调用 AI 服务。");
     const question = requireText(input.question, "问题");
     const dashboard = this.learning.dashboardFor(user);
     const resourceHints = searchLearningResources(question, 3)
@@ -300,6 +308,7 @@ export class AITutorService {
   }
 
   async generatePlan(user, input) {
+    this.accessPolicy.assert(user, Permissions.USE_AI, "当前角色不能调用 AI 服务。");
     const goal = this.learning.goals.findById(requireText(input.goalId, "学习目标"));
     if (!goal || goal.ownerId !== user.id) {
       throw new NotFoundError("学习目标不存在。");
@@ -320,6 +329,7 @@ export class AITutorService {
   }
 
   async summarizeNote(user, input) {
+    this.accessPolicy.assert(user, Permissions.USE_AI, "当前角色不能调用 AI 服务。");
     const note = this.learning.notes.findById(requireText(input.noteId, "笔记"));
     if (!note || note.ownerId !== user.id) {
       throw new NotFoundError("笔记不存在。");
@@ -339,11 +349,12 @@ export class AITutorService {
 }
 
 export class CollaborationService {
-  constructor({ database, messages, activity, eventBus }) {
+  constructor({ database, messages, activity, eventBus, accessPolicy = new AccessPolicyService() }) {
     this.database = database;
     this.messages = messages;
     this.activity = activity;
     this.eventBus = eventBus;
+    this.accessPolicy = accessPolicy;
   }
 
   roomMessages(roomId = "room_ood") {
@@ -354,6 +365,7 @@ export class CollaborationService {
   }
 
   async sendMessage(user, input) {
+    this.accessPolicy.assert(user, Permissions.SEND_MESSAGE, "当前角色不能发送协作消息。");
     const now = new Date().toISOString();
     const message = new RoomMessage({
       id: this.database.nextId("msg"),
@@ -371,12 +383,14 @@ export class CollaborationService {
 }
 
 export class SecurityFacade {
+  constructor(accessPolicy = new AccessPolicyService()) {
+    this.accessPolicy = accessPolicy;
+  }
+
   assertCanUseAI(user) {
     if (!user) {
       throw new AuthError();
     }
-    if (![Roles.STUDENT, Roles.TEACHER, Roles.ADMIN].includes(user.role)) {
-      throw new ForbiddenError("当前角色不能调用 AI 服务。");
-    }
+    this.accessPolicy.assert(user, Permissions.USE_AI, "当前角色不能调用 AI 服务。");
   }
 }

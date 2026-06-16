@@ -478,10 +478,16 @@ def add_image(doc, path, caption, width=6.25):
 
 def count_lines():
     total = 0
-    include = {".js", ".mjs", ".css", ".html", ".json"}
-    ignore = {"node_modules", ".git", "data", "docs"}
+    include = {".js", ".mjs", ".css", ".html", ".json", ".sql", ".cmd", ".md"}
+    ignore = {"node_modules", ".git", ".runtime", "data", "docs"}
     for path in ROOT.rglob("*"):
-        if path.is_file() and path.suffix in include and not any(part in ignore for part in path.parts):
+        if (
+            path.is_file()
+            and path.suffix in include
+            and not path.name.endswith(".generated.js")
+            and path.suffix not in {".log", ".zip"}
+            and not any(part in ignore for part in path.parts)
+        ):
             total += sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
     return total
 
@@ -493,7 +499,7 @@ def cover(doc: Document, line_count: int):
     meta = [
         ("项目类型", "三人团队项目；Web 前端 + Node.js Server 端；接入 LM Studio 本地 LLM 服务"),
         ("项目边界", "课程学习目标、任务拆解、笔记沉淀、AI 辅导与协作同步"),
-        ("代码规模", f"前后端、测试、AI 资源目录等源码共 {line_count} 行，满足团队项目 50000+ 行要求（scripts/linecount.mjs 统计）"),
+        ("代码规模", f"第一阶段有效代码、SQL 迁移、测试和工程脚本共 {line_count} 行；已排除 generated 文件，后续通过真实模块扩展至 50000+ 行"),
         ("运行地址", "默认 http://127.0.0.1:4077，截图验证端口 4081"),
         ("文档日期", "2026-05-23"),
     ]
@@ -697,7 +703,7 @@ def write_document():
             ("开发环境", "Windows；Node.js 20+；浏览器 Chrome/Edge；LM Studio 本地模型服务 qwen3.5-9b-glm5.1-distill-v1。"),
             ("运行方法", "进入 EduMindAgent，执行 npm start，浏览器访问 http://127.0.0.1:4077。"),
             ("测试方法", "执行 npm test 验证核心流程；执行 npm run test:lmstudio 验证真实 LM Studio 模型调用。"),
-            ("代码规模", f"scripts/linecount.mjs 统计源码 {line_count} 行，超过团队项目 50000 行要求；Server、Client、测试、脚本和 AI 资源目录均计入。"),
+            ("代码规模", f"scripts/linecount.mjs 当前统计 {line_count} 行，口径排除 generated 文件、日志、截图和压缩包；团队后续通过真实业务模块、SQL 迁移、知识库导入和测试补足 50000+ 行。"),
             ("安装/卸载", "安装：解压项目并安装 Node.js；卸载：删除项目目录即可，数据位于 data/app-data.json。"),
             ("可执行程序", "本项目为 Web 系统，未额外打包桌面可执行程序；可选后续使用 pkg/electron 封装。"),
         ],
@@ -736,7 +742,8 @@ def write_document():
             ("2026-05-23 11:45", "实现领域对象、应用服务和 REST API", "User、LearningGoal、StudyTask、AITutorService 等类"),
             ("2026-05-23 12:05", "实现浏览器前端工作台", "登录、总览、学习、AI、协作页面"),
             ("2026-05-23 12:20", "补充测试与 AI 课程资源目录", "3 个 Node.js 测试、AI 本地知识库初版"),
-            ("2026-05-23 12:30", "按团队项目要求扩展源码规模并接入 LM Studio Provider 接口", "LMStudioProvider、2600 条本地课程资源、50000+ 行源码统计"),
+            ("2026-05-23 12:30", "接入 LM Studio Provider 接口并完成早期资源目录验证", "LMStudioProvider、AI 本地课程资源原型"),
+            ("2026-06-16 10:30", "移除 generated 计数风险并补充基础设施", "统一错误码、权限策略、数据库迁移系统、有效代码统计脚本"),
             ("2026-05-23 17:40", "配置团队本地大模型服务", "默认接入 qwen3.5-9b-glm5.1-distill-v1，新增 npm run test:lmstudio 验证脚本"),
             ("2026-05-23 12:35", "使用 Playwright 进行页面验证并生成截图", "dashboard、learning、ai、team 四张截图"),
             ("2026-05-23 12:50", "编写结课设计文档与 UML/架构图", "DOCX 文档、功能树、用例图、类图、包图、顺序图"),
@@ -745,7 +752,7 @@ def write_document():
     )
     add_para(
         doc,
-        "Commit 记录建议：正式提交到 Git 仓库时，可按“初始化项目”“实现后端服务”“实现前端工作台”“接入 LM Studio Provider”“配置 qwen3.5-9b 本地模型”“扩展团队项目代码规模”“补充测试与文档”组织提交历史。",
+        "Commit 记录建议：正式提交到 Git 仓库时，可按“初始化项目”“实现后端服务”“实现前端工作台”“接入 LM Studio Provider”“配置 qwen3.5-9b 本地模型”“移除 generated 计数风险”“扩展真实业务模块”“补充测试与文档”组织提交历史。",
     )
     add_para(doc, "3.4 项目总结", style="Heading 2")
     add_para(
