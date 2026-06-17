@@ -11,6 +11,7 @@ import { analyticsView } from "../client/src/views/analyticsView.js";
 import { practiceView } from "../client/src/views/practiceView.js";
 import { questionBankManageView } from "../client/src/views/questionBankManageView.js";
 import { settingsView } from "../client/src/views/settingsView.js";
+import { workbenchView } from "../client/src/views/workbenchView.js";
 
 test("format and query utilities support v6 view rendering", () => {
   assert.equal(formatDate("2026-06-16T08:00:00.000Z"), "2026-06-16");
@@ -73,6 +74,12 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.deleteQuestion("question_1");
     await client.practiceSessions({ courseId: "course_ood" });
     await client.health();
+    await client.analyticsFunnel({ courseId: "course_ood" });
+    await client.notificationSummary();
+    await client.notifications({ category: "scheduler" });
+    await client.markNotificationRead("notification_1");
+    await client.schedulerReminders({ status: "active" });
+    await client.runSchedulerDue({ now: "2026-06-17T00:00:00.000Z" });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -83,7 +90,13 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/question-banks/bank_1", method: "PATCH" },
     { url: "http://demo.local/api/questions/question_1", method: "DELETE" },
     { url: "http://demo.local/api/practice-sessions?courseId=course_ood", method: "GET" },
-    { url: "http://demo.local/api/health", method: "GET" }
+    { url: "http://demo.local/api/health", method: "GET" },
+    { url: "http://demo.local/api/analytics/funnel?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/notifications/summary", method: "GET" },
+    { url: "http://demo.local/api/notifications?category=scheduler", method: "GET" },
+    { url: "http://demo.local/api/notifications/notification_1/read", method: "PATCH" },
+    { url: "http://demo.local/api/scheduler/reminders?status=active", method: "GET" },
+    { url: "http://demo.local/api/scheduler/run-due", method: "POST" }
   ]);
 });
 
@@ -101,8 +114,20 @@ test("v6 views render as importable ESM modules without build tools", () => {
   state.assessment.questions = [{ id: "q_1", bankId: "bank_1", courseId: "course_ood", type: "single_choice", stem: "题干", analysis: "解析", difficulty: "easy" }];
   state.assessment.practiceSession = { id: "practice_1", questions: [{ id: "q_1", stem: "题干", choices: [] }], answers: [] };
   state.analytics.teacher = { courses: [], students: [], riskStudents: [], recentActivity: [] };
+  state.workbench.notificationSummary = { unread: 1 };
+  state.workbench.notifications = [{ id: "notification_1", title: "Notice", body: "Body", category: "scheduler", severity: "info", createdAt: "2026-06-16" }];
+  state.workbench.reminders = [{ id: "reminder_1", title: "Reminder", message: "Message", targetType: "practice", courseId: "course_ood", nextRunAt: "2026-06-17", status: "active" }];
+  state.workbench.schedulerDashboard = { activeReminders: 1 };
+  state.workbench.schedulerTimeline = [{ type: "reminder.next", reminderId: "reminder_1", at: "2026-06-17", title: "Reminder", status: "active" }];
+  state.workbench.funnel = { stages: [{ key: "students", count: 1, rate: 100 }] };
+  state.workbench.riskBoard = { summary: { high: 0 }, items: [] };
+  state.workbench.engagement = { activityCount: 1, messageCount: 1, channelMix: [{ channel: "message", count: 1 }], quietSignals: ["ok"] };
+  state.workbench.courseDeepReport = { assignments: { published: 1, submitted: 1 }, practice: { sessionCount: 1, openMistakes: 0 }, mastery: { concepts: [{ concept: "UML", score: 80 }] } };
+  state.workbench.studentProgress = { learning: { completedTaskCount: 1, taskCount: 2 }, assignments: { submittedCount: 1 }, grading: { averageScore: 90 }, practice: { averageCorrectRate: 80 }, nextFocus: ["Review"] };
   state.settings.health = { service: "gateway-service", status: "up", time: "2026-06-16T00:00:00.000Z", services: [] };
   state.settings.modelConfig = buildModelConfig(state.provider);
+  const renderedWorkbench = workbenchView(state);
+  assert.match(renderedWorkbench, /Learning Funnel/);
 
   assert.match(assignmentManageView(state), /作业列表/);
   assert.match(questionBankManageView(state), /题库列表/);

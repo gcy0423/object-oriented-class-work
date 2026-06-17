@@ -8,6 +8,7 @@ import { practiceView } from "./views/practiceView.js";
 import { questionBankManageView } from "./views/questionBankManageView.js";
 import { settingsView } from "./views/settingsView.js";
 import { teamView } from "./views/teamView.js";
+import { workbenchView } from "./views/workbenchView.js";
 import { createInitialState } from "./state/appState.js";
 import { buildModelConfig, canManageAssessment, routeVisible, withErrorPatch, withLoadingPatch, withSavingPatch } from "./state/selectors.js";
 import { Store } from "./state/viewState.js";
@@ -18,6 +19,7 @@ import { toastView } from "./widgets/toast.js";
 
 const views = {
   dashboard: dashboardView,
+  workbench: workbenchView,
   learning: learningView,
   assignments: assignmentManageView,
   "question-banks": questionBankManageView,
@@ -163,6 +165,40 @@ class EduMindApp {
         this.api.health()
       ]);
 
+      const workbenchCourseId = state.filters.workbench.courseId || firstCourseId;
+      const notificationParams = state.filters.workbench.category ? { category: state.filters.workbench.category } : {};
+      const reminderParams = {
+        ...(workbenchCourseId ? { courseId: workbenchCourseId } : {}),
+        ...(state.filters.workbench.reminderStatus ? { status: state.filters.workbench.reminderStatus } : {})
+      };
+      const [
+        notificationSummaryResult,
+        notificationsResult,
+        notificationPreferencesResult,
+        remindersResult,
+        schedulerDashboardResult,
+        schedulerTimelineResult,
+        schedulerDuePreviewResult,
+        funnelResult,
+        riskBoardResult,
+        engagementResult,
+        courseDeepReportResult,
+        studentProgressResult
+      ] = await Promise.allSettled([
+        this.api.notificationSummary(notificationParams),
+        this.api.notifications(notificationParams),
+        this.api.notificationPreferences(),
+        this.api.schedulerReminders(reminderParams),
+        this.api.schedulerDashboard(reminderParams),
+        this.api.schedulerTimeline(reminderParams),
+        this.api.schedulerDuePreview(workbenchCourseId ? { courseId: workbenchCourseId } : {}),
+        this.api.analyticsFunnel(workbenchCourseId ? { courseId: workbenchCourseId } : {}),
+        isTeacher && workbenchCourseId ? this.api.analyticsRiskBoard({ courseId: workbenchCourseId }) : Promise.resolve({ data: null }),
+        this.api.analyticsEngagement(workbenchCourseId ? { courseId: workbenchCourseId } : {}),
+        workbenchCourseId ? this.api.analyticsCourseDeepReport(workbenchCourseId) : Promise.resolve({ data: null }),
+        state.user?.id ? this.api.analyticsStudentProgress(state.user.id) : Promise.resolve({ data: null })
+      ]);
+
       let assignmentDetail = state.assessment.assignmentDetail;
       if (state.selected.assignmentId) {
         try {
@@ -204,6 +240,20 @@ class EduMindApp {
           teacher: teacherResult.status === "fulfilled" ? teacherResult.value.data : null,
           selectedCourse: state.analytics.selectedCourse,
           selectedStudent: state.analytics.selectedStudent
+        },
+        workbench: {
+          notifications: notificationsResult.status === "fulfilled" ? notificationsResult.value.data.items || [] : state.workbench.notifications,
+          notificationSummary: notificationSummaryResult.status === "fulfilled" ? notificationSummaryResult.value.data : state.workbench.notificationSummary,
+          notificationPreferences: notificationPreferencesResult.status === "fulfilled" ? notificationPreferencesResult.value.data : state.workbench.notificationPreferences,
+          reminders: remindersResult.status === "fulfilled" ? remindersResult.value.data.items || [] : state.workbench.reminders,
+          schedulerDashboard: schedulerDashboardResult.status === "fulfilled" ? schedulerDashboardResult.value.data : state.workbench.schedulerDashboard,
+          schedulerTimeline: schedulerTimelineResult.status === "fulfilled" ? schedulerTimelineResult.value.data.items || [] : state.workbench.schedulerTimeline,
+          schedulerDuePreview: schedulerDuePreviewResult.status === "fulfilled" ? schedulerDuePreviewResult.value.data : state.workbench.schedulerDuePreview,
+          funnel: funnelResult.status === "fulfilled" ? funnelResult.value.data : state.workbench.funnel,
+          riskBoard: riskBoardResult.status === "fulfilled" ? riskBoardResult.value.data : state.workbench.riskBoard,
+          engagement: engagementResult.status === "fulfilled" ? engagementResult.value.data : state.workbench.engagement,
+          courseDeepReport: courseDeepReportResult.status === "fulfilled" ? courseDeepReportResult.value.data : state.workbench.courseDeepReport,
+          studentProgress: studentProgressResult.status === "fulfilled" ? studentProgressResult.value.data : state.workbench.studentProgress
         },
         settings: {
           health: healthResult.status === "fulfilled" ? healthResult.value.data : null,
@@ -385,6 +435,40 @@ class EduMindApp {
         await this.refreshApp("错题已标记为已复习。");
         return;
       }
+      if (action === "read-notification") {
+        await this.api.markNotificationRead(actionButton.dataset.id);
+        await this.refreshApp("Notification marked as read.");
+        return;
+      }
+      if (action === "dismiss-notification") {
+        await this.api.dismissNotification(actionButton.dataset.id);
+        await this.refreshApp("Notification dismissed.");
+        return;
+      }
+      if (action === "mark-all-notifications-read") {
+        await this.api.markAllNotificationsRead({});
+        await this.refreshApp("All notifications marked as read.");
+        return;
+      }
+      if (action === "pause-reminder") {
+        await this.api.updateReminder(actionButton.dataset.id, { status: "paused" });
+        await this.refreshApp("Reminder paused.");
+        return;
+      }
+      if (action === "resume-reminder") {
+        await this.api.updateReminder(actionButton.dataset.id, { status: "active" });
+        await this.refreshApp("Reminder resumed.");
+        return;
+      }
+      if (action === "run-due-scheduler") {
+        await this.api.runSchedulerDue({ now: new Date().toISOString() });
+        await this.refreshApp("Due reminders processed.");
+        return;
+      }
+      if (action === "clear-reminder-draft") {
+        this.setState({ draft: { ...this.store.get().draft, reminder: null } });
+        return;
+      }
       if (action === "view-course-analytics") {
         const result = await this.api.analyticsCourse(actionButton.dataset.id);
         this.setState({ analytics: { ...this.store.get().analytics, selectedCourse: result.data }, route: "analytics" });
@@ -505,6 +589,36 @@ class EduMindApp {
         }
         this.setState({ draft: { ...this.store.get().draft, grade: null } });
         await this.refreshApp("评分已保存。");
+        return;
+      }
+      if (form.dataset.form === "workbench-filter") {
+        this.setState({ filters: { ...this.store.get().filters, workbench: { ...this.store.get().filters.workbench, ...data } } });
+        await this.refreshApp("Workbench filters applied.");
+        return;
+      }
+      if (form.dataset.form === "workbench-reminder") {
+        const dueAt = data.dueAt ? new Date(data.dueAt).toISOString() : "";
+        if (!data.title || !dueAt) {
+          this.toast("Reminder title and due time are required.");
+          return;
+        }
+        this.patchSaving("reminder", true);
+        try {
+          await this.api.createReminder({
+            title: data.title,
+            message: data.message,
+            courseId: data.courseId,
+            dueAt,
+            targetType: data.targetType,
+            frequency: data.frequency,
+            channels: ["in_app"]
+          });
+        } finally {
+          this.patchSaving("reminder", false);
+        }
+        this.setState({ draft: { ...this.store.get().draft, reminder: null }, route: "workbench" });
+        form.reset();
+        await this.refreshApp("Reminder created.");
         return;
       }
       if (form.dataset.form === "question-bank-filter") {

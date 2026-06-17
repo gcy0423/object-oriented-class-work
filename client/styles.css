@@ -270,6 +270,87 @@ textarea:focus-visible,
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.workbench-metrics {
+  margin-bottom: 16px;
+}
+
+.workbench-filter {
+  margin-bottom: 16px;
+}
+
+.workbench-feed {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workbench-feed-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.workbench-feed-item.is-unread {
+  border-color: #f2c66d;
+  background: #fffaf0;
+}
+
+.workbench-feed-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+}
+
+.workbench-table {
+  min-width: 560px;
+}
+
+.workbench-timeline {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.workbench-timeline li {
+  display: grid;
+  grid-template-columns: 92px minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.workbench-timeline time {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.workbench-notes {
+  margin-top: 12px;
+}
+
+.workbench-notes li {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.compact-stats {
+  margin-bottom: 14px;
+}
+
+.two-field-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .course-card-grid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }

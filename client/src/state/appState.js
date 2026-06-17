@@ -23,14 +23,16 @@ export function createInitialState() {
       question: false,
       practiceAnswer: false,
       profile: false,
-      submission: false
+      submission: false,
+      reminder: false
     },
     errors: {},
     filters: {
       assignments: { courseId: "", status: "", keyword: "" },
       questionBanks: { courseId: "", type: "", difficulty: "", keyword: "" },
       practice: { courseId: "", bankId: "", status: "", mistakeStatus: "" },
-      analytics: { courseId: "", studentId: "" }
+      analytics: { courseId: "", studentId: "" },
+      workbench: { courseId: "", category: "", reminderStatus: "" }
     },
     selected: {
       assignmentId: "",
@@ -44,7 +46,8 @@ export function createInitialState() {
       questionBank: null,
       question: null,
       grade: null,
-      profile: null
+      profile: null,
+      reminder: null
     },
     ui: {
       activePanel: "",
@@ -67,6 +70,20 @@ export function createInitialState() {
       teacher: null,
       selectedCourse: null,
       selectedStudent: null
+    },
+    workbench: {
+      notifications: [],
+      notificationSummary: null,
+      notificationPreferences: null,
+      reminders: [],
+      schedulerDashboard: null,
+      schedulerTimeline: [],
+      schedulerDuePreview: null,
+      funnel: null,
+      riskBoard: null,
+      engagement: null,
+      courseDeepReport: null,
+      studentProgress: null
     },
     settings: {
       health: null,

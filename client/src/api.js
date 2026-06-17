@@ -89,6 +89,28 @@ export class ApiClient {
   analyticsCourse(id) { return this.request(`/api/analytics/courses/${encodeURIComponent(id)}`); }
   analyticsStudent(id) { return this.request(`/api/analytics/students/${encodeURIComponent(id)}`); }
   analyticsTeacher() { return this.request("/api/analytics/teacher"); }
+  analyticsFunnel(params = {}) { return this.request(`/api/analytics/funnel${toQuery(params)}`); }
+  analyticsRiskBoard(params = {}) { return this.request(`/api/analytics/risk-board${toQuery(params)}`); }
+  analyticsCourseDeepReport(id) { return this.request(`/api/analytics/courses/${encodeURIComponent(id)}/deep-report`); }
+  analyticsStudentProgress(id) { return this.request(`/api/analytics/students/${encodeURIComponent(id)}/progress-report`); }
+  analyticsEngagement(params = {}) { return this.request(`/api/analytics/engagement${toQuery(params)}`); }
+
+  notifications(params = {}) { return this.request(`/api/notifications${toQuery(params)}`); }
+  notificationSummary(params = {}) { return this.request(`/api/notifications/summary${toQuery(params)}`); }
+  createNotification(input) { return this.request("/api/notifications", { method: "POST", body: JSON.stringify(input) }); }
+  notificationPreferences() { return this.request("/api/notification-preferences"); }
+  updateNotificationPreferences(input) { return this.request("/api/notification-preferences", { method: "PATCH", body: JSON.stringify(input) }); }
+  markNotificationRead(id) { return this.request(`/api/notifications/${encodeURIComponent(id)}/read`, { method: "PATCH", body: JSON.stringify({}) }); }
+  dismissNotification(id) { return this.request(`/api/notifications/${encodeURIComponent(id)}/dismiss`, { method: "PATCH", body: JSON.stringify({}) }); }
+  markAllNotificationsRead(input = {}) { return this.request("/api/notifications/read-all", { method: "PATCH", body: JSON.stringify(input) }); }
+
+  schedulerReminders(params = {}) { return this.request(`/api/scheduler/reminders${toQuery(params)}`); }
+  createReminder(input) { return this.request("/api/scheduler/reminders", { method: "POST", body: JSON.stringify(input) }); }
+  updateReminder(id, input) { return this.request(`/api/scheduler/reminders/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  schedulerDuePreview(params = {}) { return this.request(`/api/scheduler/due-preview${toQuery(params)}`); }
+  runSchedulerDue(input = {}) { return this.request("/api/scheduler/run-due", { method: "POST", body: JSON.stringify(input) }); }
+  schedulerTimeline(params = {}) { return this.request(`/api/scheduler/timeline${toQuery(params)}`); }
+  schedulerDashboard(params = {}) { return this.request(`/api/scheduler/dashboard${toQuery(params)}`); }
 
   createGoal(input) { return this.request("/api/goals", { method: "POST", body: JSON.stringify(input) }); }
   createTask(input) { return this.request("/api/tasks", { method: "POST", body: JSON.stringify(input) }); }
