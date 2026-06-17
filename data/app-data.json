@@ -129,7 +129,7 @@
       "type": "ai.ask",
       "summary": "AI 回答问题：Confirm briefly that Edu",
       "payload": {
-        "provider": "lmstudio:qwen3.5-9b-glm5.1-distill-v1"
+        "provider": "lmstudio:qwopus3.6-27b-v2-mtp@iq4_xs"
       }
     }
   ]

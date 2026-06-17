@@ -360,6 +360,73 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/knowledge/summary", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.knowledge.get("/api/knowledge/summary", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/knowledge/concepts", async (req) => {
+    const user = await services.verifyUser(req);
+    const params = new URLSearchParams(req.query).toString();
+    return services.knowledge.get(`/api/knowledge/concepts${params ? `?${params}` : ""}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/knowledge/concepts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.knowledge.get(`/api/knowledge/concepts/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/knowledge/search", async (req) => {
+    const user = await services.verifyUser(req);
+    const params = new URLSearchParams(req.query).toString();
+    return services.knowledge.get(`/api/knowledge/search${params ? `?${params}` : ""}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/knowledge/graph", async (req) => {
+    const user = await services.verifyUser(req);
+    const params = new URLSearchParams(req.query).toString();
+    return services.knowledge.get(`/api/knowledge/graph${params ? `?${params}` : ""}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/knowledge/recommendations", async (req) => {
+    const user = await services.verifyUser(req);
+    const params = new URLSearchParams(req.query).toString();
+    return services.knowledge.get(`/api/knowledge/recommendations${params ? `?${params}` : ""}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/knowledge/ai-context", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.knowledge.post("/api/knowledge/ai-context", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/knowledge/learning-path", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.knowledge.post("/api/knowledge/learning-path", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/knowledge/practice-set", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.knowledge.post("/api/knowledge/practice-set", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.get("/api/analytics/overview", async (req) => {
     const user = await services.verifyUser(req);
     return services.analytics.get("/api/analytics/overview", {

@@ -1,0 +1,414 @@
+const DAY = "2026-06-17";
+
+const conceptDefinitions = [
+  {
+    id: "kc_domain_object",
+    courseId: "course_ood",
+    title: "领域对象识别",
+    aliases: ["Domain Object", "实体识别", "概念类"],
+    summary: "从需求文本中识别稳定业务概念，区分实体、值对象、领域服务和外部系统。",
+    category: "domain-modeling",
+    difficulty: "core",
+    tags: ["领域建模", "类图", "需求分析"],
+    learningObjectives: [
+      "能够从用例描述中提取名词短语并筛选候选类。",
+      "能够说明实体和值对象的区别。",
+      "能够为核心对象补充身份、属性和生命周期。"
+    ],
+    commonMisconceptions: [
+      "把所有名词都直接变成类。",
+      "把数据库表结构等同于领域对象。",
+      "忽略对象行为，只保留属性列表。"
+    ],
+    evidence: ["类图", "用例规约", "领域词汇表"]
+  },
+  {
+    id: "kc_use_case",
+    courseId: "course_ood",
+    title: "用例建模",
+    aliases: ["Use Case", "参与者", "系统边界"],
+    summary: "用参与者目标描述系统对外可见行为，明确主成功场景、扩展场景和前后置条件。",
+    category: "requirements",
+    difficulty: "basic",
+    tags: ["UML", "需求分析", "参与者"],
+    learningObjectives: [
+      "能够识别主要参与者和次要参与者。",
+      "能够写出可验证的主成功场景。",
+      "能够把异常分支写成扩展场景。"
+    ],
+    commonMisconceptions: [
+      "把页面按钮当作用例。",
+      "把内部函数调用写进用例。",
+      "没有说明系统边界。"
+    ],
+    evidence: ["用例图", "用例表", "验收标准"]
+  },
+  {
+    id: "kc_sequence",
+    courseId: "course_ood",
+    title: "顺序图对象协作",
+    aliases: ["Sequence Diagram", "时序图", "消息调用"],
+    summary: "顺序图强调对象之间按时间顺序发生的消息交互，适合说明跨服务调用和应用服务编排。",
+    category: "uml",
+    difficulty: "core",
+    tags: ["UML", "对象协作", "服务编排"],
+    learningObjectives: [
+      "能够区分参与对象、生命线和消息。",
+      "能够把 REST 调用和领域服务调用映射成消息。",
+      "能够使用 alt/opt 表达异常和可选分支。"
+    ],
+    commonMisconceptions: [
+      "把顺序图画成流程图。",
+      "只画前端和数据库，不画应用服务。",
+      "没有体现返回值和失败分支。"
+    ],
+    evidence: ["顺序图", "接口调用说明", "测试用例"]
+  },
+  {
+    id: "kc_repository",
+    courseId: "course_ood",
+    title: "Repository 模式",
+    aliases: ["仓储模式", "Repository Pattern"],
+    summary: "Repository 把集合式读写接口和存储细节隔离，让领域对象不依赖 JSON、SQL 或远程 API。",
+    category: "design-pattern",
+    difficulty: "core",
+    tags: ["设计模式", "持久化", "分层"],
+    learningObjectives: [
+      "能够解释 Repository 和 DAO 的差异。",
+      "能够说明仓储如何隐藏数据文件结构。",
+      "能够在测试中替换存储实现。"
+    ],
+    commonMisconceptions: [
+      "把所有业务规则写进 Repository。",
+      "让控制器直接读写 JSON 文件。",
+      "仓储方法命名只反映数据库操作。"
+    ],
+    evidence: ["Repository 类", "JsonDatabase", "服务测试"]
+  },
+  {
+    id: "kc_strategy_provider",
+    courseId: "course_ai",
+    title: "LLM Provider 策略",
+    aliases: ["Strategy", "Provider", "LM Studio"],
+    summary: "通过统一 Provider 接口切换 Mock、LM Studio 和 OpenAI-compatible 实现，降低 AI 接入风险。",
+    category: "ai-integration",
+    difficulty: "core",
+    tags: ["AI", "Strategy", "LM Studio"],
+    learningObjectives: [
+      "能够解释为什么普通测试默认使用 Mock Provider。",
+      "能够说明 LM Studio 的 OpenAI-compatible 接口路径。",
+      "能够处理模型返回 reasoning_content 的兼容情况。"
+    ],
+    commonMisconceptions: [
+      "把真实模型调用作为所有测试前置条件。",
+      "把 endpoint 写死到业务代码中。",
+      "只处理 content 字段而忽略 reasoning_content。"
+    ],
+    evidence: ["LMStudioProvider", "verifyLmStudio.mjs", "AI 服务配置"]
+  },
+  {
+    id: "kc_service_boundary",
+    courseId: "course_ood",
+    title: "服务边界与数据所有权",
+    aliases: ["Service Boundary", "数据所有权", "微服务拆分"],
+    summary: "按业务能力拆分服务，每个服务拥有自己的写模型，跨服务通过 API 或事件协作。",
+    category: "architecture",
+    difficulty: "advanced",
+    tags: ["微服务", "服务边界", "架构"],
+    learningObjectives: [
+      "能够说明 identity、learning、assessment、ai、knowledge 等服务的职责。",
+      "能够判断 Gateway 是否越界写业务规则。",
+      "能够解释跨服务失败时为什么不能回滚主业务。"
+    ],
+    commonMisconceptions: [
+      "按技术层而不是业务能力拆服务。",
+      "多个服务同时写同一份数据。",
+      "Gateway 直接读取下游数据文件。"
+    ],
+    evidence: ["service-boundaries.md", "Gateway routes", "服务测试"]
+  },
+  {
+    id: "kc_rubric",
+    courseId: "course_ood",
+    title: "Rubric 评分规则",
+    aliases: ["评分量规", "Rubric", "作业评价"],
+    summary: "Rubric 把评分标准拆成多个可解释维度，让教师评分和 AI 初评都有统一依据。",
+    category: "assessment",
+    difficulty: "core",
+    tags: ["作业", "评分", "AI 初评"],
+    learningObjectives: [
+      "能够设计评分维度、满分和权重。",
+      "能够把反馈拆分到具体标准。",
+      "能够说明 AI 初评为什么不能直接覆盖教师最终评分。"
+    ],
+    commonMisconceptions: [
+      "只保存总分不保存评分依据。",
+      "把 AI 建议当成最终成绩。",
+      "不同作业复用不匹配的评分标准。"
+    ],
+    evidence: ["RubricCriterion", "Grade", "AI review"]
+  },
+  {
+    id: "kc_mistake_book",
+    courseId: "course_ood",
+    title: "错题本闭环",
+    aliases: ["Mistake Item", "错题归因", "掌握度"],
+    summary: "错题本把答题记录、知识点、错误原因和复习状态连接起来，形成可持续练习闭环。",
+    category: "assessment",
+    difficulty: "advanced",
+    tags: ["练习", "错题本", "掌握度"],
+    learningObjectives: [
+      "能够从答题记录生成错题项。",
+      "能够按知识点聚合错误原因。",
+      "能够根据复习状态推荐后续练习。"
+    ],
+    commonMisconceptions: [
+      "只记录错题文本不记录关联知识点。",
+      "复习完成后不更新掌握度。",
+      "所有错误使用同一种反馈。"
+    ],
+    evidence: ["MistakeService", "PracticeService", "MasteryService"]
+  },
+  {
+    id: "kc_gateway",
+    courseId: "course_ood",
+    title: "Gateway 代理与聚合",
+    aliases: ["API Gateway", "网关", "统一入口"],
+    summary: "Gateway 负责鉴权、代理、健康聚合和 Dashboard 聚合，不应拥有下游业务数据。",
+    category: "architecture",
+    difficulty: "core",
+    tags: ["Gateway", "REST", "鉴权"],
+    learningObjectives: [
+      "能够说明用户上下文如何通过请求头传递。",
+      "能够说明 Gateway 聚合失败如何返回错误。",
+      "能够区分代理路由和业务规则。"
+    ],
+    commonMisconceptions: [
+      "在 Gateway 中直接计算作业成绩。",
+      "Gateway 绕过服务 API 读写 JSON。",
+      "没有处理下游服务不可用。"
+    ],
+    evidence: ["gateway-service", "ServiceClient", "health aggregation"]
+  },
+  {
+    id: "kc_knowledge_retrieval",
+    courseId: "course_ai",
+    title: "知识库检索增强",
+    aliases: ["RAG", "知识召回", "AI 上下文"],
+    summary: "AI 回答前先从本地知识库检索相关知识点和片段，再把结构化上下文注入 Prompt。",
+    category: "ai-integration",
+    difficulty: "advanced",
+    tags: ["AI", "知识库", "检索"],
+    learningObjectives: [
+      "能够解释检索增强与直接问模型的差异。",
+      "能够说明召回结果为什么需要限长和排序。",
+      "能够把知识点、片段和复习卡片组织成 Prompt 上下文。"
+    ],
+    commonMisconceptions: [
+      "把大段无关文本全部塞进 Prompt。",
+      "只按关键词匹配不返回来源。",
+      "知识库文件存在但业务代码从不读取。"
+    ],
+    evidence: ["knowledge-service", "AI context", "search results"]
+  },
+  {
+    id: "kc_frontend_state",
+    courseId: "course_ood",
+    title: "前端状态派生",
+    aliases: ["Selector", "View State", "前端工作台"],
+    summary: "前端通过 selectors 从原始 API 数据派生权限、进度、过滤结果和统计视图，避免视图重复计算。",
+    category: "frontend",
+    difficulty: "core",
+    tags: ["前端", "状态管理", "ESM"],
+    learningObjectives: [
+      "能够说明 appState、viewState 和 selectors 的职责。",
+      "能够把表单校验和视图渲染分离。",
+      "能够解释无构建工具 ESM 前端的运行方式。"
+    ],
+    commonMisconceptions: [
+      "每个视图重复拼接相同统计逻辑。",
+      "把 API 调用写散到 DOM 事件里。",
+      "表单失败没有统一错误提示。"
+    ],
+    evidence: ["client/src/state", "client/src/views", "client/src/forms"]
+  },
+  {
+    id: "kc_test_strategy",
+    courseId: "course_ood",
+    title: "测试策略",
+    aliases: ["Node Test", "集成测试", "回归测试"],
+    summary: "使用 Node.js 内置测试覆盖单体核心流程、微服务 API、Gateway 集成和 AI Provider 兼容逻辑。",
+    category: "quality",
+    difficulty: "core",
+    tags: ["测试", "质量保证", "CI"],
+    learningObjectives: [
+      "能够区分普通测试和真实模型测试。",
+      "能够使用临时 JSON 数据隔离测试环境。",
+      "能够覆盖下游服务失败时的降级逻辑。"
+    ],
+    commonMisconceptions: [
+      "测试污染真实 data 目录。",
+      "所有测试都依赖固定端口。",
+      "只测试成功路径不测试失败路径。"
+    ],
+    evidence: ["test/kernel.test.mjs", "test/services.test.mjs", "verify-lmstudio-local.cmd"]
+  }
+];
+
+const articleDefinitions = [
+  {
+    id: "ka_domain_object",
+    conceptId: "kc_domain_object",
+    title: "从需求到领域对象的判断流程",
+    outline: ["读取用例目标", "提取候选名词", "判断身份和值", "补充行为和不变量"],
+    body: "领域对象不是数据库字段集合，而是业务语言中具有稳定含义和行为边界的概念。EduMind Agent 中的 LearningGoal、Assignment、QuestionBank 都有明确生命周期，适合建模为实体。",
+    examples: ["LearningGoal 拥有 progress 和 targetDate。", "RubricCriterion 是评分规则的一部分。"],
+    checkpoints: ["对象是否有身份？", "对象是否有业务行为？", "对象是否被多个场景复用？"],
+    tags: ["领域建模", "类图"]
+  },
+  {
+    id: "ka_sequence_gateway",
+    conceptId: "kc_sequence",
+    title: "Gateway 到下游服务的顺序图写法",
+    outline: ["浏览器发送请求", "Gateway 校验 Token", "注入用户上下文", "调用下游服务", "聚合响应"],
+    body: "顺序图应体现参与对象之间的消息顺序。以 /api/dashboard 为例，Gateway 会并发请求 learning、assessment、identity、collaboration、ai、analytics 服务，然后组合前端需要的数据。",
+    examples: ["alt 分支可以表示 analytics-service 不可用时的降级。", "verifyUser 是鉴权前置消息。"],
+    checkpoints: ["是否出现用户上下文请求头？", "是否标出下游失败分支？"],
+    tags: ["UML", "Gateway"]
+  },
+  {
+    id: "ka_provider_strategy",
+    conceptId: "kc_strategy_provider",
+    title: "LM Studio Provider 配置要点",
+    outline: ["OpenAI-compatible Server", "endpoint 规范化", "模型名传递", "超时与 token 限制"],
+    body: "LM Studio 暴露 OpenAI-compatible 接口时，应用只需要把基础地址规范化到 /v1/chat/completions。模型名、超时、max_tokens 都应来自配置，避免写死在应用服务中。",
+    examples: ["http://10.108.10.110:1234 会被规范化为 /v1/chat/completions。"],
+    checkpoints: ["普通测试是否使用 mock？", "真实模型验证是否单独执行？"],
+    tags: ["LM Studio", "AI"]
+  },
+  {
+    id: "ka_knowledge_context",
+    conceptId: "kc_knowledge_retrieval",
+    title: "AI 上下文装配规则",
+    outline: ["搜索相关知识点", "抽取片段", "限制长度", "保留来源"],
+    body: "知识库增强回答的关键不是塞入更多文本，而是把与问题最相关的概念、片段和误区组织成可解释上下文。服务返回 searchResults、concepts 和 promptHints，方便 AI 服务构造 Prompt。",
+    examples: ["问题包含“顺序图对象协作”时，应召回 kc_sequence。"],
+    checkpoints: ["是否返回来源 id？", "是否避免无关长文本？"],
+    tags: ["RAG", "Prompt"]
+  },
+  {
+    id: "ka_assessment_loop",
+    conceptId: "kc_mistake_book",
+    title: "从练习到错题本的闭环",
+    outline: ["创建练习会话", "记录答题", "完成判分", "生成错题", "更新掌握度"],
+    body: "错题本的价值在于把一次答错转化为后续复习依据。PracticeService 记录答案，MistakeService 保存错题，MasteryService 聚合知识点掌握度。",
+    examples: ["选择题答错后立即进入 mistakeItems。"],
+    checkpoints: ["错题是否有关联 questionId？", "复习后是否更新状态？"],
+    tags: ["练习", "错题本"]
+  },
+  {
+    id: "ka_frontend_workbench",
+    conceptId: "kc_frontend_state",
+    title: "前端工作台模块边界",
+    outline: ["api.js", "state", "views", "forms", "widgets"],
+    body: "当前前端不依赖构建工具，浏览器直接加载 ESM。为了控制复杂度，API 调用集中在 api.js，状态派生在 selectors，页面组合在 views，表单校验在 forms。",
+    examples: ["assignmentManageView 组合表单、表格和操作按钮。"],
+    checkpoints: ["视图是否直接写复杂业务判断？", "表单错误是否统一展示？"],
+    tags: ["前端", "ESM"]
+  }
+];
+
+const chunkDefinitions = [
+  ["kn_domain_rule", "kc_domain_object", "ka_domain_object", "rule", "对象判断规则", "如果一个概念有稳定身份、生命周期和业务行为，优先建模为实体；如果只描述属性值且不可变，优先建模为值对象。", ["实体", "值对象", "身份"], 5],
+  ["kn_domain_prompt", "kc_domain_object", "ka_domain_object", "prompt-hint", "领域对象答题提示", "回答领域建模题时，应给出候选类筛选依据，并说明每个核心类承担的职责。", ["领域建模", "Prompt"], 4],
+  ["kn_usecase_rule", "kc_use_case", "ka_domain_object", "rule", "用例粒度规则", "用例应描述参与者想达成的业务目标，而不是单个按钮、页面跳转或内部函数。", ["用例", "粒度"], 4],
+  ["kn_sequence_rule", "kc_sequence", "ka_sequence_gateway", "rule", "顺序图消息规则", "顺序图中的箭头应表达对象间消息，不应把条件判断画成孤立流程节点。", ["顺序图", "消息"], 5],
+  ["kn_sequence_prompt", "kc_sequence", "ka_sequence_gateway", "prompt-hint", "顺序图答题提示", "说明对象协作时，按参与者、Gateway、应用服务、领域服务、Repository 的调用顺序展开。", ["UML", "对象协作"], 5],
+  ["kn_repo_rule", "kc_repository", "ka_domain_object", "rule", "仓储职责规则", "Repository 负责集合式读取和保存，不负责计算进度、评分或 AI Prompt 生成。", ["Repository", "分层"], 5],
+  ["kn_provider_endpoint", "kc_strategy_provider", "ka_provider_strategy", "rule", "LM Studio endpoint", "基础地址会被规范化到 /v1/chat/completions，避免用户手动输入完整路径时重复拼接。", ["LM Studio", "endpoint"], 5],
+  ["kn_provider_fallback", "kc_strategy_provider", "ka_provider_strategy", "rule", "AI 测试隔离", "普通测试必须使用 Mock Provider，真实 LM Studio 调用只通过 test:lmstudio 单独验证。", ["AI", "测试"], 5],
+  ["kn_boundary_rule", "kc_service_boundary", "ka_sequence_gateway", "rule", "数据所有权规则", "每个业务集合只能有一个服务拥有写权限，其他服务必须通过 API 或事件获取数据。", ["服务边界", "数据所有权"], 5],
+  ["kn_rubric_rule", "kc_rubric", "ka_assessment_loop", "rule", "Rubric 评分规则", "评分结果需要保存 criterionId、score 和 comment，不能只保存最终总分。", ["Rubric", "评分"], 4],
+  ["kn_mistake_rule", "kc_mistake_book", "ka_assessment_loop", "rule", "错题生成规则", "答题记录判定错误后，应保存 questionId、studentId、reason 和 reviewStatus。", ["错题本", "练习"], 4],
+  ["kn_gateway_rule", "kc_gateway", "ka_sequence_gateway", "rule", "Gateway 职责规则", "Gateway 可以聚合 Dashboard，但不能直接修改作业、知识点或学习任务的业务状态。", ["Gateway", "架构"], 5],
+  ["kn_knowledge_prompt", "kc_knowledge_retrieval", "ka_knowledge_context", "prompt-hint", "知识库增强提示", "AI 回答必须优先使用命中的知识点、误区和检查点，并在建议中给出可执行下一步。", ["RAG", "AI 上下文"], 5],
+  ["kn_frontend_rule", "kc_frontend_state", "ka_frontend_workbench", "rule", "前端状态规则", "selectors 负责派生数据，views 负责组织展示，forms 负责输入和校验。", ["前端", "状态"], 3],
+  ["kn_test_rule", "kc_test_strategy", "ka_provider_strategy", "rule", "测试数据隔离", "服务测试使用临时 JSON 文件和随机端口，不能污染 data 目录或依赖固定端口。", ["测试", "隔离"], 5]
+];
+
+const relationDefinitions = [
+  ["kr_usecase_domain", "kc_use_case", "kc_domain_object", "derives", 5, "用例文本是领域对象识别的主要来源。"],
+  ["kr_domain_sequence", "kc_domain_object", "kc_sequence", "supports", 4, "顺序图需要先明确参与对象。"],
+  ["kr_repository_boundary", "kc_repository", "kc_service_boundary", "supports", 4, "仓储模式帮助服务维护自己的数据所有权。"],
+  ["kr_gateway_boundary", "kc_gateway", "kc_service_boundary", "constrains", 5, "Gateway 不能越过服务边界写业务数据。"],
+  ["kr_provider_knowledge", "kc_knowledge_retrieval", "kc_strategy_provider", "enhances", 4, "知识库上下文会进入 LLM Provider 的 Prompt。"],
+  ["kr_rubric_mistake", "kc_rubric", "kc_mistake_book", "supports", 3, "评分标准和错题归因共同影响掌握度。"],
+  ["kr_test_provider", "kc_test_strategy", "kc_strategy_provider", "verifies", 5, "测试策略约束真实模型调用的执行范围。"],
+  ["kr_frontend_gateway", "kc_frontend_state", "kc_gateway", "consumes", 3, "前端通过 Gateway 获取聚合数据。"],
+  ["kr_knowledge_test", "kc_test_strategy", "kc_knowledge_retrieval", "verifies", 4, "知识库搜索和 AI 上下文需要独立测试。"]
+];
+
+const reviewCardDefinitions = [
+  ["card_domain_1", "kc_domain_object", "什么情况下候选名词应建模为实体？", "当它有稳定身份、生命周期和业务行为时，应优先建模为实体。", ["看身份", "看生命周期"], "basic"],
+  ["card_usecase_1", "kc_use_case", "为什么不能把按钮点击直接写成用例？", "用例表达参与者业务目标，按钮只是实现目标的一种界面操作。", ["目标粒度"], "basic"],
+  ["card_sequence_1", "kc_sequence", "顺序图中 Gateway 的主要职责是什么？", "Gateway 负责鉴权、代理和聚合，随后把请求转发给下游服务。", ["消息顺序"], "core"],
+  ["card_provider_1", "kc_strategy_provider", "为什么普通测试不应依赖 LM Studio？", "真实模型服务可能不可用或响应不稳定，普通测试应使用 Mock 保证可复现。", ["测试隔离"], "core"],
+  ["card_boundary_1", "kc_service_boundary", "判断服务边界是否清晰的关键问题是什么？", "看每个业务数据集合是否只有一个写入方，跨服务是否通过 API 或事件协作。", ["数据所有权"], "advanced"],
+  ["card_knowledge_1", "kc_knowledge_retrieval", "知识库增强回答为什么需要返回来源？", "来源让回答可解释，也便于调试召回是否准确。", ["RAG"], "advanced"]
+];
+
+function stamp(record) {
+  return {
+    ...record,
+    createdAt: record.createdAt || DAY,
+    updatedAt: record.updatedAt || DAY
+  };
+}
+
+export function createKnowledgeSeed() {
+  return {
+    concepts: conceptDefinitions.map(stamp),
+    articles: articleDefinitions.map((article) => stamp({
+      ...article,
+      courseId: conceptDefinitions.find((concept) => concept.id === article.conceptId)?.courseId || "course_ood"
+    })),
+    chunks: chunkDefinitions.map(([id, conceptId, articleId, kind, title, content, keywords, weight]) => {
+      const concept = conceptDefinitions.find((item) => item.id === conceptId);
+      return stamp({
+        id,
+        courseId: concept?.courseId || "course_ood",
+        conceptId,
+        articleId,
+        kind,
+        title,
+        content,
+        keywords,
+        weight
+      });
+    }),
+    relations: relationDefinitions.map(([id, sourceId, targetId, type, strength, reason]) => {
+      const concept = conceptDefinitions.find((item) => item.id === sourceId);
+      return stamp({
+        id,
+        courseId: concept?.courseId || "course_ood",
+        sourceId,
+        targetId,
+        type,
+        strength,
+        reason
+      });
+    }),
+    reviewCards: reviewCardDefinitions.map(([id, conceptId, question, answer, hints, level]) => {
+      const concept = conceptDefinitions.find((item) => item.id === conceptId);
+      return stamp({
+        id,
+        courseId: concept?.courseId || "course_ood",
+        conceptId,
+        question,
+        answer,
+        hints,
+        level
+      });
+    })
+  };
+}

@@ -10,7 +10,7 @@ function requireText(value, label) {
 }
 
 export class AITutorService {
-  constructor({ config, database, templates, requests, responses, providerHealth, learningClient }) {
+  constructor({ config, database, templates, requests, responses, providerHealth, learningClient, knowledgeClient = null }) {
     this.config = config;
     this.database = database;
     this.templates = templates;
@@ -18,6 +18,7 @@ export class AITutorService {
     this.responses = responses;
     this.providerHealth = providerHealth;
     this.learningClient = learningClient;
+    this.knowledgeClient = knowledgeClient;
     this.provider = this.createProvider(config.llm);
   }
 
@@ -59,9 +60,10 @@ export class AITutorService {
       courses: context.courses.map((course) => course.title).join("、"),
       goals: context.goals.map((goal) => goal.title).join("；")
     });
-    const resourceHints = searchLearningResources(question, 3)
-      .map((item) => `${item.concept}：${item.promptHint}`)
-      .join("\n");
+    const resourceHints = await this.buildKnowledgeHints({
+      question,
+      courseId: context.goals[0]?.courseId || context.courses[0]?.id
+    });
 
     return this.completeAndRecord({
       user,
@@ -76,6 +78,31 @@ export class AITutorService {
       ],
       suggestions: ["加入今日任务", "生成复习卡片", "保存到笔记"]
     });
+  }
+
+  async buildKnowledgeHints({ question, courseId }) {
+    if (this.knowledgeClient) {
+      try {
+        const context = await this.knowledgeClient.buildContext({ question, courseId, limit: 5 });
+        const conceptHints = (context.concepts || [])
+          .map((concept) => [
+            `知识点：${concept.title}`,
+            `摘要：${concept.summary}`,
+            ...(concept.objectives || []).slice(0, 2).map((objective) => `目标：${objective}`),
+            ...(concept.misconceptions || []).slice(0, 1).map((mistake) => `常见误区：${mistake}`)
+          ].join("\n"));
+        const promptHints = (context.promptHints || []).map((hint) => `提示：${hint}`);
+        const combined = [...conceptHints, ...promptHints].filter(Boolean).join("\n");
+        if (combined) {
+          return combined;
+        }
+      } catch {
+        // knowledge-service 是增强能力，失败时回退到本地轻量知识库。
+      }
+    }
+    return searchLearningResources(question, 3)
+      .map((item) => `${item.concept}：${item.promptHint}`)
+      .join("\n");
   }
 
   async generatePlan(user, input) {

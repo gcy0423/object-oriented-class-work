@@ -23,8 +23,8 @@ npm run test:lmstudio
 要求：
 
 - LM Studio 已启动 OpenAI-compatible Server。
-- 模型为 `qwen3.5-9b-glm5.1-distill-v1`。
-- 默认地址为 `http://172.25.160.1:1234/v1/chat/completions`。
+- 模型为 `qwopus3.6-27b-v2-mtp@iq4_xs`。
+- 默认地址为 `http://10.108.10.110:1234/v1/chat/completions`。
 
 ## 当前环境注意
 

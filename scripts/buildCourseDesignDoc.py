@@ -217,7 +217,7 @@ def save_package_arch(path: Path):
         ("application", "应用服务\nAuth / Learning / AI / Collaboration", 1050, 170, 1480, 360),
         ("domain", "领域对象\nUser / Goal / Task / Note / Message", 560, 520, 980, 720),
         ("infrastructure", "基础设施\nJsonDatabase / SeedData", 1100, 520, 1480, 720),
-        ("LM Studio LLM", "OpenAI-compatible API\nqwen3.5-9b-glm5.1-distill-v1", 560, 850, 980, 1020),
+        ("LM Studio LLM", "OpenAI-compatible API\nqwopus3.6-27b-v2-mtp@iq4_xs", 560, 850, 980, 1020),
         ("local data", "data/app-data.json\n手写知识库检索", 1100, 850, 1480, 1020),
     ]
     for title, desc, x1, y1, x2, y2 in packages:
@@ -239,7 +239,7 @@ def save_package_arch(path: Path):
         draw.text((mx - 58, my - 28), label, font=pil_font(18), fill="#52637A")
     draw.rounded_rectangle((1530, 220, 1820, 950), radius=22, outline="#2E74B5", width=4, fill="#FFFFFF")
     draw.text((1580, 260), "部署节点", font=pil_font(32), fill="#1F4D78")
-    deploy = ["开发机/服务器", "Node.js 进程", "静态前端文件", "JSON 数据文件", "LM Studio: qwen3.5-9b"]
+    deploy = ["开发机/服务器", "Node.js 进程", "静态前端文件", "JSON 数据文件", "LM Studio: qwopus3.6"]
     for i, item in enumerate(deploy):
         y = 340 + i * 100
         box(draw, (1570, y, 1780, y + 64), item, fill="#F7FAFF", outline="#D8DEE9", font_size=20)
@@ -634,7 +634,7 @@ def write_document():
             ("后端语言", "Java / .NET / Node.js / PHP", "Node.js", "课程提交环境轻量；内置 HTTP、Crypto、Test Runner 可支撑无依赖项目"),
             ("前端", "Vue / React / Angular / 原生 Web", "原生 ES Modules", "不需要安装依赖，能直接服务静态文件并兼容移动端浏览器"),
             ("数据存储", "MySQL / SQLite / MongoDB / JSON", "JSON 文件", "团队演示阶段便于打包与复现；后续可替换为 SQLite/MySQL"),
-            ("AI 接入", "固定云服务 / LM Studio / OpenAI 兼容 / 本地 Mock", "LM Studio Provider", "默认接入 qwen3.5-9b-glm5.1-distill-v1；Mock 仅用于离线回退和单元测试"),
+            ("AI 接入", "固定云服务 / LM Studio / OpenAI 兼容 / 本地 Mock", "LM Studio Provider", "默认接入 qwopus3.6-27b-v2-mtp@iq4_xs；Mock 仅用于离线回退和单元测试"),
             ("同步机制", "轮询 / WebSocket / SSE", "SSE", "服务端推送简单可靠，适合活动日志和协作消息同步"),
         ],
         [1500, 2200, 1500, 4160],
@@ -667,7 +667,7 @@ def write_document():
             ("数据完整性", "应用服务集中校验必填字段、资源归属和状态流转；任务完成后统一回写目标进度。"),
             ("高并发应对", "团队项目以课程级并发为目标；可通过反向代理、进程集群、请求限流、缓存和数据库替换继续扩展。"),
             ("监控与日志", "ActivityLog 记录领域事件；运行时可扩展为结构化日志、健康检查和告警。"),
-            ("部署方式", "Node.js 单进程部署静态前端和 API；LM Studio 在 172.25.160.1:1234 启动 OpenAI-compatible Server；自动部署可用 GitHub Actions 或服务器脚本。"),
+            ("部署方式", "Node.js 单进程部署静态前端和 API；LM Studio 在 10.108.10.110:1234 启动 OpenAI-compatible Server；自动部署可用 GitHub Actions 或服务器脚本。"),
             ("版本演化", "Provider、Repository、Service 分离，后续可替换数据库、前端框架或 LLM 供应商。"),
         ],
         [1900, 7460],
@@ -677,7 +677,7 @@ def write_document():
     add_para(doc, "关键点一：可替换 LLM Provider", style="Heading 3")
     add_para(
         doc,
-        "AITutorService 不直接绑定某个云厂商，而是依赖 Provider 的 complete(messages) 能力。团队部署默认使用 LMStudioProvider 指向 http://172.25.160.1:1234/v1/chat/completions，并调用 qwen3.5-9b-glm5.1-distill-v1；MockLLMProvider 仅用于离线回退和单元测试。项目提供 npm run test:lmstudio 脚本用于提交前真实请求本地模型。",
+        "AITutorService 不直接绑定某个云厂商，而是依赖 Provider 的 complete(messages) 能力。团队部署默认使用 LMStudioProvider 指向 http://10.108.10.110:1234/v1/chat/completions，并调用 qwopus3.6-27b-v2-mtp@iq4_xs；MockLLMProvider 仅用于离线回退和单元测试。项目提供 npm run test:lmstudio 脚本用于提交前真实请求本地模型。",
     )
     add_para(doc, "关键点二：领域对象驱动的任务进度计算", style="Heading 3")
     add_para(
@@ -700,7 +700,7 @@ def write_document():
         doc,
         ["项目", "说明"],
         [
-            ("开发环境", "Windows；Node.js 20+；浏览器 Chrome/Edge；LM Studio 本地模型服务 qwen3.5-9b-glm5.1-distill-v1。"),
+            ("开发环境", "Windows；Node.js 20+；浏览器 Chrome/Edge；LM Studio 本地模型服务 qwopus3.6-27b-v2-mtp@iq4_xs。"),
             ("运行方法", "进入 EduMindAgent，执行 npm start，浏览器访问 http://127.0.0.1:4077。"),
             ("测试方法", "执行 npm test 验证核心流程；执行 npm run test:lmstudio 验证真实 LM Studio 模型调用。"),
             ("代码规模", f"scripts/linecount.mjs 当前统计可审查源码 {line_count} 行；统计口径排除 generated 文件、日志、截图、文档和运行数据。"),
@@ -727,7 +727,7 @@ def write_document():
     for text in [
         "需求理解：使用 AI 辅助抽取结课设计文档中的交付要求、评分关注点和文档结构。",
         "代码生成：使用 AI 生成 Node.js 后端、Web 前端、测试脚本和截图脚本，并人工通过运行测试与截图验证结果。",
-        "AI 服务设计：系统自身内置 AITutorService、PromptTemplate、MockLLMProvider、LMStudioProvider 和 OpenAICompatibleProvider。团队部署时由 LM Studio 提供 qwen3.5-9b-glm5.1-distill-v1 模型服务，地址为 http://172.25.160.1:1234；提交前通过 npm run test:lmstudio 验证真实模型调用。",
+        "AI 服务设计：系统自身内置 AITutorService、PromptTemplate、MockLLMProvider、LMStudioProvider 和 OpenAICompatibleProvider。团队部署时由 LM Studio 提供 qwopus3.6-27b-v2-mtp@iq4_xs 模型服务，地址为 http://10.108.10.110:1234；提交前通过 npm run test:lmstudio 验证真实模型调用。",
         "文档生成：使用 AI 协助组织需求文档、设计文档和项目管理文档；项目总结章节按课程要求留给学生自行补写。",
     ]:
         add_bullet(doc, text)
@@ -743,7 +743,7 @@ def write_document():
             ("2026-05-23 12:05", "实现浏览器前端工作台", "登录、总览、学习、AI、协作页面"),
             ("2026-05-23 12:20", "补充测试与 AI 课程知识库", "Node.js 测试、AI 本地知识库初版"),
             ("2026-05-23 12:30", "接入 LM Studio Provider 接口并清理代码统计口径", "LMStudioProvider、手写课程知识库、有效代码统计脚本"),
-            ("2026-05-23 17:40", "配置团队本地大模型服务", "默认接入 qwen3.5-9b-glm5.1-distill-v1，新增 npm run test:lmstudio 验证脚本"),
+            ("2026-05-23 17:40", "配置团队本地大模型服务", "默认接入 qwopus3.6-27b-v2-mtp@iq4_xs，新增 npm run test:lmstudio 验证脚本"),
             ("2026-05-23 12:35", "使用 Playwright 进行页面验证并生成截图", "dashboard、learning、ai、team 四张截图"),
             ("2026-05-23 12:50", "编写结课设计文档与 UML/架构图", "DOCX 文档、功能树、用例图、类图、包图、顺序图"),
         ],
@@ -751,7 +751,7 @@ def write_document():
     )
     add_para(
         doc,
-        "Commit 记录建议：正式提交到 Git 仓库时，可按“初始化项目”“实现后端服务”“实现前端工作台”“接入 LM Studio Provider”“配置 qwen3.5-9b 本地模型”“扩展真实业务模块”“补充测试与文档”组织提交历史。",
+        "Commit 记录建议：正式提交到 Git 仓库时，可按“初始化项目”“实现后端服务”“实现前端工作台”“接入 LM Studio Provider”“配置 qwopus3.6 本地模型”“扩展真实业务模块”“补充测试与文档”组织提交历史。",
     )
     add_para(doc, "3.4 项目总结", style="Heading 2")
     add_para(

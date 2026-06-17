@@ -5,6 +5,7 @@ import { createServiceServer } from "../../../shared/http/server.js";
 import { AITutorService } from "./application/aiTutorService.js";
 import { loadConfig } from "./config.js";
 import { AIRequestRepository, AIResponseRepository, PromptTemplateRepository, ProviderHealthRepository } from "./domain/ai.js";
+import { KnowledgeClient } from "./infrastructure/clients/knowledgeClient.js";
 import { LearningClient } from "./infrastructure/clients/learningClient.js";
 import { createAiSeed } from "./infrastructure/seed.js";
 import { registerRoutes } from "./routes.js";
@@ -26,6 +27,11 @@ export function createApp(config = loadConfig()) {
       baseUrl: config.learningServiceUrl,
       internalKey: config.internalKey,
       timeoutMs: config.llm.timeoutMs
+    }),
+    knowledgeClient: new KnowledgeClient({
+      baseUrl: config.knowledgeServiceUrl,
+      internalKey: config.internalKey,
+      timeoutMs: Math.min(config.llm.timeoutMs, 3000)
     })
   });
   const services = { ready, database, repositories, aiTutor };

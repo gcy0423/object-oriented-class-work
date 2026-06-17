@@ -75,6 +75,10 @@ export function createApp(config = loadConfig()) {
     serviceName: "analytics-service",
     baseUrl: serviceMap.get("analytics-service")
   });
+  const knowledge = new ServiceClient({
+    serviceName: "knowledge-service",
+    baseUrl: serviceMap.get("knowledge-service")
+  });
   const verifyUser = async (req) => {
     const header = req.headers.authorization || "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : req.query?.token || "";
@@ -121,7 +125,7 @@ export function createApp(config = loadConfig()) {
       });
     }
   };
-  const services = { identity, learning, assessment, ai, collaboration, analytics, verifyUser, proxySse, serviceMap };
+  const services = { identity, learning, assessment, ai, collaboration, analytics, knowledge, verifyUser, proxySse, serviceMap };
   const router = new Router();
   registerRoutes(router, config, services);
   registerGatewayHealth(router, config);

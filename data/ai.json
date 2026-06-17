@@ -33,9 +33,9 @@
       "createdAt": "2026-06-16T11:58:02.803Z",
       "updatedAt": "2026-06-16T11:58:02.803Z",
       "provider": "mock-local-llm",
-      "model": "mock",
+      "model": "qwopus3.6-27b-v2-mtp@iq4_xs",
       "status": "up",
-      "endpoint": "http://172.25.160.1:1234",
+      "endpoint": "http://10.108.10.110:1234",
       "checkedAt": "2026-06-16T11:58:02.803Z"
     }
   ]

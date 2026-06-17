@@ -18,6 +18,7 @@ import { createApp as createAssessmentApp } from "../services/assessment-service
 import { createApp as createCollaborationApp } from "../services/collaboration-service/src/main.js";
 import { createApp as createGatewayApp } from "../services/gateway-service/src/main.js";
 import { createApp as createIdentityApp } from "../services/identity-service/src/main.js";
+import { createApp as createKnowledgeApp } from "../services/knowledge-service/src/main.js";
 import { createApp as createLearningApp } from "../services/learning-service/src/main.js";
 
 const INTERNAL_KEY = "test-internal-key";
@@ -132,6 +133,20 @@ function analyticsConfig(dir, overrides = {}) {
   };
 }
 
+function knowledgeConfig(dir, overrides = {}) {
+  return {
+    serviceName: "knowledge-service",
+    host: "127.0.0.1",
+    port: 0,
+    internalKey: INTERNAL_KEY,
+    dataFile: join(dir, "knowledge.json"),
+    defaultCourseId: "course_ood",
+    maxSearchLimit: 20,
+    graphDepth: 2,
+    ...overrides
+  };
+}
+
 function gatewayConfig(services, overrides = {}) {
   return {
     serviceName: "gateway-service",
@@ -191,7 +206,8 @@ test("each service health endpoint returns ok", async () => {
       { createApp: createAssessmentApp, config: assessmentConfig(dir) },
       { createApp: createAiApp, config: aiConfig(dir, { learningServiceUrl: "http://127.0.0.1:65531" }) },
       { createApp: createCollaborationApp, config: collaborationConfig(dir) },
-      { createApp: createAnalyticsApp, config: { serviceName: "analytics-service", host: "127.0.0.1", port: 0, internalKey: INTERNAL_KEY } }
+      { createApp: createAnalyticsApp, config: { serviceName: "analytics-service", host: "127.0.0.1", port: 0, internalKey: INTERNAL_KEY } },
+      { createApp: createKnowledgeApp, config: knowledgeConfig(dir) }
     ];
 
     const apps = [];
@@ -314,6 +330,175 @@ test("service client handles success, patch, and failure responses", async () =>
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
+});
+
+test("knowledge-service handles search, graph, AI context, and import validation", async () => {
+  await withTempDir(async (dir) => {
+    const app = await startApp(createKnowledgeApp, knowledgeConfig(dir));
+    try {
+      const healthResponse = await fetch(`${app.url}/health`);
+      const healthPayload = await healthResponse.json();
+      assert.equal(healthResponse.status, 200);
+      assert.equal(healthPayload.data.service, "knowledge-service");
+      assert.ok(healthPayload.data.summary.concepts >= 10);
+
+      const conceptsResponse = await fetch(`${app.url}/api/knowledge/concepts?courseId=course_ood`);
+      const conceptsPayload = await conceptsResponse.json();
+      assert.equal(conceptsResponse.status, 200);
+      assert.ok(conceptsPayload.data.some((concept) => concept.id === "kc_sequence"));
+
+      const searchResponse = await fetch(`${app.url}/api/knowledge/search?q=${encodeURIComponent("顺序图 对象协作")}&limit=5`);
+      const searchPayload = await searchResponse.json();
+      assert.equal(searchResponse.status, 200);
+      assert.equal(searchPayload.data[0].conceptId, "kc_sequence");
+      assert.ok(searchPayload.data[0].matches.length > 0);
+
+      const graphResponse = await fetch(`${app.url}/api/knowledge/graph?conceptId=kc_sequence&depth=1`);
+      const graphPayload = await graphResponse.json();
+      assert.equal(graphResponse.status, 200);
+      assert.ok(graphPayload.data.nodes.some((node) => node.id === "kc_sequence"));
+      assert.ok(graphPayload.data.edges.length > 0);
+
+      const contextResponse = await fetch(`${app.url}/internal/knowledge/context`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-edumind-internal-key": INTERNAL_KEY
+        },
+        body: JSON.stringify({
+          question: "知识库增强回答为什么需要来源和召回片段？",
+          courseId: "course_ai",
+          limit: 4
+        })
+      });
+      const contextPayload = await contextResponse.json();
+      assert.equal(contextResponse.status, 200);
+      assert.ok(contextPayload.data.concepts.some((concept) => concept.id === "kc_knowledge_retrieval"));
+      assert.ok(Array.isArray(contextPayload.data.promptHints));
+
+      const validationResponse = await fetch(`${app.url}/internal/knowledge/validate-import`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-edumind-internal-key": INTERNAL_KEY
+        },
+        body: JSON.stringify({
+          concepts: [{ id: "", courseId: "course_ood", title: "", tags: [] }],
+          articles: [],
+          relations: []
+        })
+      });
+      const validationPayload = await validationResponse.json();
+      assert.equal(validationResponse.status, 200);
+      assert.equal(validationPayload.data.valid, false);
+      assert.ok(validationPayload.data.errors.length >= 2);
+
+      const pathResponse = await fetch(`${app.url}/api/knowledge/learning-path`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          courseId: "course_ood",
+          goalText: "顺序图 对象协作 服务边界",
+          days: 3
+        })
+      });
+      const pathPayload = await pathResponse.json();
+      assert.equal(pathResponse.status, 200);
+      assert.ok(pathPayload.data.totalConcepts > 0);
+      assert.ok(pathPayload.data.schedule.every((day) => day.items.length > 0));
+
+      const practiceResponse = await fetch(`${app.url}/api/knowledge/practice-set`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          courseId: "course_ood",
+          conceptIds: ["kc_sequence", "kc_service_boundary"],
+          limit: 2
+        })
+      });
+      const practicePayload = await practiceResponse.json();
+      assert.equal(practiceResponse.status, 200);
+      assert.equal(practicePayload.data.conceptCount, 2);
+      assert.ok(practicePayload.data.questions.some((question) => question.type === "scenario-analysis"));
+    } finally {
+      await stopServers([app.server]);
+    }
+  });
+});
+
+test("gateway proxies knowledge-service search and AI context APIs", async () => {
+  await withTempDir(async (dir) => {
+    const apps = [];
+    try {
+      const identity = await startApp(createIdentityApp, identityConfig(dir));
+      const knowledge = await startApp(createKnowledgeApp, knowledgeConfig(dir));
+      const gateway = await startApp(createGatewayApp, gatewayConfig([
+        { name: "identity-service", url: identity.url },
+        { name: "knowledge-service", url: knowledge.url }
+      ]));
+      apps.push(identity, knowledge, gateway);
+
+      const loginResult = await loginThroughGateway(gateway.url, {
+        email: "student@edumind.local",
+        name: "林知夏",
+        role: "student"
+      });
+      const token = loginResult.payload.data.token;
+      const headers = {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json"
+      };
+
+      const searchResponse = await fetch(`${gateway.url}/api/knowledge/search?q=${encodeURIComponent("Rubric 评分")}`, {
+        headers
+      });
+      const searchPayload = await searchResponse.json();
+      assert.equal(searchResponse.status, 200);
+      assert.ok(searchPayload.data.some((result) => result.conceptId === "kc_rubric"));
+
+      const contextResponse = await fetch(`${gateway.url}/api/knowledge/ai-context`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          question: "知识库增强回答为什么需要来源？",
+          courseId: "course_ai",
+          limit: 3
+        })
+      });
+      const contextPayload = await contextResponse.json();
+      assert.equal(contextResponse.status, 200);
+      assert.ok(contextPayload.data.searchResults.length > 0);
+      assert.ok(contextPayload.data.concepts.length > 0);
+
+      const pathResponse = await fetch(`${gateway.url}/api/knowledge/learning-path`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          courseId: "course_ood",
+          conceptIds: ["kc_use_case", "kc_domain_object", "kc_sequence"],
+          days: 2
+        })
+      });
+      const pathPayload = await pathResponse.json();
+      assert.equal(pathResponse.status, 200);
+      assert.ok(pathPayload.data.totalMinutes > 0);
+
+      const practiceResponse = await fetch(`${gateway.url}/api/knowledge/practice-set`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          courseId: "course_ood",
+          conceptIds: ["kc_rubric"],
+          limit: 1
+        })
+      });
+      const practicePayload = await practiceResponse.json();
+      assert.equal(practiceResponse.status, 200);
+      assert.ok(practicePayload.data.questions.length >= 2);
+    } finally {
+      await stopServers(apps.map((app) => app.server));
+    }
+  });
 });
 
 test("assessment-service and gateway expose v6 assessment CRUD and practice history", async () => {

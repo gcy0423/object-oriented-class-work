@@ -64,22 +64,22 @@ test("LM Studio provider can be selected without calling the local model", async
   await withKernel(async (kernel) => {
     const provider = kernel.ai.createProvider({
       provider: "lmstudio",
-      endpoint: "http://172.25.160.1:1234",
-      model: "qwen3.5-9b-glm5.1-distill-v1",
+      endpoint: "http://10.108.10.110:1234",
+      model: "qwopus3.6-27b-v2-mtp@iq4_xs",
       apiKey: "",
       timeoutMs: 1000,
       maxTokens: 1024
     });
-    assert.equal(provider.name, "lmstudio:qwen3.5-9b-glm5.1-distill-v1");
-    assert.equal(provider.config.endpoint, "http://172.25.160.1:1234/v1/chat/completions");
+    assert.equal(provider.name, "lmstudio:qwopus3.6-27b-v2-mtp@iq4_xs");
+    assert.equal(provider.config.endpoint, "http://10.108.10.110:1234/v1/chat/completions");
   });
 });
 
 test("default config points to the team LM Studio model", () => {
   const config = loadConfig({});
   assert.equal(config.llm.provider, "lmstudio");
-  assert.equal(config.llm.model, "qwen3.5-9b-glm5.1-distill-v1");
-  assert.equal(config.llm.endpoint, "http://172.25.160.1:1234/v1/chat/completions");
+  assert.equal(config.llm.model, "qwopus3.6-27b-v2-mtp@iq4_xs");
+  assert.equal(config.llm.endpoint, "http://10.108.10.110:1234/v1/chat/completions");
   assert.equal(config.llm.timeoutMs, 90000);
   assert.equal(config.llm.maxTokens, 1024);
 });

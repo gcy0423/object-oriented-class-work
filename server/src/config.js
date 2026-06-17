@@ -14,8 +14,8 @@ export function loadConfig(env = process.env) {
     tokenSecret: env.EDUMIND_TOKEN_SECRET || "edumind-local-development-secret",
     llm: {
       provider: env.LLM_PROVIDER || "lmstudio",
-      endpoint: env.LLM_ENDPOINT || "http://172.25.160.1:1234/v1/chat/completions",
-      model: env.LLM_MODEL || "qwen3.5-9b-glm5.1-distill-v1",
+      endpoint: env.LLM_ENDPOINT || "http://10.108.10.110:1234/v1/chat/completions",
+      model: env.LLM_MODEL || "qwopus3.6-27b-v2-mtp@iq4_xs",
       apiKey: env.LLM_API_KEY || "",
       timeoutMs: Number(env.LLM_TIMEOUT_MS || 90000),
       maxTokens: Number(env.LLM_MAX_TOKENS || 1024)

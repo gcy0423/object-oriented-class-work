@@ -6,6 +6,7 @@ const services = [
   { name: "identity-service", script: "services/identity-service/src/main.js" },
   { name: "learning-service", script: "services/learning-service/src/main.js" },
   { name: "assessment-service", script: "services/assessment-service/src/main.js" },
+  { name: "knowledge-service", script: "services/knowledge-service/src/main.js" },
   { name: "ai-service", script: "services/ai-service/src/main.js" },
   { name: "collaboration-service", script: "services/collaboration-service/src/main.js" },
   { name: "analytics-service", script: "services/analytics-service/src/main.js" },

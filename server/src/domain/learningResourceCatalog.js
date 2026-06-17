@@ -51,7 +51,7 @@ const RESOURCE_DEFINITIONS = [
     topic: "LLM Provider",
     concept: "OpenAI-compatible 接口与 LM Studio 本地模型接入",
     level: "core",
-    scenario: "用于解释 qwen3.5-9b-glm5.1-distill-v1 的本地部署和离线演示策略。",
+    scenario: "用于解释 qwopus3.6-27b-v2-mtp@iq4_xs 的本地部署和离线演示策略。",
     checklist: [
       "普通测试使用 Mock Provider，不依赖本地模型。",
       "真实模型测试通过 verifyLmStudio.mjs 单独执行。",

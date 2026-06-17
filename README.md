@@ -44,12 +44,12 @@ teacher@edumind.local / 教师
 
 ## AI 服务配置：LM Studio 本地模型
 
-项目默认接入团队本地 LM Studio 服务。请在 LM Studio 中启动 `qwen3.5-9b-glm5.1-distill-v1`，打开 OpenAI-compatible Server，并确认服务地址为 `http://172.25.160.1:1234`。后端会自动使用 `/v1/chat/completions` 接口。
+项目默认接入团队本地 LM Studio 服务。请在 LM Studio 中启动 `qwopus3.6-27b-v2-mtp@iq4_xs`，打开 OpenAI-compatible Server，并确认服务地址为 `http://10.108.10.110:1234`。后端会自动使用 `/v1/chat/completions` 接口。
 
 ```bash
 set LLM_PROVIDER=lmstudio
-set LLM_MODEL=qwen3.5-9b-glm5.1-distill-v1
-set LLM_ENDPOINT=http://172.25.160.1:1234
+set LLM_MODEL=qwopus3.6-27b-v2-mtp@iq4_xs
+set LLM_ENDPOINT=http://10.108.10.110:1234
 set LLM_TIMEOUT_MS=90000
 set LLM_MAX_TOKENS=1024
 npm start

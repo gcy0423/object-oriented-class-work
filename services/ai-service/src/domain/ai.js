@@ -137,7 +137,7 @@ export class OpenAICompatibleProvider {
 }
 
 export function normalizeChatCompletionsEndpoint(endpoint) {
-  const value = String(endpoint || "http://172.25.160.1:1234").replace(/\/+$/, "");
+  const value = String(endpoint || "http://10.108.10.110:1234").replace(/\/+$/, "");
   if (value.endsWith("/v1/chat/completions")) {
     return value;
   }
@@ -152,7 +152,7 @@ export class LMStudioProvider extends OpenAICompatibleProvider {
     super({
       ...config,
       endpoint: normalizeChatCompletionsEndpoint(config.endpoint),
-      model: config.model || "qwen3.5-9b-glm5.1-distill-v1"
+      model: config.model || "qwopus3.6-27b-v2-mtp@iq4_xs"
     });
     this.name = `lmstudio:${this.config.model}`;
     this.model = this.config.model;
