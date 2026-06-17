@@ -9,9 +9,11 @@ import { compactErrors, validateAssignment, validateQuestion } from "../client/s
 import { assessmentInsightView } from "../client/src/views/assessmentInsightView.js";
 import { assignmentManageView } from "../client/src/views/assignmentManageView.js";
 import { analyticsView } from "../client/src/views/analyticsView.js";
+import { identityAdminView } from "../client/src/views/identityAdminView.js";
 import { knowledgeView } from "../client/src/views/knowledgeView.js";
 import { practiceView } from "../client/src/views/practiceView.js";
 import { questionBankManageView } from "../client/src/views/questionBankManageView.js";
+import { reportView } from "../client/src/views/reportView.js";
 import { settingsView } from "../client/src/views/settingsView.js";
 import { workbenchView } from "../client/src/views/workbenchView.js";
 
@@ -99,6 +101,25 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.assessmentCourseReport({ courseId: "course_ood" });
     await client.assessmentStudentPortfolio({ courseId: "course_ood", studentId: "user_student" });
     await client.assessmentRiskRegister({ courseId: "course_ood" });
+    await client.identityUsers({ role: "student", status: "active" });
+    await client.identityUserProfile("user_student");
+    await client.updateIdentityUserProfile("user_student", { major: "Software Engineering" });
+    await client.classes({ courseId: "course_ood" });
+    await client.createClassroom({ name: "Class 02" });
+    await client.classroomDetail("class_ood_01");
+    await client.assignClassStudent("class_ood_01", { userId: "user_student" });
+    await client.assignClassTeacher("class_ood_01", { userId: "user_teacher" });
+    await client.groups({ classroomId: "class_ood_01" });
+    await client.createGroup({ classroomId: "class_ood_01", name: "Alpha" });
+    await client.addGroupMember("group_ood_alpha", { userId: "user_student" });
+    await client.rolePermissions();
+    await client.identityDashboard();
+    await client.reportCatalog();
+    await client.studentWeeklyReport({ courseId: "course_ood" });
+    await client.courseWeeklyReport({ courseId: "course_ood", format: "markdown" });
+    await client.assignmentGradingReport("assignment_1", { format: "csv" });
+    await client.mistakeReviewReport({ studentId: "user_student" });
+    await client.aiUsageReport({ format: "html" });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -132,7 +153,26 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/mistakes/mistake_1/analysis", method: "GET" },
     { url: "http://demo.local/api/assessment/course-report?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/assessment/student-portfolio?courseId=course_ood&studentId=user_student", method: "GET" },
-    { url: "http://demo.local/api/assessment/risk-register?courseId=course_ood", method: "GET" }
+    { url: "http://demo.local/api/assessment/risk-register?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/identity/users?role=student&status=active", method: "GET" },
+    { url: "http://demo.local/api/identity/users/user_student/profile", method: "GET" },
+    { url: "http://demo.local/api/identity/users/user_student/profile", method: "PATCH" },
+    { url: "http://demo.local/api/classes?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/classes", method: "POST" },
+    { url: "http://demo.local/api/classes/class_ood_01", method: "GET" },
+    { url: "http://demo.local/api/classes/class_ood_01/students", method: "POST" },
+    { url: "http://demo.local/api/classes/class_ood_01/teachers", method: "POST" },
+    { url: "http://demo.local/api/groups?classroomId=class_ood_01", method: "GET" },
+    { url: "http://demo.local/api/groups", method: "POST" },
+    { url: "http://demo.local/api/groups/group_ood_alpha/members", method: "POST" },
+    { url: "http://demo.local/api/role-permissions", method: "GET" },
+    { url: "http://demo.local/api/admin/identity-dashboard", method: "GET" },
+    { url: "http://demo.local/api/reports/catalog", method: "GET" },
+    { url: "http://demo.local/api/reports/student-weekly?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/reports/course-weekly?courseId=course_ood&format=markdown", method: "GET" },
+    { url: "http://demo.local/api/reports/assignments/assignment_1/grading?format=csv", method: "GET" },
+    { url: "http://demo.local/api/reports/mistakes/review?studentId=user_student", method: "GET" },
+    { url: "http://demo.local/api/reports/ai-usage?format=html", method: "GET" }
   ]);
 });
 
@@ -181,6 +221,54 @@ test("v6 views render as importable ESM modules without build tools", () => {
   state.assessmentInsight.courseReport = { assignmentCount: 1, submissionCount: 1, rubricCount: 1, gradedSubmissionCount: 1, gradeDistribution: { excellent: 1, good: 0, pass: 0, risk: 0 }, practiceEngagement: { sessionCount: 1 }, mistakeLoad: { openMistakes: 1 }, masteryCoverage: { averageMastery: 80 } };
   state.assessmentInsight.studentPortfolio = { assignmentProgress: { totalAssignments: 1, completionRate: 100, rows: [{ title: "Assignment", submitted: true, teacherScore: 90, aiScore: 88 }] }, gradeTrend: { averageScore: 90 }, practiceSummary: { sessionCount: 1 }, risk: { level: "low", score: 0 }, evidenceTimeline: [{ at: "2026-06-16T00:00:00.000Z", summary: "Submitted assignment." }] };
   state.assessmentInsight.riskRegister = { totalStudents: 1, highRiskCount: 0, mediumRiskCount: 0, lowRiskCount: 1, items: [{ studentId: "user_student", risk: { level: "low", score: 0 }, assignmentCompletionRate: 100, averageScore: 90, openMistakes: 1, weakConcepts: [{ concept: "UML" }] }] };
+  const sampleReport = {
+    report: {
+      id: "report_1",
+      type: "student-weekly",
+      title: "Student Weekly",
+      generatedAt: "2026-06-16T00:00:00.000Z",
+      summary: "Structured weekly report.",
+      metrics: [{ label: "Open mistakes", value: 1 }],
+      sections: [{ title: "Progress", body: "Stable", items: ["Review UML"] }],
+      recommendations: ["Keep evidence traceable."],
+      tables: [{ title: "Rows", columns: [{ key: "name", label: "Name" }], rows: [{ name: "A" }] }]
+    }
+  };
+  state.reports.catalog = { reports: [{ key: "student-weekly", title: "Student Weekly", roles: ["student"], formats: ["markdown"] }] };
+  state.reports.studentWeekly = sampleReport;
+  state.reports.courseWeekly = { report: { ...sampleReport.report, id: "report_2", type: "course-weekly", title: "Course Weekly" } };
+  state.reports.assignmentGrading = { report: { ...sampleReport.report, id: "report_3", type: "assignment-grading", title: "Assignment Grading" } };
+  state.reports.mistakeReview = { report: { ...sampleReport.report, id: "report_4", type: "mistake-review", title: "Mistake Review" } };
+  state.reports.aiUsage = { report: { ...sampleReport.report, id: "report_5", type: "ai-usage", title: "AI Usage" } };
+  state.reports.exportPreview = { export: { filename: "report.md", contentType: "text/markdown", format: "markdown", body: "# Report" } };
+  state.identityAdmin.users = [
+    { id: "user_student", name: "Student", role: "student", email: "student@edumind.local", status: "active", department: "CS", major: "SE", classroomCount: 1, groupCount: 1 },
+    { id: "user_teacher", name: "Teacher", role: "teacher", email: "teacher@edumind.local", status: "active", department: "CS", classroomCount: 1, groupCount: 0 }
+  ];
+  state.identityAdmin.classrooms = [
+    { id: "class_ood_01", name: "Object-Oriented Class 01", courseId: "course_ood", courseTitle: "Object-Oriented Technology", description: "Classroom", status: "active", capacity: 60, stats: { studentCount: 1, teacherCount: 1, groupCount: 1, fillRate: 3 } }
+  ];
+  state.identityAdmin.groups = [
+    { id: "group_ood_alpha", classroomId: "class_ood_01", name: "OO Design Alpha", leaderId: "user_student", description: "Group", status: "active", tags: ["design"], stats: { memberCount: 1, leaderName: "Student" } }
+  ];
+  state.identityAdmin.selectedProfile = {
+    user: state.identityAdmin.users[0],
+    enrollments: [{ classroomId: "class_ood_01", role: "student", status: "active", joinedAt: "2026-06-16", classroom: state.identityAdmin.classrooms[0] }],
+    groups: [{ groupId: "group_ood_alpha", role: "leader", status: "active", joinedAt: "2026-06-16", group: state.identityAdmin.groups[0] }]
+  };
+  state.identityAdmin.classroomDetail = {
+    classroom: state.identityAdmin.classrooms[0],
+    enrollments: [{ userId: "user_student", role: "student", status: "active", source: "seed", user: state.identityAdmin.users[0] }],
+    groups: state.identityAdmin.groups
+  };
+  state.identityAdmin.roleMatrix = {
+    roles: ["student", "teacher", "admin"],
+    matrix: [
+      { role: "student", resources: [{ resource: "learning", actions: ["read:self"], description: "Student learning scope" }] },
+      { role: "teacher", resources: [{ resource: "classroom", actions: ["create:class", "assign:student"], description: "Teacher class scope" }] }
+    ]
+  };
+  state.identityAdmin.dashboard = { metrics: { userCount: 2, studentCount: 1, teacherCount: 1, classroomCount: 1, groupCount: 1, enrollmentCount: 2 } };
   state.settings.health = { service: "gateway-service", status: "up", time: "2026-06-16T00:00:00.000Z", services: [] };
   state.settings.modelConfig = buildModelConfig(state.provider);
   const renderedWorkbench = workbenchView(state);
@@ -189,6 +277,12 @@ test("v6 views render as importable ESM modules without build tools", () => {
   assert.match(renderedKnowledge, /Graph Evidence/);
   const renderedAssessmentInsight = assessmentInsightView(state);
   assert.match(renderedAssessmentInsight, /Teacher Grading Insight/);
+  const renderedReports = reportView(state);
+  assert.match(renderedReports, /Report Catalog/);
+  assert.match(renderedReports, /Export Preview/);
+  const renderedIdentity = identityAdminView(state);
+  assert.match(renderedIdentity, /User Directory/);
+  assert.match(renderedIdentity, /Role Permission Matrix/);
 
   assert.match(assignmentManageView(state), /作业列表/);
   assert.match(questionBankManageView(state), /题库列表/);

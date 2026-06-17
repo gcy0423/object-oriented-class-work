@@ -168,4 +168,25 @@ export class ApiClient {
   createCollaborationHandoff(input) { return this.request("/api/collaboration/handoffs", { method: "POST", body: JSON.stringify(input) }); }
   updateCollaborationHandoff(id, input) { return this.request(`/api/collaboration/handoffs/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
   collaborationAudit(params = {}) { return this.request(`/api/collaboration/audit${toQuery(params)}`); }
+
+  identityUsers(params = {}) { return this.request(`/api/identity/users${toQuery(params)}`); }
+  identityUserProfile(id) { return this.request(`/api/identity/users/${encodeURIComponent(id)}/profile`); }
+  updateIdentityUserProfile(id, input) { return this.request(`/api/identity/users/${encodeURIComponent(id)}/profile`, { method: "PATCH", body: JSON.stringify(input) }); }
+  classes(params = {}) { return this.request(`/api/classes${toQuery(params)}`); }
+  createClassroom(input) { return this.request("/api/classes", { method: "POST", body: JSON.stringify(input) }); }
+  classroomDetail(id) { return this.request(`/api/classes/${encodeURIComponent(id)}`); }
+  assignClassStudent(id, input) { return this.request(`/api/classes/${encodeURIComponent(id)}/students`, { method: "POST", body: JSON.stringify(input) }); }
+  assignClassTeacher(id, input) { return this.request(`/api/classes/${encodeURIComponent(id)}/teachers`, { method: "POST", body: JSON.stringify(input) }); }
+  groups(params = {}) { return this.request(`/api/groups${toQuery(params)}`); }
+  createGroup(input) { return this.request("/api/groups", { method: "POST", body: JSON.stringify(input) }); }
+  addGroupMember(id, input) { return this.request(`/api/groups/${encodeURIComponent(id)}/members`, { method: "POST", body: JSON.stringify(input) }); }
+  rolePermissions() { return this.request("/api/role-permissions"); }
+  identityDashboard() { return this.request("/api/admin/identity-dashboard"); }
+
+  reportCatalog() { return this.request("/api/reports/catalog"); }
+  studentWeeklyReport(params = {}) { return this.request(`/api/reports/student-weekly${toQuery(params)}`); }
+  courseWeeklyReport(params = {}) { return this.request(`/api/reports/course-weekly${toQuery(params)}`); }
+  assignmentGradingReport(id, params = {}) { return this.request(`/api/reports/assignments/${encodeURIComponent(id)}/grading${toQuery(params)}`); }
+  mistakeReviewReport(params = {}) { return this.request(`/api/reports/mistakes/review${toQuery(params)}`); }
+  aiUsageReport(params = {}) { return this.request(`/api/reports/ai-usage${toQuery(params)}`); }
 }

@@ -39,7 +39,12 @@ export function createInitialState() {
       collaborationDecision: false,
       collaborationResource: false,
       collaborationChecklist: false,
-      collaborationHandoff: false
+      collaborationHandoff: false,
+      classroom: false,
+      classAssignment: false,
+      group: false,
+      groupMember: false,
+      identityProfile: false
     },
     errors: {},
     filters: {
@@ -50,7 +55,9 @@ export function createInitialState() {
       workbench: { courseId: "", category: "", reminderStatus: "" },
       knowledge: { courseId: "", query: "object collaboration", category: "", difficulty: "", tag: "", conceptId: "" },
       assessmentInsight: { courseId: "", assignmentId: "", rubricId: "", submissionId: "", practiceSessionId: "", mistakeId: "", studentId: "" },
-      collaboration: { courseId: "", roomId: "", type: "", taskStatus: "", mentionStatus: "" }
+      collaboration: { courseId: "", roomId: "", type: "", taskStatus: "", mentionStatus: "" },
+      reports: { courseId: "", studentId: "", assignmentId: "", format: "markdown" },
+      identityAdmin: { role: "", status: "", courseId: "", classroomId: "", q: "" }
     },
     selected: {
       assignmentId: "",
@@ -58,7 +65,9 @@ export function createInitialState() {
       questionId: "",
       practiceSessionId: "",
       studentId: "",
-      collaborationRoomId: ""
+      collaborationRoomId: "",
+      classroomId: "",
+      identityUserId: ""
     },
     draft: {
       assignment: null,
@@ -78,7 +87,12 @@ export function createInitialState() {
       collaborationDecision: { title: "", status: "proposed" },
       collaborationResource: { title: "", url: "", type: "link" },
       collaborationChecklist: { title: "", ownerId: "", status: "open" },
-      collaborationHandoff: { title: "", toUserId: "", status: "open" }
+      collaborationHandoff: { title: "", toUserId: "", status: "open" },
+      classroom: { name: "", courseId: "", courseTitle: "", teacherId: "", capacity: 60, status: "active" },
+      classAssignment: { userId: "", role: "student", status: "active" },
+      group: { classroomId: "", name: "", leaderId: "", status: "active" },
+      groupMember: { groupId: "", userId: "", role: "member", status: "active" },
+      identityProfile: { name: "", status: "active", role: "student", department: "", major: "", studentNo: "", teacherNo: "", phone: "" }
     },
     ui: {
       activePanel: "",
@@ -150,6 +164,24 @@ export function createInitialState() {
       handoffs: [],
       insight: null,
       audit: []
+    },
+    reports: {
+      catalog: null,
+      studentWeekly: null,
+      courseWeekly: null,
+      assignmentGrading: null,
+      mistakeReview: null,
+      aiUsage: null,
+      exportPreview: null
+    },
+    identityAdmin: {
+      users: [],
+      selectedProfile: null,
+      classrooms: [],
+      classroomDetail: null,
+      groups: [],
+      roleMatrix: null,
+      dashboard: null
     },
     settings: {
       health: null,

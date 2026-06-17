@@ -25,7 +25,8 @@ export function loadConfig(env = process.env) {
       { name: "analytics-service", url: readServiceUrl(env, "ANALYTICS_SERVICE_URL", "http://127.0.0.1:4106") },
       { name: "knowledge-service", url: readServiceUrl(env, "KNOWLEDGE_SERVICE_URL", "http://127.0.0.1:4107") },
       { name: "notification-service", url: readServiceUrl(env, "NOTIFICATION_SERVICE_URL", "http://127.0.0.1:4108") },
-      { name: "scheduler-service", url: readServiceUrl(env, "SCHEDULER_SERVICE_URL", "http://127.0.0.1:4109") }
+      { name: "scheduler-service", url: readServiceUrl(env, "SCHEDULER_SERVICE_URL", "http://127.0.0.1:4109") },
+      { name: "report-service", url: readServiceUrl(env, "REPORT_SERVICE_URL", "http://127.0.0.1:4110") }
     ]
   };
 }

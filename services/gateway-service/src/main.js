@@ -87,6 +87,10 @@ export function createApp(config = loadConfig()) {
     serviceName: "scheduler-service",
     baseUrl: serviceMap.get("scheduler-service")
   });
+  const reports = new ServiceClient({
+    serviceName: "report-service",
+    baseUrl: serviceMap.get("report-service")
+  });
   const verifyUser = async (req) => {
     const header = req.headers.authorization || "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : req.query?.token || "";
@@ -136,6 +140,7 @@ export function createApp(config = loadConfig()) {
   const services = { identity, learning, assessment, ai, collaboration, analytics, knowledge, verifyUser, proxySse, serviceMap };
   services.notification = notification;
   services.scheduler = scheduler;
+  services.reports = reports;
   const router = new Router();
   registerRoutes(router, config, services);
   registerGatewayHealth(router, config);

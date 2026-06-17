@@ -3,8 +3,16 @@ import { JsonDatabase } from "../../../shared/data/jsonDatabase.js";
 import { Router } from "../../../shared/http/router.js";
 import { createServiceServer } from "../../../shared/http/server.js";
 import { AuthService } from "./application/authService.js";
+import { ClassManagementService } from "./application/classManagementService.js";
 import { loadConfig } from "./config.js";
-import { UserRepository } from "./domain/identity.js";
+import {
+  ClassroomRepository,
+  EnrollmentRepository,
+  GroupMemberRepository,
+  RolePermissionRepository,
+  StudyGroupRepository,
+  UserRepository
+} from "./domain/identity.js";
 import { createIdentitySeed } from "./infrastructure/seed.js";
 import { registerRoutes } from "./routes.js";
 
@@ -12,10 +20,24 @@ export function createApp(config = loadConfig()) {
   const database = new JsonDatabase(config.dataFile, () => createIdentitySeed());
   const ready = database.load();
   const repositories = {
-    users: new UserRepository(database)
+    users: new UserRepository(database),
+    classrooms: new ClassroomRepository(database),
+    enrollments: new EnrollmentRepository(database),
+    groups: new StudyGroupRepository(database),
+    groupMembers: new GroupMemberRepository(database),
+    permissions: new RolePermissionRepository(database)
   };
   const auth = new AuthService({ users: repositories.users, config });
-  const services = { ready, database, repositories, auth };
+  const classes = new ClassManagementService({
+    database,
+    users: repositories.users,
+    classrooms: repositories.classrooms,
+    enrollments: repositories.enrollments,
+    groups: repositories.groups,
+    groupMembers: repositories.groupMembers,
+    permissions: repositories.permissions
+  });
+  const services = { ready, database, repositories, auth, classes };
   const router = new Router();
   registerRoutes(router, config, services);
   const server = createServiceServer({ router, config });

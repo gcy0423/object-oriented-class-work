@@ -21,6 +21,7 @@ import { createApp as createIdentityApp } from "../services/identity-service/src
 import { createApp as createKnowledgeApp } from "../services/knowledge-service/src/main.js";
 import { createApp as createLearningApp } from "../services/learning-service/src/main.js";
 import { createApp as createNotificationApp } from "../services/notification-service/src/main.js";
+import { createApp as createReportApp } from "../services/report-service/src/main.js";
 import { createApp as createSchedulerApp } from "../services/scheduler-service/src/main.js";
 
 const INTERNAL_KEY = "test-internal-key";
@@ -122,6 +123,22 @@ function assessmentConfig(dir, overrides = {}) {
 function analyticsConfig(dir, overrides = {}) {
   return {
     serviceName: "analytics-service",
+    host: "127.0.0.1",
+    port: 0,
+    internalKey: INTERNAL_KEY,
+    timeoutMs: 1000,
+    identityServiceUrl: overrides.identityServiceUrl || "http://127.0.0.1:4101",
+    learningServiceUrl: overrides.learningServiceUrl || "http://127.0.0.1:4102",
+    assessmentServiceUrl: overrides.assessmentServiceUrl || "http://127.0.0.1:4103",
+    aiServiceUrl: overrides.aiServiceUrl || "http://127.0.0.1:4104",
+    collaborationServiceUrl: overrides.collaborationServiceUrl || "http://127.0.0.1:4105",
+    ...overrides
+  };
+}
+
+function reportConfig(dir, overrides = {}) {
+  return {
+    serviceName: "report-service",
     host: "127.0.0.1",
     port: 0,
     internalKey: INTERNAL_KEY,
@@ -863,6 +880,155 @@ test("identity-service handles login, token verify, and internal user queries", 
       const badVerifyPayload = await badVerifyResponse.json();
       assert.equal(badVerifyResponse.status, 401);
       assert.equal(badVerifyPayload.code, "AUTH_REQUIRED");
+    } finally {
+      await stopServers([identity.server]);
+    }
+  });
+});
+
+test("identity-service manages users, classrooms, groups, and role permissions", async () => {
+  await withTempDir(async (dir) => {
+    const identity = await startApp(createIdentityApp, identityConfig(dir));
+    const teacherHeaders = {
+      "content-type": "application/json",
+      "x-edumind-user-id": "user_teacher",
+      "x-edumind-user-role": "teacher",
+      "x-edumind-user-name": encodeUserContextHeader("Teacher")
+    };
+    const studentHeaders = {
+      "content-type": "application/json",
+      "x-edumind-user-id": "user_student",
+      "x-edumind-user-role": "student",
+      "x-edumind-user-name": encodeUserContextHeader("Student")
+    };
+
+    try {
+      const usersResponse = await fetch(`${identity.url}/api/identity/users?role=student`, {
+        headers: teacherHeaders
+      });
+      const usersPayload = await usersResponse.json();
+      assert.equal(usersResponse.status, 200);
+      assert.ok(usersPayload.data.some((user) => user.id === "user_student"));
+      assert.ok(usersPayload.data[0].permissions.length >= 1);
+
+      const forbiddenUsersResponse = await fetch(`${identity.url}/api/identity/users`, {
+        headers: studentHeaders
+      });
+      const forbiddenUsersPayload = await forbiddenUsersResponse.json();
+      assert.equal(forbiddenUsersResponse.status, 403);
+      assert.equal(forbiddenUsersPayload.code, "FORBIDDEN");
+
+      const profileUpdateResponse = await fetch(`${identity.url}/api/identity/users/user_student/profile`, {
+        method: "PATCH",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          name: "Updated Student",
+          major: "Software Engineering",
+          department: "Computer Science",
+          status: "active"
+        })
+      });
+      const profileUpdatePayload = await profileUpdateResponse.json();
+      assert.equal(profileUpdateResponse.status, 200);
+      assert.equal(profileUpdatePayload.data.name, "Updated Student");
+      assert.equal(profileUpdatePayload.data.major, "Software Engineering");
+
+      const profileResponse = await fetch(`${identity.url}/api/identity/users/user_student/profile`, {
+        headers: teacherHeaders
+      });
+      const profilePayload = await profileResponse.json();
+      assert.equal(profileResponse.status, 200);
+      assert.equal(profilePayload.data.enrollments.length, 1);
+      assert.equal(profilePayload.data.groups.length, 1);
+
+      const classListResponse = await fetch(`${identity.url}/api/classes?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const classListPayload = await classListResponse.json();
+      assert.equal(classListResponse.status, 200);
+      assert.ok(classListPayload.data.some((item) => item.id === "class_ood_01"));
+
+      const createClassResponse = await fetch(`${identity.url}/api/classes`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          name: "Object-Oriented Class 02",
+          courseId: "course_ood",
+          courseTitle: "Object-Oriented Technology",
+          teacherId: "user_teacher",
+          capacity: 40,
+          tags: "project,review"
+        })
+      });
+      const createClassPayload = await createClassResponse.json();
+      assert.equal(createClassResponse.status, 200);
+      assert.equal(createClassPayload.data.stats.teacherCount, 1);
+      assert.equal(createClassPayload.data.capacity, 40);
+
+      const classroomId = createClassPayload.data.id;
+      const assignStudentResponse = await fetch(`${identity.url}/api/classes/${classroomId}/students`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({ userId: "user_student", status: "active" })
+      });
+      const assignStudentPayload = await assignStudentResponse.json();
+      assert.equal(assignStudentResponse.status, 200);
+      assert.equal(assignStudentPayload.data.role, "student");
+
+      const assignTeacherResponse = await fetch(`${identity.url}/api/classes/${classroomId}/teachers`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({ userId: "user_teacher", status: "active" })
+      });
+      const assignTeacherPayload = await assignTeacherResponse.json();
+      assert.equal(assignTeacherResponse.status, 200);
+      assert.equal(assignTeacherPayload.data.role, "teacher");
+
+      const classroomDetailResponse = await fetch(`${identity.url}/api/classes/${classroomId}`, {
+        headers: teacherHeaders
+      });
+      const classroomDetailPayload = await classroomDetailResponse.json();
+      assert.equal(classroomDetailResponse.status, 200);
+      assert.equal(classroomDetailPayload.data.enrollments.length, 2);
+
+      const createGroupResponse = await fetch(`${identity.url}/api/groups`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          classroomId,
+          name: "Model Review Group",
+          leaderId: "user_student",
+          description: "Design and assessment review",
+          tags: "modeling,assessment"
+        })
+      });
+      const createGroupPayload = await createGroupResponse.json();
+      assert.equal(createGroupResponse.status, 200);
+      assert.equal(createGroupPayload.data.stats.memberCount, 1);
+
+      const addMemberResponse = await fetch(`${identity.url}/api/groups/${createGroupPayload.data.id}/members`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({ userId: "user_student", role: "reviewer", status: "active" })
+      });
+      const addMemberPayload = await addMemberResponse.json();
+      assert.equal(addMemberResponse.status, 200);
+      assert.equal(addMemberPayload.data.role, "reviewer");
+
+      const roleMatrixResponse = await fetch(`${identity.url}/api/role-permissions`, {
+        headers: teacherHeaders
+      });
+      const roleMatrixPayload = await roleMatrixResponse.json();
+      assert.equal(roleMatrixResponse.status, 200);
+      assert.ok(roleMatrixPayload.data.matrix.some((item) => item.role === "teacher"));
+
+      const dashboardResponse = await fetch(`${identity.url}/api/admin/identity-dashboard`, {
+        headers: teacherHeaders
+      });
+      const dashboardPayload = await dashboardResponse.json();
+      assert.equal(dashboardResponse.status, 200);
+      assert.ok(dashboardPayload.data.metrics.classroomCount >= 2);
+      assert.ok(dashboardPayload.data.metrics.groupCount >= 2);
     } finally {
       await stopServers([identity.server]);
     }
@@ -2611,6 +2777,335 @@ test("analytics-service aggregates student, course, and teacher statistics with 
       const forbiddenRiskPayload = await forbiddenRiskResponse.json();
       assert.equal(forbiddenRiskResponse.status, 403);
       assert.equal(forbiddenRiskPayload.code, "FORBIDDEN");
+    } finally {
+      await stopServers(apps.map((app) => app.server));
+    }
+  });
+});
+
+test("report-service builds structured reports and export payloads", async () => {
+  await withTempDir(async (dir) => {
+    const apps = [];
+    try {
+      const identity = await startApp(createIdentityApp, identityConfig(dir));
+      const collaboration = await startApp(createCollaborationApp, collaborationConfig(dir));
+      const learning = await startApp(createLearningApp, learningConfig(dir, {
+        collaborationServiceUrl: collaboration.url
+      }));
+      const ai = await startApp(createAiApp, aiConfig(dir, {
+        learningServiceUrl: learning.url
+      }));
+      const assessment = await startApp(createAssessmentApp, assessmentConfig(dir, {
+        identityServiceUrl: identity.url,
+        learningServiceUrl: learning.url,
+        aiServiceUrl: ai.url,
+        collaborationServiceUrl: collaboration.url
+      }));
+      const reports = await startApp(createReportApp, reportConfig(dir, {
+        identityServiceUrl: identity.url,
+        learningServiceUrl: learning.url,
+        assessmentServiceUrl: assessment.url,
+        aiServiceUrl: ai.url,
+        collaborationServiceUrl: collaboration.url
+      }));
+      apps.push(identity, collaboration, learning, ai, assessment, reports);
+
+      const studentHeaders = {
+        "x-edumind-user-id": "user_student",
+        "x-edumind-user-role": "student",
+        "x-edumind-user-name": encodeUserContextHeader("林知夏")
+      };
+      const teacherHeaders = {
+        "x-edumind-user-id": "user_teacher",
+        "x-edumind-user-role": "teacher",
+        "x-edumind-user-name": encodeUserContextHeader("周老师")
+      };
+
+      const catalogResponse = await fetch(`${reports.url}/api/reports/catalog`, {
+        headers: studentHeaders
+      });
+      const catalogPayload = await catalogResponse.json();
+      assert.equal(catalogResponse.status, 200);
+      assert.ok(catalogPayload.data.reports.some((item) => item.key === "student-weekly"));
+
+      const studentWeeklyResponse = await fetch(`${reports.url}/api/reports/student-weekly?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const studentWeeklyPayload = await studentWeeklyResponse.json();
+      assert.equal(studentWeeklyResponse.status, 200);
+      assert.equal(studentWeeklyPayload.data.report.type, "student-weekly");
+      assert.ok(studentWeeklyPayload.data.report.metrics.length >= 4);
+
+      const mistakeResponse = await fetch(`${reports.url}/api/reports/mistakes/review?courseId=course_ood&format=csv`, {
+        headers: studentHeaders
+      });
+      const mistakePayload = await mistakeResponse.json();
+      assert.equal(mistakeResponse.status, 200);
+      assert.equal(mistakePayload.data.export.format, "csv");
+      assert.match(mistakePayload.data.export.body, /report_id/);
+
+      const aiUsageResponse = await fetch(`${reports.url}/api/reports/ai-usage?format=markdown`, {
+        headers: studentHeaders
+      });
+      const aiUsagePayload = await aiUsageResponse.json();
+      assert.equal(aiUsageResponse.status, 200);
+      assert.equal(aiUsagePayload.data.report.type, "ai-usage");
+      assert.match(aiUsagePayload.data.export.body, /AI Usage Report/);
+
+      const forbiddenCourseResponse = await fetch(`${reports.url}/api/reports/course-weekly?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const forbiddenCoursePayload = await forbiddenCourseResponse.json();
+      assert.equal(forbiddenCourseResponse.status, 403);
+      assert.equal(forbiddenCoursePayload.code, "FORBIDDEN");
+
+      const courseWeeklyResponse = await fetch(`${reports.url}/api/reports/course-weekly?courseId=course_ood&format=html`, {
+        headers: teacherHeaders
+      });
+      const courseWeeklyPayload = await courseWeeklyResponse.json();
+      assert.equal(courseWeeklyResponse.status, 200);
+      assert.equal(courseWeeklyPayload.data.report.type, "course-weekly");
+      assert.match(courseWeeklyPayload.data.export.body, /Teacher Weekly Report/);
+
+      const gradingResponse = await fetch(`${reports.url}/api/reports/assignments/assignment_ood_model/grading?format=markdown`, {
+        headers: teacherHeaders
+      });
+      const gradingPayload = await gradingResponse.json();
+      assert.equal(gradingResponse.status, 200);
+      assert.equal(gradingPayload.data.report.type, "assignment-grading");
+      assert.match(gradingPayload.data.export.body, /Grading Report/);
+    } finally {
+      await stopServers(apps.map((app) => app.server));
+    }
+  });
+});
+
+test("gateway proxies report-service report APIs", async () => {
+  await withTempDir(async (dir) => {
+    const apps = [];
+    try {
+      const identity = await startApp(createIdentityApp, identityConfig(dir));
+      const collaboration = await startApp(createCollaborationApp, collaborationConfig(dir));
+      const learning = await startApp(createLearningApp, learningConfig(dir, {
+        collaborationServiceUrl: collaboration.url
+      }));
+      const ai = await startApp(createAiApp, aiConfig(dir, {
+        learningServiceUrl: learning.url
+      }));
+      const assessment = await startApp(createAssessmentApp, assessmentConfig(dir, {
+        identityServiceUrl: identity.url,
+        learningServiceUrl: learning.url,
+        aiServiceUrl: ai.url,
+        collaborationServiceUrl: collaboration.url
+      }));
+      const reports = await startApp(createReportApp, reportConfig(dir, {
+        identityServiceUrl: identity.url,
+        learningServiceUrl: learning.url,
+        assessmentServiceUrl: assessment.url,
+        aiServiceUrl: ai.url,
+        collaborationServiceUrl: collaboration.url
+      }));
+      const gateway = await startApp(createGatewayApp, gatewayConfig([
+        { name: "identity-service", url: identity.url },
+        { name: "learning-service", url: learning.url },
+        { name: "assessment-service", url: assessment.url },
+        { name: "ai-service", url: ai.url },
+        { name: "collaboration-service", url: collaboration.url },
+        { name: "report-service", url: reports.url }
+      ]));
+      apps.push(identity, collaboration, learning, ai, assessment, reports, gateway);
+
+      const studentLogin = await loginThroughGateway(gateway.url, {
+        email: "student@edumind.local",
+        name: "林知夏",
+        role: "student"
+      });
+      const teacherLogin = await loginThroughGateway(gateway.url, {
+        email: "teacher@edumind.local",
+        name: "周老师",
+        role: "teacher"
+      });
+      const studentHeaders = {
+        authorization: `Bearer ${studentLogin.payload.data.token}`
+      };
+      const teacherHeaders = {
+        authorization: `Bearer ${teacherLogin.payload.data.token}`
+      };
+
+      const catalogResponse = await fetch(`${gateway.url}/api/reports/catalog`, {
+        headers: studentHeaders
+      });
+      const catalogPayload = await catalogResponse.json();
+      assert.equal(catalogResponse.status, 200);
+      assert.ok(catalogPayload.data.reports.length >= 3);
+
+      const weeklyResponse = await fetch(`${gateway.url}/api/reports/student-weekly?courseId=course_ood&format=markdown`, {
+        headers: studentHeaders
+      });
+      const weeklyPayload = await weeklyResponse.json();
+      assert.equal(weeklyResponse.status, 200);
+      assert.equal(weeklyPayload.data.export.format, "markdown");
+
+      const courseResponse = await fetch(`${gateway.url}/api/reports/course-weekly?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const coursePayload = await courseResponse.json();
+      assert.equal(courseResponse.status, 200);
+      assert.equal(coursePayload.data.report.type, "course-weekly");
+
+      const gradingResponse = await fetch(`${gateway.url}/api/reports/assignments/assignment_ood_model/grading?format=csv`, {
+        headers: teacherHeaders
+      });
+      const gradingPayload = await gradingResponse.json();
+      assert.equal(gradingResponse.status, 200);
+      assert.equal(gradingPayload.data.export.format, "csv");
+
+      const aiUsageResponse = await fetch(`${gateway.url}/api/reports/ai-usage`, {
+        headers: studentHeaders
+      });
+      const aiUsagePayload = await aiUsageResponse.json();
+      assert.equal(aiUsageResponse.status, 200);
+      assert.equal(aiUsagePayload.data.report.type, "ai-usage");
+    } finally {
+      await stopServers(apps.map((app) => app.server));
+    }
+  });
+});
+
+test("gateway proxies identity class management APIs", async () => {
+  await withTempDir(async (dir) => {
+    const apps = [];
+    try {
+      const identity = await startApp(createIdentityApp, identityConfig(dir));
+      const gateway = await startApp(createGatewayApp, gatewayConfig([
+        { name: "identity-service", url: identity.url }
+      ]));
+      apps.push(identity, gateway);
+
+      const teacherLogin = await loginThroughGateway(gateway.url, {
+        email: "teacher@edumind.local",
+        name: "Teacher",
+        role: "teacher"
+      });
+      const studentLogin = await loginThroughGateway(gateway.url, {
+        email: "student@edumind.local",
+        name: "Student",
+        role: "student"
+      });
+      const teacherHeaders = {
+        authorization: `Bearer ${teacherLogin.payload.data.token}`,
+        "content-type": "application/json"
+      };
+      const studentHeaders = {
+        authorization: `Bearer ${studentLogin.payload.data.token}`,
+        "content-type": "application/json"
+      };
+
+      const usersResponse = await fetch(`${gateway.url}/api/identity/users?role=student`, {
+        headers: teacherHeaders
+      });
+      const usersPayload = await usersResponse.json();
+      assert.equal(usersResponse.status, 200);
+      assert.ok(usersPayload.data.some((user) => user.id === "user_student"));
+
+      const forbiddenResponse = await fetch(`${gateway.url}/api/identity/users`, {
+        headers: studentHeaders
+      });
+      const forbiddenPayload = await forbiddenResponse.json();
+      assert.equal(forbiddenResponse.status, 403);
+      assert.equal(forbiddenPayload.code, "FORBIDDEN");
+
+      const profileResponse = await fetch(`${gateway.url}/api/identity/users/user_student/profile`, {
+        headers: teacherHeaders
+      });
+      const profilePayload = await profileResponse.json();
+      assert.equal(profileResponse.status, 200);
+      assert.equal(profilePayload.data.user.id, "user_student");
+
+      const updateProfileResponse = await fetch(`${gateway.url}/api/identity/users/user_student/profile`, {
+        method: "PATCH",
+        headers: teacherHeaders,
+        body: JSON.stringify({ name: "Gateway Student", major: "Software Engineering" })
+      });
+      const updateProfilePayload = await updateProfileResponse.json();
+      assert.equal(updateProfileResponse.status, 200);
+      assert.equal(updateProfilePayload.data.name, "Gateway Student");
+
+      const classCreateResponse = await fetch(`${gateway.url}/api/classes`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          name: "Gateway Managed Class",
+          courseId: "course_ood",
+          courseTitle: "Object-Oriented Technology",
+          capacity: 36,
+          tags: "gateway,identity"
+        })
+      });
+      const classCreatePayload = await classCreateResponse.json();
+      assert.equal(classCreateResponse.status, 200);
+      assert.equal(classCreatePayload.data.stats.teacherCount, 1);
+      const classroomId = classCreatePayload.data.id;
+
+      const classListResponse = await fetch(`${gateway.url}/api/classes?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const classListPayload = await classListResponse.json();
+      assert.equal(classListResponse.status, 200);
+      assert.ok(classListPayload.data.some((item) => item.id === classroomId));
+
+      const assignResponse = await fetch(`${gateway.url}/api/classes/${classroomId}/students`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({ userId: "user_student", status: "active" })
+      });
+      const assignPayload = await assignResponse.json();
+      assert.equal(assignResponse.status, 200);
+      assert.equal(assignPayload.data.role, "student");
+
+      const detailResponse = await fetch(`${gateway.url}/api/classes/${classroomId}`, {
+        headers: teacherHeaders
+      });
+      const detailPayload = await detailResponse.json();
+      assert.equal(detailResponse.status, 200);
+      assert.ok(detailPayload.data.enrollments.length >= 2);
+
+      const groupResponse = await fetch(`${gateway.url}/api/groups`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({ classroomId, name: "Gateway Group", leaderId: "user_student" })
+      });
+      const groupPayload = await groupResponse.json();
+      assert.equal(groupResponse.status, 200);
+      assert.equal(groupPayload.data.classroomId, classroomId);
+
+      const memberResponse = await fetch(`${gateway.url}/api/groups/${groupPayload.data.id}/members`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({ userId: "user_student", role: "member" })
+      });
+      assert.equal(memberResponse.status, 200);
+
+      const groupsResponse = await fetch(`${gateway.url}/api/groups?classroomId=${classroomId}`, {
+        headers: teacherHeaders
+      });
+      const groupsPayload = await groupsResponse.json();
+      assert.equal(groupsResponse.status, 200);
+      assert.ok(groupsPayload.data.some((item) => item.id === groupPayload.data.id));
+
+      const permissionsResponse = await fetch(`${gateway.url}/api/role-permissions`, {
+        headers: teacherHeaders
+      });
+      const permissionsPayload = await permissionsResponse.json();
+      assert.equal(permissionsResponse.status, 200);
+      assert.ok(permissionsPayload.data.roles.includes("teacher"));
+
+      const dashboardResponse = await fetch(`${gateway.url}/api/admin/identity-dashboard`, {
+        headers: teacherHeaders
+      });
+      const dashboardPayload = await dashboardResponse.json();
+      assert.equal(dashboardResponse.status, 200);
+      assert.ok(dashboardPayload.data.metrics.userCount >= 3);
     } finally {
       await stopServers(apps.map((app) => app.server));
     }

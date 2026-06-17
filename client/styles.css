@@ -721,6 +721,75 @@ textarea:focus-visible,
   min-width: 760px;
 }
 
+.report-filter {
+  margin-bottom: 16px;
+}
+
+.report-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 420px);
+  gap: 16px;
+  align-items: start;
+}
+
+.report-main,
+.report-side,
+.report-section-list,
+.report-catalog {
+  display: grid;
+  gap: 16px;
+}
+
+.report-card .panel-header {
+  align-items: flex-start;
+}
+
+.report-section-list {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 14px;
+}
+
+.report-section-list article,
+.report-catalog article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.report-section-list h3 {
+  margin: 0 0 8px;
+}
+
+.report-recommendations {
+  display: grid;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding-left: 18px;
+}
+
+.report-export-form select {
+  min-height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 6px 10px;
+  background: #fff;
+}
+
+.report-export-preview pre {
+  max-height: 520px;
+  overflow: auto;
+  white-space: pre-wrap;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.report-table {
+  min-width: 680px;
+}
+
 .course-card-grid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
@@ -1170,9 +1239,112 @@ textarea:focus-visible,
   z-index: 20;
 }
 
+.identity-filter {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.identity-metrics {
+  margin-bottom: 14px;
+}
+
+.identity-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.75fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.identity-main,
+.identity-side,
+.identity-form-stack {
+  display: grid;
+  gap: 16px;
+}
+
+.identity-user-table .selected-row {
+  background: rgba(37, 99, 235, 0.06);
+}
+
+.identity-profile-form {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.identity-profile-form .panel-header,
+.identity-profile-form .button-row {
+  grid-column: 1 / -1;
+}
+
+.identity-evidence-grid,
+.identity-detail-grid,
+.identity-permission-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.identity-card-list {
+  display: grid;
+  gap: 12px;
+}
+
+.identity-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.identity-card.is-selected {
+  border-color: rgba(37, 99, 235, 0.42);
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+
+.identity-card-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.identity-side-list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.identity-side-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.identity-role-matrix section {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+  background: rgba(248, 250, 252, 0.78);
+}
+
+.identity-role-matrix h3,
+.identity-detail-grid h3,
+.identity-evidence-grid h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
 @media (max-width: 1180px) {
   .insight-layout,
   .collaboration-layout,
+  .identity-layout,
+  .report-layout,
   .knowledge-layout,
   .workbench-grid,
   .two-column,
@@ -1211,6 +1383,11 @@ textarea:focus-visible,
   .filter-toolbar {
     grid-template-columns: 1fr 1fr;
   }
+
+  .identity-filter,
+  .identity-profile-form {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 640px) {
@@ -1236,6 +1413,13 @@ textarea:focus-visible,
     .collab-summary-head,
     .collab-member-list li,
     .collab-side-list li,
+    .identity-filter,
+    .identity-profile-form,
+    .identity-evidence-grid,
+    .identity-detail-grid,
+    .identity-permission-grid,
+    .identity-card-head,
+    .identity-side-list li,
     .knowledge-profile-grid,
   .knowledge-context-grid,
   .knowledge-edge,

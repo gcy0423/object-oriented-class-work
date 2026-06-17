@@ -14,6 +14,7 @@
     "start:ai": "node services/ai-service/src/main.js",
     "start:collaboration": "node services/collaboration-service/src/main.js",
     "start:analytics": "node services/analytics-service/src/main.js",
+    "start:reports": "node services/report-service/src/main.js",
     "start:knowledge": "node services/knowledge-service/src/main.js",
     "start:notification": "node services/notification-service/src/main.js",
     "start:scheduler": "node services/scheduler-service/src/main.js",

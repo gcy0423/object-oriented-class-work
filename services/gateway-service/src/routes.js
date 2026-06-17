@@ -43,6 +43,97 @@ export function registerRoutes(router, config, services = {}) {
     return ok({ user });
   });
 
+  router.get("/api/identity/users", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.get(withQuery("/api/identity/users", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/identity/users/:id/profile", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.get(`/api/identity/users/${encodeURIComponent(req.params.id)}/profile`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/identity/users/:id/profile", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.patch(`/api/identity/users/${encodeURIComponent(req.params.id)}/profile`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/classes", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.get(withQuery("/api/classes", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/classes", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.post("/api/classes", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/classes/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.get(`/api/classes/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/classes/:id/students", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.post(`/api/classes/${encodeURIComponent(req.params.id)}/students`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/classes/:id/teachers", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.post(`/api/classes/${encodeURIComponent(req.params.id)}/teachers`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/groups", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.get(withQuery("/api/groups", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/groups", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.post("/api/groups", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/groups/:id/members", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.post(`/api/groups/${encodeURIComponent(req.params.id)}/members`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/role-permissions", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.get("/api/role-permissions", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/admin/identity-dashboard", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.identity.get("/api/admin/identity-dashboard", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.get("/api/courses", async (req) => {
     const user = await services.verifyUser(req);
     return services.learning.get("/api/courses", {
@@ -840,6 +931,48 @@ export function registerRoutes(router, config, services = {}) {
   router.get("/api/analytics/engagement", async (req) => {
     const user = await services.verifyUser(req);
     return services.analytics.get(withQuery("/api/analytics/engagement", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/reports/catalog", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.reports.get("/api/reports/catalog", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/reports/student-weekly", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.reports.get(withQuery("/api/reports/student-weekly", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/reports/course-weekly", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.reports.get(withQuery("/api/reports/course-weekly", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/reports/assignments/:id/grading", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.reports.get(withQuery(`/api/reports/assignments/${encodeURIComponent(req.params.id)}/grading`, req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/reports/mistakes/review", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.reports.get(withQuery("/api/reports/mistakes/review", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/reports/ai-usage", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.reports.get(withQuery("/api/reports/ai-usage", req.query), {
       headers: buildUserHeaders(config, user)
     });
   });

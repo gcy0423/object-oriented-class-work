@@ -4,10 +4,12 @@ import { assignmentManageView } from "./views/assignmentManageView.js";
 import { analyticsView } from "./views/analyticsView.js";
 import { aiView } from "./views/aiView.js";
 import { dashboardView } from "./views/dashboardView.js";
+import { identityAdminView } from "./views/identityAdminView.js";
 import { knowledgeView } from "./views/knowledgeView.js";
 import { learningView } from "./views/learningView.js";
 import { practiceView } from "./views/practiceView.js";
 import { questionBankManageView } from "./views/questionBankManageView.js";
+import { reportView } from "./views/reportView.js";
 import { settingsView } from "./views/settingsView.js";
 import { teamView } from "./views/teamView.js";
 import { workbenchView } from "./views/workbenchView.js";
@@ -28,6 +30,8 @@ const views = {
   "question-banks": questionBankManageView,
   practice: practiceView,
   "assessment-insight": assessmentInsightView,
+  reports: reportView,
+  "identity-admin": identityAdminView,
   analytics: analyticsView,
   ai: aiView,
   team: teamView,
@@ -352,6 +356,76 @@ class EduMindApp {
         this.api.collaborationAudit(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId, limit: 60 } : { limit: 60 })
       ]);
 
+      const reportFilter = state.filters.reports;
+      const reportCourseId = reportFilter.courseId || firstCourseId;
+      const reportStudentId = reportFilter.studentId || state.user?.id || "";
+      const reportAssignmentId = reportFilter.assignmentId || state.selected.assignmentId || firstItem(assignmentRows)?.id || "";
+      const reportParams = {
+        ...(reportCourseId ? { courseId: reportCourseId } : {}),
+        ...(reportStudentId ? { studentId: reportStudentId } : {})
+      };
+      const [
+        reportCatalogResult,
+        studentWeeklyReportResult,
+        courseWeeklyReportResult,
+        assignmentGradingReportResult,
+        mistakeReviewReportResult,
+        aiUsageReportResult
+      ] = await Promise.allSettled([
+        this.api.reportCatalog(),
+        this.api.studentWeeklyReport(reportParams),
+        isTeacher ? this.api.courseWeeklyReport(reportCourseId ? { courseId: reportCourseId } : {}) : Promise.resolve({ data: null }),
+        isTeacher && reportAssignmentId ? this.api.assignmentGradingReport(reportAssignmentId) : Promise.resolve({ data: null }),
+        this.api.mistakeReviewReport(reportParams),
+        this.api.aiUsageReport(reportCourseId ? { courseId: reportCourseId } : {})
+      ]);
+
+      const identityFilter = state.filters.identityAdmin;
+      const identityParams = {
+        ...(identityFilter.role ? { role: identityFilter.role } : {}),
+        ...(identityFilter.status ? { status: identityFilter.status } : {}),
+        ...(identityFilter.q ? { q: identityFilter.q } : {})
+      };
+      const identityClassParams = {
+        ...(identityFilter.courseId || firstCourseId ? { courseId: identityFilter.courseId || firstCourseId } : {})
+      };
+      const [
+        identityUsersResult,
+        identityClassroomsResult,
+        identityGroupsResult,
+        identityRoleMatrixResult,
+        identityDashboardResult
+      ] = await Promise.allSettled([
+        isTeacher ? this.api.identityUsers(identityParams) : Promise.resolve({ data: [] }),
+        isTeacher ? this.api.classes(identityClassParams) : Promise.resolve({ data: [] }),
+        isTeacher ? this.api.groups({ ...identityClassParams, ...(identityFilter.classroomId ? { classroomId: identityFilter.classroomId } : {}) }) : Promise.resolve({ data: [] }),
+        isTeacher ? this.api.rolePermissions() : Promise.resolve({ data: null }),
+        isTeacher ? this.api.identityDashboard() : Promise.resolve({ data: null })
+      ]);
+      const identityUsers = identityUsersResult.status === "fulfilled" ? identityUsersResult.value.data : state.identityAdmin.users;
+      const identityClassrooms = identityClassroomsResult.status === "fulfilled" ? identityClassroomsResult.value.data : state.identityAdmin.classrooms;
+      const identityGroups = identityGroupsResult.status === "fulfilled" ? identityGroupsResult.value.data : state.identityAdmin.groups;
+      const selectedIdentityUserId = state.selected.identityUserId || firstItem(identityUsers)?.id || state.user?.id || "";
+      const selectedClassroomId = identityFilter.classroomId || state.selected.classroomId || firstItem(identityClassrooms)?.id || "";
+      let identityProfile = state.identityAdmin.selectedProfile;
+      let identityClassroomDetail = state.identityAdmin.classroomDetail;
+      if (isTeacher && selectedIdentityUserId) {
+        try {
+          const profileResult = await this.api.identityUserProfile(selectedIdentityUserId);
+          identityProfile = profileResult.data;
+        } catch {
+          identityProfile = state.identityAdmin.selectedProfile;
+        }
+      }
+      if (isTeacher && selectedClassroomId) {
+        try {
+          const detailResult = await this.api.classroomDetail(selectedClassroomId);
+          identityClassroomDetail = detailResult.data;
+        } catch {
+          identityClassroomDetail = state.identityAdmin.classroomDetail;
+        }
+      }
+
       this.setState({
         dashboard: dashboard.data,
         provider: dashboard.meta?.provider || "",
@@ -360,7 +434,9 @@ class EduMindApp {
         toast: message,
         selected: {
           ...state.selected,
-          collaborationRoomId: selectedCollaborationRoomId
+          collaborationRoomId: selectedCollaborationRoomId,
+          identityUserId: selectedIdentityUserId,
+          classroomId: selectedClassroomId
         },
         assessment: {
           assignments: assignmentsResult.status === "fulfilled" ? assignmentsResult.value.data : [],
@@ -426,6 +502,24 @@ class EduMindApp {
           checklist: collaborationChecklistResult.status === "fulfilled" ? collaborationChecklistResult.value.data : state.collaboration.checklist,
           handoffs: collaborationHandoffsResult.status === "fulfilled" ? collaborationHandoffsResult.value.data : state.collaboration.handoffs,
           audit: collaborationAuditResult.status === "fulfilled" ? collaborationAuditResult.value.data : state.collaboration.audit
+        },
+        reports: {
+          catalog: reportCatalogResult.status === "fulfilled" ? reportCatalogResult.value.data : state.reports.catalog,
+          studentWeekly: studentWeeklyReportResult.status === "fulfilled" ? studentWeeklyReportResult.value.data : state.reports.studentWeekly,
+          courseWeekly: courseWeeklyReportResult.status === "fulfilled" ? courseWeeklyReportResult.value.data : state.reports.courseWeekly,
+          assignmentGrading: assignmentGradingReportResult.status === "fulfilled" ? assignmentGradingReportResult.value.data : state.reports.assignmentGrading,
+          mistakeReview: mistakeReviewReportResult.status === "fulfilled" ? mistakeReviewReportResult.value.data : state.reports.mistakeReview,
+          aiUsage: aiUsageReportResult.status === "fulfilled" ? aiUsageReportResult.value.data : state.reports.aiUsage,
+          exportPreview: state.reports.exportPreview
+        },
+        identityAdmin: {
+          users: identityUsers,
+          selectedProfile: identityProfile,
+          classrooms: identityClassrooms,
+          classroomDetail: identityClassroomDetail,
+          groups: identityGroups,
+          roleMatrix: identityRoleMatrixResult.status === "fulfilled" ? identityRoleMatrixResult.value.data : state.identityAdmin.roleMatrix,
+          dashboard: identityDashboardResult.status === "fulfilled" ? identityDashboardResult.value.data : state.identityAdmin.dashboard
         },
         settings: {
           health: healthResult.status === "fulfilled" ? healthResult.value.data : null,
@@ -772,6 +866,25 @@ class EduMindApp {
         this.setState({ analytics: { ...this.store.get().analytics, selectedStudent: result.data }, route: "analytics" });
         return;
       }
+      if (action === "view-identity-profile") {
+        const result = await this.api.identityUserProfile(actionButton.dataset.id);
+        this.setState({
+          route: "identity-admin",
+          selected: { ...this.store.get().selected, identityUserId: actionButton.dataset.id },
+          identityAdmin: { ...this.store.get().identityAdmin, selectedProfile: result.data }
+        });
+        return;
+      }
+      if (action === "view-classroom") {
+        const result = await this.api.classroomDetail(actionButton.dataset.id);
+        this.setState({
+          route: "identity-admin",
+          selected: { ...this.store.get().selected, classroomId: actionButton.dataset.id },
+          filters: { ...this.store.get().filters, identityAdmin: { ...this.store.get().filters.identityAdmin, classroomId: actionButton.dataset.id } },
+          identityAdmin: { ...this.store.get().identityAdmin, classroomDetail: result.data }
+        });
+        return;
+      }
       if (action === "refresh-health") {
         const result = await this.api.health();
         this.setState({ settings: { ...this.store.get().settings, health: result.data } });
@@ -1016,6 +1129,179 @@ class EduMindApp {
         }
         form.reset();
         await this.refreshApp("Collaboration summary generated.");
+        return;
+      }
+      if (form.dataset.form === "report-filter") {
+        this.setState({
+          route: "reports",
+          filters: { ...this.store.get().filters, reports: { ...this.store.get().filters.reports, ...data } }
+        });
+        await this.refreshApp("Reports refreshed.");
+        return;
+      }
+      if (form.dataset.form === "report-export") {
+        const state = this.store.get();
+        const params = {
+          format: data.format || state.filters.reports.format || "markdown",
+          ...(data.courseId ? { courseId: data.courseId } : {}),
+          ...(data.studentId ? { studentId: data.studentId } : {})
+        };
+        let result;
+        if (data.type === "student-weekly") {
+          result = await this.api.studentWeeklyReport(params);
+        } else if (data.type === "course-weekly") {
+          result = await this.api.courseWeeklyReport(params);
+        } else if (data.type === "assignment-grading") {
+          const assignmentId = data.assignmentId || state.filters.reports.assignmentId || state.selected.assignmentId || state.assessment.assignments?.[0]?.id;
+          result = await this.api.assignmentGradingReport(assignmentId, { format: params.format });
+        } else if (data.type === "mistake-review") {
+          result = await this.api.mistakeReviewReport(params);
+        } else {
+          result = await this.api.aiUsageReport(params);
+        }
+        this.setState({
+          route: "reports",
+          filters: { ...state.filters, reports: { ...state.filters.reports, format: params.format } },
+          reports: { ...state.reports, exportPreview: result.data }
+        });
+        this.toast("Report export built.");
+        return;
+      }
+      if (form.dataset.form === "identity-admin-filter") {
+        this.setState({
+          route: "identity-admin",
+          filters: { ...this.store.get().filters, identityAdmin: { ...this.store.get().filters.identityAdmin, ...data } },
+          selected: { ...this.store.get().selected, classroomId: data.classroomId || this.store.get().selected.classroomId }
+        });
+        await this.refreshApp("Identity filters applied.");
+        return;
+      }
+      if (form.dataset.form === "identity-user-profile") {
+        const userId = data.id || this.store.get().selected.identityUserId;
+        if (!userId) {
+          this.toast("User is required.");
+          return;
+        }
+        this.patchSaving("identityProfile", true);
+        try {
+          const result = await this.api.updateIdentityUserProfile(userId, {
+            name: data.name,
+            role: data.role,
+            status: data.status,
+            department: data.department,
+            major: data.major,
+            studentNo: data.studentNo,
+            teacherNo: data.teacherNo,
+            phone: data.phone
+          });
+          this.setState({
+            route: "identity-admin",
+            selected: { ...this.store.get().selected, identityUserId: userId },
+            identityAdmin: {
+              ...this.store.get().identityAdmin,
+              selectedProfile: {
+                ...(this.store.get().identityAdmin.selectedProfile || {}),
+                user: result.data
+              }
+            }
+          });
+        } finally {
+          this.patchSaving("identityProfile", false);
+        }
+        await this.refreshApp("User profile saved.");
+        return;
+      }
+      if (form.dataset.form === "identity-classroom") {
+        this.patchSaving("classroom", true);
+        try {
+          const result = await this.api.createClassroom({
+            name: data.name,
+            courseId: data.courseId,
+            courseTitle: data.courseTitle,
+            teacherId: data.teacherId,
+            capacity: Number(data.capacity || 60),
+            status: data.status,
+            description: data.description,
+            tags: data.tags
+          });
+          this.setState({
+            route: "identity-admin",
+            selected: { ...this.store.get().selected, classroomId: result.data.id },
+            filters: { ...this.store.get().filters, identityAdmin: { ...this.store.get().filters.identityAdmin, classroomId: result.data.id, courseId: result.data.courseId } }
+          });
+        } finally {
+          this.patchSaving("classroom", false);
+        }
+        form.reset();
+        await this.refreshApp("Classroom created.");
+        return;
+      }
+      if (form.dataset.form === "identity-class-assignment") {
+        const classroomId = data.classroomId || this.store.get().selected.classroomId;
+        if (!classroomId || !data.userId) {
+          this.toast("Classroom and user are required.");
+          return;
+        }
+        this.patchSaving("classAssignment", true);
+        try {
+          const input = { userId: data.userId, status: data.status };
+          if (data.role === "teacher") {
+            await this.api.assignClassTeacher(classroomId, input);
+          } else {
+            await this.api.assignClassStudent(classroomId, input);
+          }
+          this.setState({
+            route: "identity-admin",
+            selected: { ...this.store.get().selected, classroomId },
+            filters: { ...this.store.get().filters, identityAdmin: { ...this.store.get().filters.identityAdmin, classroomId } }
+          });
+        } finally {
+          this.patchSaving("classAssignment", false);
+        }
+        form.reset();
+        await this.refreshApp("Class enrollment updated.");
+        return;
+      }
+      if (form.dataset.form === "identity-group") {
+        this.patchSaving("group", true);
+        try {
+          const result = await this.api.createGroup({
+            classroomId: data.classroomId,
+            name: data.name,
+            leaderId: data.leaderId,
+            status: data.status,
+            description: data.description,
+            tags: data.tags
+          });
+          this.setState({
+            route: "identity-admin",
+            selected: { ...this.store.get().selected, classroomId: result.data.classroomId },
+            filters: { ...this.store.get().filters, identityAdmin: { ...this.store.get().filters.identityAdmin, classroomId: result.data.classroomId } }
+          });
+        } finally {
+          this.patchSaving("group", false);
+        }
+        form.reset();
+        await this.refreshApp("Study group created.");
+        return;
+      }
+      if (form.dataset.form === "identity-group-member") {
+        if (!data.groupId || !data.userId) {
+          this.toast("Group and user are required.");
+          return;
+        }
+        this.patchSaving("groupMember", true);
+        try {
+          await this.api.addGroupMember(data.groupId, {
+            userId: data.userId,
+            role: data.role,
+            status: data.status
+          });
+        } finally {
+          this.patchSaving("groupMember", false);
+        }
+        form.reset();
+        await this.refreshApp("Group member updated.");
         return;
       }
       if (form.dataset.form === "assignment-filter") {
