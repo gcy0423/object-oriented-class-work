@@ -1,0 +1,408 @@
+<!doctype html>
+<!--
+Assumptions for this prototype:
+- Student side keeps manual entry points, but the AI learning desk becomes the highest-weight entry.
+- The first prototype should prove three flows: plan today, manage goals/tasks, understand and submit an assignment.
+- AI can propose and draft actions, but data-writing actions remain confirmation based.
+- Mobile is not a scaled desktop. It uses a compact top area, bottom navigation, and single-column task cards.
+- This is a static product prototype. It does not call existing APIs or modify production code.
+-->
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>EduMind Agent · 学生端 AI-first 原型</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="prototype-shell">
+      <aside class="rail" aria-label="主导航">
+        <div class="brand-block">
+          <strong>EduMind Agent</strong>
+          <span>学生学习台</span>
+        </div>
+
+        <nav class="side-nav">
+          <div class="nav-group">
+            <span class="nav-label">智能工作台</span>
+            <button class="nav-item active" type="button" data-view="desk">
+              <span>AI 学习台</span>
+              <small>今日规划</small>
+            </button>
+          </div>
+          <div class="nav-group">
+            <span class="nav-label">学习</span>
+            <button class="nav-item" type="button" data-view="tasks">
+              <span>目标与任务</span>
+              <small>手动管理</small>
+            </button>
+            <button class="nav-item muted-nav" type="button">
+              <span>课程笔记</span>
+              <small>整理知识</small>
+            </button>
+          </div>
+          <div class="nav-group">
+            <span class="nav-label">评测</span>
+            <button class="nav-item" type="button" data-view="assignment">
+              <span>作业详情</span>
+              <small>AI 辅助</small>
+            </button>
+            <button class="nav-item muted-nav" type="button">
+              <span>练习与错题</span>
+              <small>巩固薄弱点</small>
+            </button>
+          </div>
+        </nav>
+
+        <div class="student-card">
+          <div class="avatar">夏</div>
+          <div>
+            <strong>林知夏</strong>
+            <span>student</span>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="mobile-header">
+          <div>
+            <strong>EduMind Agent</strong>
+            <span>学生学习台</span>
+          </div>
+          <button class="ghost-button" type="button">同步</button>
+        </header>
+
+        <section class="view active" id="view-desk" aria-labelledby="desk-title">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">AI 学习台</p>
+              <h1 id="desk-title">今天先把学习路径理顺</h1>
+              <p>AI 读取目标、任务、作业和错题后，给出可以确认执行的下一步。</p>
+            </div>
+            <div class="sync-pill"><span></span>mock-local-llm</div>
+          </div>
+
+          <div class="desk-layout">
+            <section class="hero-panel">
+              <div class="composer-head">
+                <div>
+                  <h2>你想让我帮你做什么？</h2>
+                  <p>当前上下文：面向对象技术与方法 · 结课设计冲刺</p>
+                </div>
+              </div>
+              <div class="composer">
+                <textarea id="aiPrompt" rows="4">帮我安排今天 2 小时的学习，优先完成结课设计文档。</textarea>
+                <div class="composer-actions">
+                  <div class="quick-chips" aria-label="快捷指令">
+                    <button type="button" data-prompt="帮我安排今天 2 小时的学习，优先完成结课设计文档。">安排今天学习</button>
+                    <button type="button" data-prompt="我不懂领域类图和包图的关系，请结合课程内容解释。">解释知识点</button>
+                    <button type="button" data-prompt="根据我的薄弱点生成 5 道 UML 类图练习。">生成练习</button>
+                    <button type="button" data-prompt="总结我最近的薄弱点，并给出复习顺序。">总结薄弱点</button>
+                  </div>
+                  <button class="primary-button" type="button" id="runAi">生成建议</button>
+                </div>
+              </div>
+            </section>
+
+            <aside class="context-panel" aria-label="学习上下文">
+              <div class="context-card current">
+                <span>当前目标</span>
+                <strong>完成结课设计文档和可运行系统</strong>
+                <div class="progress-line"><i style="width: 46%"></i></div>
+                <small>46% · 截止 2026-06-21</small>
+              </div>
+              <div class="context-grid">
+                <div><strong>3</strong><span>待办任务</span></div>
+                <div><strong>1</strong><span>开放作业</span></div>
+                <div><strong>5</strong><span>错题待复习</span></div>
+                <div><strong>120</strong><span>已学分钟</span></div>
+              </div>
+              <div class="manual-box">
+                <span>手动快捷入口</span>
+                <div class="manual-actions">
+                  <button type="button" data-view="tasks">新建任务</button>
+                  <button type="button" data-view="assignment">查看作业</button>
+                  <button type="button">新增笔记</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <section class="ai-result" aria-label="AI 建议">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">AI 建议</p>
+                <h2>今日推荐路径</h2>
+              </div>
+              <button class="text-button" type="button">重新生成</button>
+            </div>
+            <div class="recommendation-card">
+              <div class="result-copy">
+                <p>建议今天围绕「领域模型与类图关系」完成三个学习动作。先补齐概念，再推进文档，最后用练习检查理解。</p>
+              </div>
+              <div class="plan-steps">
+                <article>
+                  <span>01</span>
+                  <div>
+                    <strong>复习 UML 复习摘要</strong>
+                    <p>20 分钟，建立领域类图、包图、用例图之间的边界。</p>
+                  </div>
+                </article>
+                <article>
+                  <span>02</span>
+                  <div>
+                    <strong>整理领域模型与用例图说明</strong>
+                    <p>60 分钟，产出可放入结课设计文档的说明段落。</p>
+                  </div>
+                </article>
+                <article>
+                  <span>03</span>
+                  <div>
+                    <strong>完成 5 道类图关系练习</strong>
+                    <p>25 分钟，用结果判断是否需要回看错题。</p>
+                  </div>
+                </article>
+              </div>
+              <div class="action-strip">
+                <button class="primary-button" type="button" id="confirmTasks">创建任务草稿</button>
+                <button class="secondary-button" type="button">开始练习</button>
+                <button class="secondary-button" type="button">打开相关笔记</button>
+              </div>
+            </div>
+          </section>
+        </section>
+
+        <section class="view" id="view-tasks" aria-labelledby="tasks-title">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">目标与任务</p>
+              <h1 id="tasks-title">手动入口保留，AI 帮你拆解</h1>
+              <p>目标、任务、笔记仍然可以手动维护；AI 只在需要时生成草稿。</p>
+            </div>
+            <button class="primary-button" type="button">新建任务</button>
+          </div>
+
+          <div class="workbench">
+            <section class="main-column">
+              <article class="goal-focus">
+                <div>
+                  <p class="eyebrow">当前主目标</p>
+                  <h2>完成结课设计文档和可运行系统</h2>
+                  <p>把领域模型、系统架构、功能验证和运行截图整理成完整交付物。</p>
+                </div>
+                <div class="goal-meter">
+                  <strong>46%</strong>
+                  <span>预计还需 5.5 小时</span>
+                </div>
+              </article>
+
+              <section class="task-type-panel">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">任务类型</p>
+                    <h2>学习任务先归类，再执行</h2>
+                  </div>
+                  <button class="text-button" type="button">调整顺序</button>
+                </div>
+                <div class="task-type-grid" aria-label="学习任务类型">
+                  <button class="task-type active" type="button">
+                    <strong>预习 / 复习</strong>
+                    <span>读材料、回看知识点</span>
+                  </button>
+                  <button class="task-type" type="button">
+                    <strong>文档产出</strong>
+                    <span>写说明、补报告段落</span>
+                  </button>
+                  <button class="task-type" type="button">
+                    <strong>练习巩固</strong>
+                    <span>做题、回放错题</span>
+                  </button>
+                  <button class="task-type" type="button">
+                    <strong>作业推进</strong>
+                    <span>理解要求、准备提交</span>
+                  </button>
+                  <button class="task-type" type="button">
+                    <strong>笔记整理</strong>
+                    <span>沉淀摘要和知识卡片</span>
+                  </button>
+                </div>
+              </section>
+
+              <div class="task-stack">
+                <article class="task-card priority">
+                  <div>
+                    <span class="task-state">文档产出 · 进行中</span>
+                    <h3>整理领域模型与用例图</h3>
+                    <p>补齐类图、包图和用例图之间的说明关系。</p>
+                  </div>
+                  <button class="secondary-button" type="button">继续</button>
+                </article>
+                <article class="task-card">
+                  <div>
+                    <span class="task-state">作业推进 · 待开始</span>
+                    <h3>撰写系统设计文档</h3>
+                    <p>把架构图、服务边界、前后端流程整理为文档段落。</p>
+                  </div>
+                  <button class="secondary-button" type="button">拆解</button>
+                </article>
+                <article class="task-card done">
+                  <div>
+                    <span class="task-state">复习 · 已完成</span>
+                    <h3>整理领域模型与用例图</h3>
+                    <p>已完成核心图谱说明，可以作为后续文档基础。</p>
+                  </div>
+                  <button class="secondary-button" type="button">查看</button>
+                </article>
+              </div>
+            </section>
+
+            <aside class="assist-column">
+              <section class="assist-panel">
+                <p class="eyebrow">AI 拆解</p>
+                <h2>让 AI 把目标拆成下一步</h2>
+                <p>AI 会基于当前目标、截止时间和已有任务生成草稿，确认后再写入任务列表。</p>
+                <button class="primary-button full" type="button">生成任务草稿</button>
+              </section>
+              <section class="draft-panel">
+                <p class="eyebrow">待确认草稿</p>
+                <div class="draft-item">
+                  <strong>补充类图关系说明</strong>
+                  <span>文档产出 · 预计 40 分钟</span>
+                </div>
+                <div class="draft-item">
+                  <strong>检查包图与服务边界一致性</strong>
+                  <span>文档产出 · 预计 35 分钟</span>
+                </div>
+                <div class="action-strip compact">
+                  <button class="primary-button" type="button">确认添加</button>
+                  <button class="secondary-button" type="button">丢弃</button>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-assignment" aria-labelledby="assignment-title">
+          <div class="page-head">
+            <div>
+              <p class="eyebrow">作业详情</p>
+              <h1 id="assignment-title">先找到作业，再理解和提交</h1>
+              <p>传统作业保留两种入口：按课程查找，或按日历查看截止时间。</p>
+            </div>
+            <button class="secondary-button" type="button">返回作业列表</button>
+          </div>
+
+          <section class="assignment-entry">
+            <div class="section-title">
+              <div>
+                <p class="eyebrow">作业入口</p>
+                <h2>课程视角和日历视角并存</h2>
+              </div>
+            </div>
+            <div class="assignment-entry-grid">
+              <article class="entry-card active">
+                <div>
+                  <strong>按课程排序</strong>
+                  <span>适合从课程推进作业，查看同一门课下的所有任务。</span>
+                </div>
+                <div class="mini-list">
+                  <button type="button">面向对象技术与方法 · 2 项待完成</button>
+                  <button type="button">人工智能应用实践 · 1 项待完成</button>
+                </div>
+              </article>
+              <article class="entry-card">
+                <div>
+                  <strong>按日历排序</strong>
+                  <span>适合先处理临近截止的作业，减少漏交风险。</span>
+                </div>
+                <div class="calendar-strip">
+                  <div><b>06/15</b><span>结课设计文档</span></div>
+                  <div><b>06/18</b><span>AI 问答实验</span></div>
+                  <div><b>06/21</b><span>系统演示材料</span></div>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <div class="assignment-layout">
+            <section class="assignment-main">
+              <article class="assignment-brief">
+                <div class="assignment-topline">
+                  <span class="status-tag">进行中</span>
+                  <span>截止 2026-06-15</span>
+                </div>
+                <h2>结课设计文档说明</h2>
+                <p>说明领域类图、包图、时序图和服务边界之间的关系，并给出系统运行截图。</p>
+              </article>
+
+              <article class="ai-breakdown">
+                <div class="section-title">
+                  <div>
+                    <p class="eyebrow">AI 拆解</p>
+                    <h2>这份作业需要交付什么</h2>
+                  </div>
+                  <button class="text-button" type="button">重新分析</button>
+                </div>
+                <div class="requirement-list">
+                  <div>
+                    <span>1</span>
+                    <p>用一段话说明领域类图承载业务对象，包图承载模块边界。</p>
+                  </div>
+                  <div>
+                    <span>2</span>
+                    <p>把时序图和 AI 学习问答流程关联起来，说明调用链路。</p>
+                  </div>
+                  <div>
+                    <span>3</span>
+                    <p>补充运行截图，证明学习、AI、协作至少三条流程可用。</p>
+                  </div>
+                </div>
+              </article>
+
+              <form class="submission-box">
+                <label>
+                  <span>提交内容</span>
+                  <textarea rows="8">我将从领域模型、系统架构、AI 学习流程三个层面说明本项目的设计思路...</textarea>
+                </label>
+                <div class="action-strip">
+                  <button class="primary-button" type="button">AI 检查一遍</button>
+                  <button class="secondary-button" type="button">保存草稿</button>
+                  <button class="secondary-button danger" type="button">确认提交</button>
+                </div>
+              </form>
+            </section>
+
+            <aside class="assist-column">
+              <section class="assist-panel">
+                <p class="eyebrow">提交前检查</p>
+                <h2>AI 发现 2 个可补强点</h2>
+                <div class="check-list">
+                  <div><strong>缺少截图引用</strong><span>建议标注学习总览和 AI 问答截图。</span></div>
+                  <div><strong>类图说明偏短</strong><span>建议补一句领域对象之间的聚合关系。</span></div>
+                </div>
+                <button class="primary-button full" type="button">生成补充段落</button>
+              </section>
+              <section class="manual-box wide">
+                <span>手动操作</span>
+                <div class="manual-actions">
+                  <button type="button">查看评分规则</button>
+                  <button type="button">查看历史反馈</button>
+                  <button type="button">打开相关笔记</button>
+                </div>
+              </section>
+            </aside>
+          </div>
+        </section>
+      </main>
+
+      <nav class="bottom-nav" aria-label="移动端导航">
+        <button class="active" type="button" data-view="desk">AI 学习台</button>
+        <button type="button" data-view="tasks">任务</button>
+        <button type="button" data-view="assignment">作业</button>
+      </nav>
+    </div>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="./prototype.js"></script>
+  </body>
+</html>

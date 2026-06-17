@@ -18,6 +18,15 @@ function categoryOf(file) {
   if (path.startsWith("./client/")) {
     return "client-business-code";
   }
+  if (path.startsWith("./services/")) {
+    return "microservices-code";
+  }
+  if (path.startsWith("./shared/")) {
+    return "shared-infrastructure";
+  }
+  if (path.startsWith("./prototypes/")) {
+    return "frontend-prototypes";
+  }
   if (path.startsWith("./test/")) {
     return "tests";
   }

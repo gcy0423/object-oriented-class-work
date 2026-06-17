@@ -1,0 +1,23 @@
+{
+  "users": [
+    {
+      "id": "user_student",
+      "name": "林知夏",
+      "role": "student",
+      "email": "student@edumind.local",
+      "avatar": "夏",
+      "createdAt": "2026-06-16",
+      "updatedAt": "2026-06-16"
+    },
+    {
+      "id": "user_teacher",
+      "name": "周老师",
+      "role": "teacher",
+      "email": "teacher@edumind.local",
+      "avatar": "周",
+      "createdAt": "2026-06-16",
+      "updatedAt": "2026-06-16"
+    }
+  ],
+  "sessions": []
+}
