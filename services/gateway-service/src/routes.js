@@ -502,6 +502,118 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/notifications", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.get(withQuery("/api/notifications", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/notifications", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.post("/api/notifications", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/notifications/bulk", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.post("/api/notifications/bulk", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/notifications/summary", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.get(withQuery("/api/notifications/summary", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/notification-preferences", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.get("/api/notification-preferences", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/notification-preferences", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.patch("/api/notification-preferences", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/notifications/read-all", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.patch("/api/notifications/read-all", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/notifications/:id/read", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.patch(`/api/notifications/${encodeURIComponent(req.params.id)}/read`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/notifications/:id/dismiss", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.notification.patch(`/api/notifications/${encodeURIComponent(req.params.id)}/dismiss`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/scheduler/reminders", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.scheduler.get(withQuery("/api/scheduler/reminders", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/scheduler/reminders", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.scheduler.post("/api/scheduler/reminders", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/scheduler/reminders/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.scheduler.patch(`/api/scheduler/reminders/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/scheduler/due-preview", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.scheduler.get(withQuery("/api/scheduler/due-preview", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/scheduler/run-due", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.scheduler.post("/api/scheduler/run-due", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/scheduler/timeline", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.scheduler.get(withQuery("/api/scheduler/timeline", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/scheduler/dashboard", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.scheduler.get(withQuery("/api/scheduler/dashboard", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.get("/api/analytics/overview", async (req) => {
     const user = await services.verifyUser(req);
     return services.analytics.get("/api/analytics/overview", {

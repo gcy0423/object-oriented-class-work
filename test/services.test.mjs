@@ -20,6 +20,8 @@ import { createApp as createGatewayApp } from "../services/gateway-service/src/m
 import { createApp as createIdentityApp } from "../services/identity-service/src/main.js";
 import { createApp as createKnowledgeApp } from "../services/knowledge-service/src/main.js";
 import { createApp as createLearningApp } from "../services/learning-service/src/main.js";
+import { createApp as createNotificationApp } from "../services/notification-service/src/main.js";
+import { createApp as createSchedulerApp } from "../services/scheduler-service/src/main.js";
 
 const INTERNAL_KEY = "test-internal-key";
 
@@ -147,6 +149,34 @@ function knowledgeConfig(dir, overrides = {}) {
   };
 }
 
+function notificationConfig(dir, overrides = {}) {
+  return {
+    serviceName: "notification-service",
+    host: "127.0.0.1",
+    port: 0,
+    internalKey: INTERNAL_KEY,
+    dataFile: join(dir, "notifications.json"),
+    defaultChannel: "in_app",
+    maxPageSize: 50,
+    ...overrides
+  };
+}
+
+function schedulerConfig(dir, overrides = {}) {
+  return {
+    serviceName: "scheduler-service",
+    host: "127.0.0.1",
+    port: 0,
+    internalKey: INTERNAL_KEY,
+    dataFile: join(dir, "scheduler.json"),
+    notificationServiceUrl: overrides.notificationServiceUrl || "http://127.0.0.1:4108",
+    lookAheadHours: 72,
+    maxRunBatchSize: 50,
+    timeoutMs: 1000,
+    ...overrides
+  };
+}
+
 function gatewayConfig(services, overrides = {}) {
   return {
     serviceName: "gateway-service",
@@ -207,7 +237,9 @@ test("each service health endpoint returns ok", async () => {
       { createApp: createAiApp, config: aiConfig(dir, { learningServiceUrl: "http://127.0.0.1:65531" }) },
       { createApp: createCollaborationApp, config: collaborationConfig(dir) },
       { createApp: createAnalyticsApp, config: { serviceName: "analytics-service", host: "127.0.0.1", port: 0, internalKey: INTERNAL_KEY } },
-      { createApp: createKnowledgeApp, config: knowledgeConfig(dir) }
+      { createApp: createKnowledgeApp, config: knowledgeConfig(dir) },
+      { createApp: createNotificationApp, config: notificationConfig(dir) },
+      { createApp: createSchedulerApp, config: schedulerConfig(dir) }
     ];
 
     const apps = [];
@@ -1752,6 +1784,336 @@ test("collaboration-service handles messages, activity, internal events, and SSE
       await sseReader.cancel();
     } finally {
       await stopServers([collaboration.server]);
+    }
+  });
+});
+
+test("notification-service and scheduler-service handle reminders, delivery, and preferences", async () => {
+  await withTempDir(async (dir) => {
+    const apps = [];
+    try {
+      const notification = await startApp(createNotificationApp, notificationConfig(dir));
+      const scheduler = await startApp(createSchedulerApp, schedulerConfig(dir, {
+        notificationServiceUrl: notification.url
+      }));
+      apps.push(notification, scheduler);
+
+      const studentHeaders = {
+        "x-edumind-user-id": "user_student",
+        "x-edumind-user-role": "student",
+        "x-edumind-user-name": encodeUserContextHeader("student"),
+        "content-type": "application/json"
+      };
+      const teacherHeaders = {
+        "x-edumind-user-id": "user_teacher",
+        "x-edumind-user-role": "teacher",
+        "x-edumind-user-name": encodeUserContextHeader("teacher"),
+        "content-type": "application/json"
+      };
+      const internalHeaders = {
+        "x-edumind-internal-key": INTERNAL_KEY,
+        "content-type": "application/json"
+      };
+
+      const emitResponse = await fetch(`${notification.url}/internal/notifications/emit`, {
+        method: "POST",
+        headers: internalHeaders,
+        body: JSON.stringify({
+          recipientId: "user_student",
+          templateCode: "system.notice",
+          title: "Manual notice",
+          message: "Manual notice body",
+          category: "system",
+          severity: "info"
+        })
+      });
+      const emitPayload = await emitResponse.json();
+      assert.equal(emitResponse.status, 200);
+      assert.equal(emitPayload.data.accepted, 1);
+
+      const listResponse = await fetch(`${notification.url}/api/notifications`, {
+        headers: studentHeaders
+      });
+      const listPayload = await listResponse.json();
+      assert.equal(listResponse.status, 200);
+      assert.equal(listPayload.data.items.length, 1);
+
+      const summaryResponse = await fetch(`${notification.url}/api/notifications/summary`, {
+        headers: studentHeaders
+      });
+      const summaryPayload = await summaryResponse.json();
+      assert.equal(summaryResponse.status, 200);
+      assert.equal(summaryPayload.data.unread, 1);
+
+      const readResponse = await fetch(`${notification.url}/api/notifications/${listPayload.data.items[0].id}/read`, {
+        method: "PATCH",
+        headers: studentHeaders,
+        body: JSON.stringify({})
+      });
+      const readPayload = await readResponse.json();
+      assert.equal(readResponse.status, 200);
+      assert.ok(readPayload.data.readAt);
+
+      const preferenceResponse = await fetch(`${notification.url}/api/notification-preferences`, {
+        method: "PATCH",
+        headers: studentHeaders,
+        body: JSON.stringify({
+          channelSettings: { email: true },
+          categorySettings: { scheduler: true },
+          digestFrequency: "weekly"
+        })
+      });
+      const preferencePayload = await preferenceResponse.json();
+      assert.equal(preferenceResponse.status, 200);
+      assert.equal(preferencePayload.data.channelSettings.email, true);
+      assert.equal(preferencePayload.data.digestFrequency, "weekly");
+
+      const dueAt = new Date(Date.now() - 60_000).toISOString();
+      const reminderResponse = await fetch(`${scheduler.url}/api/scheduler/reminders`, {
+        method: "POST",
+        headers: studentHeaders,
+        body: JSON.stringify({
+          courseId: "course_ood",
+          title: "Review scheduler test",
+          message: "Run the scheduler notification flow.",
+          targetType: "practice",
+          targetId: "practice_demo",
+          dueAt,
+          frequency: "once",
+          severity: "warning",
+          channels: ["in_app"]
+        })
+      });
+      const reminderPayload = await reminderResponse.json();
+      assert.equal(reminderResponse.status, 200);
+      assert.equal(reminderPayload.data.ownerId, "user_student");
+
+      const previewResponse = await fetch(`${scheduler.url}/api/scheduler/due-preview`, {
+        headers: studentHeaders
+      });
+      const previewPayload = await previewResponse.json();
+      assert.equal(previewResponse.status, 200);
+      assert.ok(previewPayload.data.items.some((item) => item.id === reminderPayload.data.id));
+
+      const forbiddenRunResponse = await fetch(`${scheduler.url}/api/scheduler/run-due`, {
+        method: "POST",
+        headers: studentHeaders,
+        body: JSON.stringify({})
+      });
+      const forbiddenRunPayload = await forbiddenRunResponse.json();
+      assert.equal(forbiddenRunResponse.status, 403);
+      assert.equal(forbiddenRunPayload.code, "FORBIDDEN");
+
+      const tickResponse = await fetch(`${scheduler.url}/internal/scheduler/tick`, {
+        method: "POST",
+        headers: internalHeaders,
+        body: JSON.stringify({
+          now: new Date().toISOString()
+        })
+      });
+      const tickPayload = await tickResponse.json();
+      assert.equal(tickResponse.status, 200);
+      assert.equal(tickPayload.data.attempted >= 1, true);
+      assert.ok(tickPayload.data.results.some((item) => item.reminderId === reminderPayload.data.id && item.status === "success"));
+
+      const schedulerNotificationsResponse = await fetch(`${notification.url}/api/notifications?category=scheduler`, {
+        headers: studentHeaders
+      });
+      const schedulerNotificationsPayload = await schedulerNotificationsResponse.json();
+      assert.equal(schedulerNotificationsResponse.status, 200);
+      assert.ok(schedulerNotificationsPayload.data.items.some((item) => item.data.reminderId === reminderPayload.data.id));
+
+      const dashboardResponse = await fetch(`${scheduler.url}/api/scheduler/dashboard`, {
+        headers: teacherHeaders
+      });
+      const dashboardPayload = await dashboardResponse.json();
+      assert.equal(dashboardResponse.status, 200);
+      assert.equal(dashboardPayload.data.totalReminders >= 1, true);
+      assert.equal(typeof dashboardPayload.data.runStatus.success, "number");
+
+      const timelineResponse = await fetch(`${scheduler.url}/api/scheduler/timeline`, {
+        headers: studentHeaders
+      });
+      const timelinePayload = await timelineResponse.json();
+      assert.equal(timelineResponse.status, 200);
+      assert.ok(timelinePayload.data.items.some((item) => item.reminderId === reminderPayload.data.id));
+
+      const futureReminderResponse = await fetch(`${scheduler.url}/api/scheduler/reminders`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          ownerId: "user_student",
+          courseId: "course_ood",
+          title: "Teacher assigned review",
+          message: "Prepare the class diagram review.",
+          targetType: "assignment",
+          targetId: "assignment_ood_model",
+          dueAt: new Date(Date.now() + 3600_000).toISOString(),
+          frequency: "daily"
+        })
+      });
+      const futureReminderPayload = await futureReminderResponse.json();
+      assert.equal(futureReminderResponse.status, 200);
+
+      const updateReminderResponse = await fetch(`${scheduler.url}/api/scheduler/reminders/${futureReminderPayload.data.id}`, {
+        method: "PATCH",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          status: "paused",
+          metadata: { reason: "test pause" }
+        })
+      });
+      const updateReminderPayload = await updateReminderResponse.json();
+      assert.equal(updateReminderResponse.status, 200);
+      assert.equal(updateReminderPayload.data.status, "paused");
+      assert.equal(updateReminderPayload.data.metadata.reason, "test pause");
+    } finally {
+      await stopServers(apps.map((app) => app.server));
+    }
+  });
+});
+
+test("gateway proxies notification and scheduler endpoints", async () => {
+  await withTempDir(async (dir) => {
+    const apps = [];
+    try {
+      const identity = await startApp(createIdentityApp, identityConfig(dir));
+      const notification = await startApp(createNotificationApp, notificationConfig(dir));
+      const scheduler = await startApp(createSchedulerApp, schedulerConfig(dir, {
+        notificationServiceUrl: notification.url
+      }));
+      apps.push(identity, notification, scheduler);
+
+      const gateway = await startApp(createGatewayApp, gatewayConfig([
+        { name: "identity-service", url: identity.url },
+        { name: "notification-service", url: notification.url },
+        { name: "scheduler-service", url: scheduler.url }
+      ]));
+      apps.push(gateway);
+
+      const studentLogin = await loginThroughGateway(gateway.url, {
+        email: "student@edumind.local",
+        name: "student",
+        role: "student"
+      });
+      const teacherLogin = await loginThroughGateway(gateway.url, {
+        email: "teacher@edumind.local",
+        name: "teacher",
+        role: "teacher"
+      });
+      const studentToken = studentLogin.payload.data.token;
+      const teacherToken = teacherLogin.payload.data.token;
+      const studentHeaders = {
+        authorization: `Bearer ${studentToken}`,
+        "content-type": "application/json"
+      };
+      const teacherHeaders = {
+        authorization: `Bearer ${teacherToken}`,
+        "content-type": "application/json"
+      };
+
+      const createNotificationResponse = await fetch(`${gateway.url}/api/notifications`, {
+        method: "POST",
+        headers: studentHeaders,
+        body: JSON.stringify({
+          title: "Gateway notice",
+          body: "Created through gateway",
+          category: "system",
+          severity: "success"
+        })
+      });
+      const createNotificationPayload = await createNotificationResponse.json();
+      assert.equal(createNotificationResponse.status, 200);
+      assert.equal(createNotificationPayload.data.recipientId, "user_student");
+
+      const notificationSummaryResponse = await fetch(`${gateway.url}/api/notifications/summary`, {
+        headers: {
+          authorization: `Bearer ${studentToken}`
+        }
+      });
+      const notificationSummaryPayload = await notificationSummaryResponse.json();
+      assert.equal(notificationSummaryResponse.status, 200);
+      assert.equal(notificationSummaryPayload.data.unread >= 1, true);
+
+      const bulkNotificationResponse = await fetch(`${gateway.url}/api/notifications/bulk`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          recipientIds: ["user_student"],
+          title: "Teacher bulk notice",
+          body: "Bulk notification through gateway",
+          category: "system"
+        })
+      });
+      const bulkNotificationPayload = await bulkNotificationResponse.json();
+      assert.equal(bulkNotificationResponse.status, 200);
+      assert.equal(bulkNotificationPayload.data.accepted, 1);
+
+      const preferenceResponse = await fetch(`${gateway.url}/api/notification-preferences`, {
+        method: "PATCH",
+        headers: studentHeaders,
+        body: JSON.stringify({
+          channelSettings: { email: true }
+        })
+      });
+      const preferencePayload = await preferenceResponse.json();
+      assert.equal(preferenceResponse.status, 200);
+      assert.equal(preferencePayload.data.channelSettings.email, true);
+
+      const dueAt = new Date(Date.now() - 30_000).toISOString();
+      const reminderResponse = await fetch(`${gateway.url}/api/scheduler/reminders`, {
+        method: "POST",
+        headers: studentHeaders,
+        body: JSON.stringify({
+          courseId: "course_ood",
+          title: "Gateway reminder",
+          message: "Reminder created through gateway",
+          dueAt,
+          frequency: "once"
+        })
+      });
+      const reminderPayload = await reminderResponse.json();
+      assert.equal(reminderResponse.status, 200);
+
+      const duePreviewResponse = await fetch(`${gateway.url}/api/scheduler/due-preview`, {
+        headers: {
+          authorization: `Bearer ${studentToken}`
+        }
+      });
+      const duePreviewPayload = await duePreviewResponse.json();
+      assert.equal(duePreviewResponse.status, 200);
+      assert.ok(duePreviewPayload.data.items.some((item) => item.id === reminderPayload.data.id));
+
+      const runDueResponse = await fetch(`${gateway.url}/api/scheduler/run-due`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          now: new Date().toISOString()
+        })
+      });
+      const runDuePayload = await runDueResponse.json();
+      assert.equal(runDueResponse.status, 200);
+      assert.ok(runDuePayload.data.results.some((item) => item.reminderId === reminderPayload.data.id));
+
+      const schedulerNotificationResponse = await fetch(`${gateway.url}/api/notifications?category=scheduler`, {
+        headers: {
+          authorization: `Bearer ${studentToken}`
+        }
+      });
+      const schedulerNotificationPayload = await schedulerNotificationResponse.json();
+      assert.equal(schedulerNotificationResponse.status, 200);
+      assert.ok(schedulerNotificationPayload.data.items.some((item) => item.data.reminderId === reminderPayload.data.id));
+
+      const schedulerDashboardResponse = await fetch(`${gateway.url}/api/scheduler/dashboard`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const schedulerDashboardPayload = await schedulerDashboardResponse.json();
+      assert.equal(schedulerDashboardResponse.status, 200);
+      assert.equal(schedulerDashboardPayload.data.totalReminders >= 1, true);
+    } finally {
+      await stopServers(apps.map((app) => app.server));
     }
   });
 });

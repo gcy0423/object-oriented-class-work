@@ -15,6 +15,8 @@
     "start:collaboration": "node services/collaboration-service/src/main.js",
     "start:analytics": "node services/analytics-service/src/main.js",
     "start:knowledge": "node services/knowledge-service/src/main.js",
+    "start:notification": "node services/notification-service/src/main.js",
+    "start:scheduler": "node services/scheduler-service/src/main.js",
     "start:services": "node scripts/startServices.mjs",
     "start:services:mock": "node scripts/startServices.mjs --mock",
     "test": "node --test test/kernel.test.mjs test/client.test.mjs",
