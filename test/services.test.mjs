@@ -1744,6 +1744,283 @@ test("collaboration-service handles messages, activity, internal events, and SSE
       assert.equal(activityResponse.status, 200);
       assert.equal(activityPayload.data[0].type, "message.created");
 
+      const roomsResponse = await fetch(`${collaboration.url}/api/collaboration/rooms?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const roomsPayload = await roomsResponse.json();
+      assert.equal(roomsResponse.status, 200);
+      assert.ok(roomsPayload.data.some((room) => room.id === "room_ood"));
+      assert.equal(typeof roomsPayload.data[0].stats.messageCount, "number");
+
+      const createRoomResponse = await fetch(`${collaboration.url}/api/collaboration/rooms`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          title: "Test Group Workspace",
+          courseId: "course_ood",
+          type: "group",
+          description: "Room created during collaboration test.",
+          tags: "test, group"
+        })
+      });
+      const createRoomPayload = await createRoomResponse.json();
+      assert.equal(createRoomResponse.status, 200);
+      assert.equal(createRoomPayload.data.type, "group");
+
+      const memberResponse = await fetch(`${collaboration.url}/api/collaboration/rooms/${createRoomPayload.data.id}/members`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          userId: "user_teacher",
+          displayName: "Teacher",
+          role: "reviewer"
+        })
+      });
+      const memberPayload = await memberResponse.json();
+      assert.equal(memberResponse.status, 200);
+      assert.equal(memberPayload.data.userId, "user_teacher");
+
+      const mentionMessageResponse = await fetch(`${collaboration.url}/api/collaboration/messages`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          roomId: createRoomPayload.data.id,
+          content: "@user_student please review the collaboration task handoff."
+        })
+      });
+      const mentionMessagePayload = await mentionMessageResponse.json();
+      assert.equal(mentionMessageResponse.status, 200);
+      assert.equal(mentionMessagePayload.data.mentions.length, 1);
+
+      const replyResponse = await fetch(`${collaboration.url}/api/collaboration/messages/${mentionMessagePayload.data.id}/replies`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          content: "Reply keeps the message thread intact."
+        })
+      });
+      const replyPayload = await replyResponse.json();
+      assert.equal(replyResponse.status, 200);
+      assert.equal(replyPayload.data.messageId, mentionMessagePayload.data.id);
+
+      const taskResponse = await fetch(`${collaboration.url}/api/collaboration/tasks`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          roomId: createRoomPayload.data.id,
+          sourceMessageId: mentionMessagePayload.data.id,
+          title: "Close collaboration test task",
+          assigneeId: "user_student",
+          priority: "high",
+          status: "doing",
+          labels: "test, collaboration"
+        })
+      });
+      const taskPayload = await taskResponse.json();
+      assert.equal(taskResponse.status, 200);
+      assert.equal(taskPayload.data.status, "doing");
+
+      const updateTaskResponse = await fetch(`${collaboration.url}/api/collaboration/tasks/${taskPayload.data.id}`, {
+        method: "PATCH",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          status: "done"
+        })
+      });
+      const updateTaskPayload = await updateTaskResponse.json();
+      assert.equal(updateTaskResponse.status, 200);
+      assert.equal(updateTaskPayload.data.status, "done");
+
+      const summaryResponse = await fetch(`${collaboration.url}/api/collaboration/summaries`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          roomId: createRoomPayload.data.id,
+          decisions: "Thread replies and audit records are required."
+        })
+      });
+      const summaryPayload = await summaryResponse.json();
+      assert.equal(summaryResponse.status, 200);
+      assert.equal(summaryPayload.data.roomId, createRoomPayload.data.id);
+
+      const decisionResponse = await fetch(`${collaboration.url}/api/collaboration/decisions`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          roomId: createRoomPayload.data.id,
+          title: "Use explicit audit records",
+          rationale: "The project needs a traceable collaboration process.",
+          impact: "Final report can cite decision and audit data.",
+          status: "accepted",
+          tags: "audit, report"
+        })
+      });
+      const decisionPayload = await decisionResponse.json();
+      assert.equal(decisionResponse.status, 200);
+      assert.equal(decisionPayload.data.status, "accepted");
+
+      const resourceResponse = await fetch(`${collaboration.url}/api/collaboration/resources`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          roomId: createRoomPayload.data.id,
+          title: "Test resource",
+          url: "https://example.local/test-resource",
+          type: "document",
+          description: "Resource created by collaboration service test."
+        })
+      });
+      const resourcePayload = await resourceResponse.json();
+      assert.equal(resourceResponse.status, 200);
+      assert.equal(resourcePayload.data.type, "document");
+
+      const checklistResponse = await fetch(`${collaboration.url}/api/collaboration/checklist`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          roomId: createRoomPayload.data.id,
+          title: "Verify collaboration insight",
+          ownerId: "user_student",
+          status: "doing"
+        })
+      });
+      const checklistPayload = await checklistResponse.json();
+      assert.equal(checklistResponse.status, 200);
+      assert.equal(checklistPayload.data.status, "doing");
+
+      const checklistDoneResponse = await fetch(`${collaboration.url}/api/collaboration/checklist/${checklistPayload.data.id}`, {
+        method: "PATCH",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          status: "done"
+        })
+      });
+      const checklistDonePayload = await checklistDoneResponse.json();
+      assert.equal(checklistDoneResponse.status, 200);
+      assert.equal(checklistDonePayload.data.status, "done");
+
+      const handoffResponse = await fetch(`${collaboration.url}/api/collaboration/handoffs`, {
+        method: "POST",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          roomId: createRoomPayload.data.id,
+          toUserId: "user_teacher",
+          title: "Review collaboration handoff",
+          context: "The student completed the implementation path and needs review.",
+          blockers: "None",
+          nextSteps: "Review API\nReview frontend"
+        })
+      });
+      const handoffPayload = await handoffResponse.json();
+      assert.equal(handoffResponse.status, 200);
+      assert.equal(handoffPayload.data.toUserId, "user_teacher");
+
+      const handoffClosedResponse = await fetch(`${collaboration.url}/api/collaboration/handoffs/${handoffPayload.data.id}`, {
+        method: "PATCH",
+        headers: {
+          ...studentHeaders,
+          "content-type": "application/json"
+        },
+        body: JSON.stringify({
+          status: "closed"
+        })
+      });
+      const handoffClosedPayload = await handoffClosedResponse.json();
+      assert.equal(handoffClosedResponse.status, 200);
+      assert.equal(handoffClosedPayload.data.status, "closed");
+
+      const insightResponse = await fetch(`${collaboration.url}/api/collaboration/rooms/${createRoomPayload.data.id}/insight`, {
+        headers: studentHeaders
+      });
+      const insightPayload = await insightResponse.json();
+      assert.equal(insightResponse.status, 200);
+      assert.equal(typeof insightPayload.data.metrics.healthScore, "number");
+
+      const workspaceResponse = await fetch(`${collaboration.url}/api/collaboration/rooms/${createRoomPayload.data.id}`, {
+        headers: studentHeaders
+      });
+      const workspacePayload = await workspaceResponse.json();
+      assert.equal(workspaceResponse.status, 200);
+      assert.equal(workspacePayload.data.messages[0].replies.length, 1);
+      assert.equal(workspacePayload.data.tasks.some((task) => task.id === taskPayload.data.id), true);
+      assert.equal(workspacePayload.data.summaries.length >= 1, true);
+      assert.equal(workspacePayload.data.decisions.some((decision) => decision.id === decisionPayload.data.id), true);
+      assert.equal(workspacePayload.data.resources.some((resource) => resource.id === resourcePayload.data.id), true);
+      assert.equal(workspacePayload.data.checklist.some((item) => item.id === checklistPayload.data.id), true);
+      assert.equal(workspacePayload.data.handoffs.some((note) => note.id === handoffPayload.data.id), true);
+
+      const mentionsResponse = await fetch(`${collaboration.url}/api/collaboration/mentions?roomId=${createRoomPayload.data.id}`, {
+        headers: studentHeaders
+      });
+      const mentionsPayload = await mentionsResponse.json();
+      assert.equal(mentionsResponse.status, 200);
+      assert.equal(mentionsPayload.data[0].targetId, "user_student");
+
+      const readMentionResponse = await fetch(`${collaboration.url}/api/collaboration/mentions/${mentionsPayload.data[0].id}/read`, {
+        method: "PATCH",
+        headers: studentHeaders
+      });
+      const readMentionPayload = await readMentionResponse.json();
+      assert.equal(readMentionResponse.status, 200);
+      assert.equal(readMentionPayload.data.status, "read");
+
+      const auditResponse = await fetch(`${collaboration.url}/api/collaboration/audit?roomId=${createRoomPayload.data.id}`, {
+        headers: studentHeaders
+      });
+      const auditPayload = await auditResponse.json();
+      assert.equal(auditResponse.status, 200);
+      assert.ok(auditPayload.data.some((record) => record.action === "collaboration.task.updated"));
+
+      const analyticsResponse = await fetch(`${collaboration.url}/internal/collaboration/analytics`, {
+        headers: {
+          "x-edumind-internal-key": INTERNAL_KEY
+        }
+      });
+      const analyticsPayload = await analyticsResponse.json();
+      assert.equal(analyticsResponse.status, 200);
+      assert.ok(analyticsPayload.data.tasks.some((task) => task.id === taskPayload.data.id));
+      assert.ok(analyticsPayload.data.decisions.some((decision) => decision.id === decisionPayload.data.id));
+      assert.ok(analyticsPayload.data.resources.some((resource) => resource.id === resourcePayload.data.id));
+      assert.ok(analyticsPayload.data.checklist.some((item) => item.id === checklistPayload.data.id));
+      assert.ok(analyticsPayload.data.handoffs.some((note) => note.id === handoffPayload.data.id));
+      assert.ok(analyticsPayload.data.audits.length >= 1);
+
       const badInternalResponse = await fetch(`${collaboration.url}/internal/events`, {
         method: "POST",
         headers: {
@@ -2516,6 +2793,228 @@ test("gateway proxies login, AI, collaboration APIs, SSE, and dashboard aggregat
       const collaborationPostPayload = await collaborationPostResponse.json();
       assert.equal(collaborationPostResponse.status, 200);
       assert.equal(collaborationPostPayload.data.authorId, "user_student");
+
+      const gatewayRoomsResponse = await fetch(`${gateway.url}/api/collaboration/rooms?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayRoomsPayload = await gatewayRoomsResponse.json();
+      assert.equal(gatewayRoomsResponse.status, 200);
+      assert.ok(gatewayRoomsPayload.data.some((room) => room.id === "room_ood"));
+
+      const gatewayRoomCreateResponse = await fetch(`${gateway.url}/api/collaboration/rooms`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          title: "Gateway Collaboration Room",
+          courseId: "course_ood",
+          type: "group",
+          description: "Created through gateway proxy."
+        })
+      });
+      const gatewayRoomCreatePayload = await gatewayRoomCreateResponse.json();
+      assert.equal(gatewayRoomCreateResponse.status, 200);
+      assert.equal(gatewayRoomCreatePayload.data.type, "group");
+
+      const gatewayMemberResponse = await fetch(`${gateway.url}/api/collaboration/rooms/${gatewayRoomCreatePayload.data.id}/members`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          userId: "user_teacher",
+          displayName: "Teacher",
+          role: "reviewer"
+        })
+      });
+      const gatewayMemberPayload = await gatewayMemberResponse.json();
+      assert.equal(gatewayMemberResponse.status, 200);
+      assert.equal(gatewayMemberPayload.data.userId, "user_teacher");
+
+      const gatewayMentionMessageResponse = await fetch(`${gateway.url}/api/collaboration/messages`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          roomId: gatewayRoomCreatePayload.data.id,
+          content: "@user_student gateway mention message."
+        })
+      });
+      const gatewayMentionMessagePayload = await gatewayMentionMessageResponse.json();
+      assert.equal(gatewayMentionMessageResponse.status, 200);
+      assert.equal(gatewayMentionMessagePayload.data.mentions.length, 1);
+
+      const gatewayReplyResponse = await fetch(`${gateway.url}/api/collaboration/messages/${gatewayMentionMessagePayload.data.id}/replies`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          content: "Gateway reply is proxied."
+        })
+      });
+      const gatewayReplyPayload = await gatewayReplyResponse.json();
+      assert.equal(gatewayReplyResponse.status, 200);
+      assert.equal(gatewayReplyPayload.data.messageId, gatewayMentionMessagePayload.data.id);
+
+      const gatewayTaskResponse = await fetch(`${gateway.url}/api/collaboration/tasks`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          roomId: gatewayRoomCreatePayload.data.id,
+          title: "Gateway collaboration task",
+          assigneeId: "user_student",
+          priority: "high"
+        })
+      });
+      const gatewayTaskPayload = await gatewayTaskResponse.json();
+      assert.equal(gatewayTaskResponse.status, 200);
+      assert.equal(gatewayTaskPayload.data.roomId, gatewayRoomCreatePayload.data.id);
+
+      const gatewayTaskDoneResponse = await fetch(`${gateway.url}/api/collaboration/tasks/${gatewayTaskPayload.data.id}`, {
+        method: "PATCH",
+        headers: authHeaders,
+        body: JSON.stringify({
+          status: "done"
+        })
+      });
+      const gatewayTaskDonePayload = await gatewayTaskDoneResponse.json();
+      assert.equal(gatewayTaskDoneResponse.status, 200);
+      assert.equal(gatewayTaskDonePayload.data.status, "done");
+
+      const gatewaySummaryResponse = await fetch(`${gateway.url}/api/collaboration/summaries`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          roomId: gatewayRoomCreatePayload.data.id
+        })
+      });
+      const gatewaySummaryPayload = await gatewaySummaryResponse.json();
+      assert.equal(gatewaySummaryResponse.status, 200);
+      assert.equal(gatewaySummaryPayload.data.roomId, gatewayRoomCreatePayload.data.id);
+
+      const gatewayDecisionResponse = await fetch(`${gateway.url}/api/collaboration/decisions`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          roomId: gatewayRoomCreatePayload.data.id,
+          title: "Gateway decision",
+          rationale: "Gateway must proxy collaboration decisions.",
+          status: "accepted"
+        })
+      });
+      const gatewayDecisionPayload = await gatewayDecisionResponse.json();
+      assert.equal(gatewayDecisionResponse.status, 200);
+      assert.equal(gatewayDecisionPayload.data.status, "accepted");
+
+      const gatewayResourceResponse = await fetch(`${gateway.url}/api/collaboration/resources`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          roomId: gatewayRoomCreatePayload.data.id,
+          title: "Gateway resource",
+          url: "https://example.local/gateway-resource",
+          type: "document"
+        })
+      });
+      const gatewayResourcePayload = await gatewayResourceResponse.json();
+      assert.equal(gatewayResourceResponse.status, 200);
+      assert.equal(gatewayResourcePayload.data.type, "document");
+
+      const gatewayChecklistResponse = await fetch(`${gateway.url}/api/collaboration/checklist`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          roomId: gatewayRoomCreatePayload.data.id,
+          title: "Gateway checklist item",
+          ownerId: "user_student",
+          status: "open"
+        })
+      });
+      const gatewayChecklistPayload = await gatewayChecklistResponse.json();
+      assert.equal(gatewayChecklistResponse.status, 200);
+      assert.equal(gatewayChecklistPayload.data.status, "open");
+
+      const gatewayChecklistDoneResponse = await fetch(`${gateway.url}/api/collaboration/checklist/${gatewayChecklistPayload.data.id}`, {
+        method: "PATCH",
+        headers: authHeaders,
+        body: JSON.stringify({
+          status: "done"
+        })
+      });
+      const gatewayChecklistDonePayload = await gatewayChecklistDoneResponse.json();
+      assert.equal(gatewayChecklistDoneResponse.status, 200);
+      assert.equal(gatewayChecklistDonePayload.data.status, "done");
+
+      const gatewayHandoffResponse = await fetch(`${gateway.url}/api/collaboration/handoffs`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          roomId: gatewayRoomCreatePayload.data.id,
+          toUserId: "user_teacher",
+          title: "Gateway handoff",
+          context: "Gateway should proxy handoff records.",
+          nextSteps: "Review proxy\nReview workspace"
+        })
+      });
+      const gatewayHandoffPayload = await gatewayHandoffResponse.json();
+      assert.equal(gatewayHandoffResponse.status, 200);
+      assert.equal(gatewayHandoffPayload.data.toUserId, "user_teacher");
+
+      const gatewayHandoffClosedResponse = await fetch(`${gateway.url}/api/collaboration/handoffs/${gatewayHandoffPayload.data.id}`, {
+        method: "PATCH",
+        headers: authHeaders,
+        body: JSON.stringify({
+          status: "closed"
+        })
+      });
+      const gatewayHandoffClosedPayload = await gatewayHandoffClosedResponse.json();
+      assert.equal(gatewayHandoffClosedResponse.status, 200);
+      assert.equal(gatewayHandoffClosedPayload.data.status, "closed");
+
+      const gatewayInsightResponse = await fetch(`${gateway.url}/api/collaboration/rooms/${gatewayRoomCreatePayload.data.id}/insight`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayInsightPayload = await gatewayInsightResponse.json();
+      assert.equal(gatewayInsightResponse.status, 200);
+      assert.equal(typeof gatewayInsightPayload.data.metrics.healthScore, "number");
+
+      const gatewayWorkspaceResponse = await fetch(`${gateway.url}/api/collaboration/rooms/${gatewayRoomCreatePayload.data.id}`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayWorkspacePayload = await gatewayWorkspaceResponse.json();
+      assert.equal(gatewayWorkspaceResponse.status, 200);
+      assert.equal(gatewayWorkspacePayload.data.messages[0].replies.length, 1);
+      assert.equal(gatewayWorkspacePayload.data.decisions.some((decision) => decision.id === gatewayDecisionPayload.data.id), true);
+      assert.equal(gatewayWorkspacePayload.data.resources.some((resource) => resource.id === gatewayResourcePayload.data.id), true);
+      assert.equal(gatewayWorkspacePayload.data.checklist.some((item) => item.id === gatewayChecklistPayload.data.id), true);
+      assert.equal(gatewayWorkspacePayload.data.handoffs.some((note) => note.id === gatewayHandoffPayload.data.id), true);
+
+      const gatewayMentionsResponse = await fetch(`${gateway.url}/api/collaboration/mentions?roomId=${gatewayRoomCreatePayload.data.id}`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayMentionsPayload = await gatewayMentionsResponse.json();
+      assert.equal(gatewayMentionsResponse.status, 200);
+      assert.equal(gatewayMentionsPayload.data[0].status, "unread");
+
+      const gatewayMentionReadResponse = await fetch(`${gateway.url}/api/collaboration/mentions/${gatewayMentionsPayload.data[0].id}/read`, {
+        method: "PATCH",
+        headers: authHeaders
+      });
+      const gatewayMentionReadPayload = await gatewayMentionReadResponse.json();
+      assert.equal(gatewayMentionReadResponse.status, 200);
+      assert.equal(gatewayMentionReadPayload.data.status, "read");
+
+      const gatewayAuditResponse = await fetch(`${gateway.url}/api/collaboration/audit?roomId=${gatewayRoomCreatePayload.data.id}`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayAuditPayload = await gatewayAuditResponse.json();
+      assert.equal(gatewayAuditResponse.status, 200);
+      assert.ok(gatewayAuditPayload.data.some((record) => record.action === "room.summary.created"));
 
       const activityResponse = await fetch(`${gateway.url}/api/activity?limit=20`, {
         headers: {

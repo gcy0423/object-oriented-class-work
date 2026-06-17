@@ -627,6 +627,100 @@ textarea:focus-visible,
   font-size: 13px;
 }
 
+.collaboration-filter {
+  margin-bottom: 16px;
+}
+
+.collaboration-layout {
+  display: grid;
+  grid-template-columns: minmax(240px, 320px) minmax(0, 1.45fr) minmax(300px, 420px);
+  gap: 16px;
+  align-items: start;
+}
+
+.collaboration-left,
+.collaboration-main,
+.collaboration-right,
+.collab-room-list,
+.collab-thread-list,
+.collab-summary-list,
+.collab-replies {
+  display: grid;
+  gap: 12px;
+}
+
+.collab-room,
+.collab-thread,
+.collab-summary-list article,
+.collab-replies article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.collab-room.is-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(13, 128, 120, 0.12);
+}
+
+.collab-room-head,
+.collab-thread-head,
+.collab-summary-head,
+.collab-member-list li,
+.collab-side-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.collab-thread p,
+.collab-summary-list p,
+.collab-side-list p {
+  margin: 8px 0;
+  line-height: 1.58;
+}
+
+.collab-replies {
+  margin-top: 12px;
+  padding-left: 14px;
+  border-left: 3px solid var(--line);
+}
+
+.collab-inline-reply {
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.collab-member-list,
+.collab-side-list {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.collab-member-list li,
+.collab-side-list li {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fff;
+}
+
+.collab-side-list li.is-unread {
+  border-color: #f2c66d;
+  background: #fffaf0;
+}
+
+.collab-table {
+  min-width: 760px;
+}
+
 .course-card-grid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
@@ -1078,6 +1172,7 @@ textarea:focus-visible,
 
 @media (max-width: 1180px) {
   .insight-layout,
+  .collaboration-layout,
   .knowledge-layout,
   .workbench-grid,
   .two-column,
@@ -1134,9 +1229,14 @@ textarea:focus-visible,
   .stats-grid,
   .filter-toolbar,
   .insight-dimension-grid,
-  .insight-mini-grid,
-  .insight-timeline li,
-  .knowledge-profile-grid,
+    .insight-mini-grid,
+    .insight-timeline li,
+    .collab-room-head,
+    .collab-thread-head,
+    .collab-summary-head,
+    .collab-member-list li,
+    .collab-side-list li,
+    .knowledge-profile-grid,
   .knowledge-context-grid,
   .knowledge-edge,
   .knowledge-schedule > li {

@@ -14,6 +14,7 @@ export function createInitialState() {
       questionBanks: false,
       practice: false,
       analytics: false,
+      collaboration: false,
       settings: false
     },
     saving: {
@@ -28,7 +29,17 @@ export function createInitialState() {
       knowledgePath: false,
       knowledgePractice: false,
       knowledgeContext: false,
-      adaptivePlan: false
+      adaptivePlan: false,
+      collaborationRoom: false,
+      collaborationMessage: false,
+      collaborationReply: false,
+      collaborationTask: false,
+      collaborationSummary: false,
+      collaborationMember: false,
+      collaborationDecision: false,
+      collaborationResource: false,
+      collaborationChecklist: false,
+      collaborationHandoff: false
     },
     errors: {},
     filters: {
@@ -38,14 +49,16 @@ export function createInitialState() {
       analytics: { courseId: "", studentId: "" },
       workbench: { courseId: "", category: "", reminderStatus: "" },
       knowledge: { courseId: "", query: "object collaboration", category: "", difficulty: "", tag: "", conceptId: "" },
-      assessmentInsight: { courseId: "", assignmentId: "", rubricId: "", submissionId: "", practiceSessionId: "", mistakeId: "", studentId: "" }
+      assessmentInsight: { courseId: "", assignmentId: "", rubricId: "", submissionId: "", practiceSessionId: "", mistakeId: "", studentId: "" },
+      collaboration: { courseId: "", roomId: "", type: "", taskStatus: "", mentionStatus: "" }
     },
     selected: {
       assignmentId: "",
       questionBankId: "",
       questionId: "",
       practiceSessionId: "",
-      studentId: ""
+      studentId: "",
+      collaborationRoomId: ""
     },
     draft: {
       assignment: null,
@@ -57,7 +70,15 @@ export function createInitialState() {
       knowledgePath: { goalText: "object collaboration service boundary", days: 5 },
       knowledgePractice: { conceptIds: "", limit: 4 },
       knowledgeContext: { question: "How should the AI answer cite retrieved knowledge?", limit: 4 },
-      adaptivePlan: { questionCount: 8, bankId: "" }
+      adaptivePlan: { questionCount: 8, bankId: "" },
+      collaborationRoom: { title: "", type: "course", description: "" },
+      collaborationTask: { title: "", priority: "medium", assigneeId: "" },
+      collaborationSummary: { summary: "", decisions: "", risks: "" },
+      collaborationMember: { userId: "", displayName: "", role: "member" },
+      collaborationDecision: { title: "", status: "proposed" },
+      collaborationResource: { title: "", url: "", type: "link" },
+      collaborationChecklist: { title: "", ownerId: "", status: "open" },
+      collaborationHandoff: { title: "", toUserId: "", status: "open" }
     },
     ui: {
       activePanel: "",
@@ -117,6 +138,18 @@ export function createInitialState() {
       courseReport: null,
       studentPortfolio: null,
       riskRegister: null
+    },
+    collaboration: {
+      rooms: [],
+      workspace: null,
+      mentions: [],
+      tasks: [],
+      decisions: [],
+      resources: [],
+      checklist: [],
+      handoffs: [],
+      insight: null,
+      audit: []
     },
     settings: {
       health: null,

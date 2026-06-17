@@ -312,12 +312,56 @@ class EduMindApp {
         isTeacher && insightCourseId ? this.api.assessmentRiskRegister({ courseId: insightCourseId }) : Promise.resolve({ data: null })
       ]);
 
+      const collaborationFilter = state.filters.collaboration;
+      const collaborationCourseId = collaborationFilter.courseId || firstCourseId;
+      const roomParams = {
+        ...(collaborationCourseId ? { courseId: collaborationCourseId } : {}),
+        ...(collaborationFilter.type ? { type: collaborationFilter.type } : {})
+      };
+      const roomsResult = await this.api.collaborationRooms(roomParams).catch(() => ({ data: state.collaboration.rooms || [] }));
+      const roomRows = Array.isArray(roomsResult.data) ? roomsResult.data : [];
+      const selectedCollaborationRoomId = collaborationFilter.roomId
+        || state.selected.collaborationRoomId
+        || firstItem(roomRows)?.id
+        || "room_ood";
+      const [
+        collaborationWorkspaceResult,
+        collaborationMentionsResult,
+        collaborationTasksResult,
+        collaborationInsightResult,
+        collaborationDecisionsResult,
+        collaborationResourcesResult,
+        collaborationChecklistResult,
+        collaborationHandoffsResult,
+        collaborationAuditResult
+      ] = await Promise.allSettled([
+        selectedCollaborationRoomId ? this.api.collaborationRoom(selectedCollaborationRoomId) : Promise.resolve({ data: null }),
+        this.api.collaborationMentions({
+          ...(collaborationFilter.mentionStatus ? { status: collaborationFilter.mentionStatus } : {}),
+          ...(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId } : {})
+        }),
+        this.api.collaborationTasks({
+          ...(collaborationFilter.taskStatus ? { status: collaborationFilter.taskStatus } : {}),
+          ...(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId } : {})
+        }),
+        selectedCollaborationRoomId ? this.api.collaborationRoomInsight(selectedCollaborationRoomId) : Promise.resolve({ data: null }),
+        this.api.collaborationDecisions(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId } : {}),
+        this.api.collaborationResources(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId } : {}),
+        this.api.collaborationChecklist(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId } : {}),
+        this.api.collaborationHandoffs(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId } : {}),
+        this.api.collaborationAudit(selectedCollaborationRoomId ? { roomId: selectedCollaborationRoomId, limit: 60 } : { limit: 60 })
+      ]);
+
       this.setState({
         dashboard: dashboard.data,
         provider: dashboard.meta?.provider || "",
         messages: messagesResult.status === "fulfilled" ? messagesResult.value.data : [],
         activity: activityResult.status === "fulfilled" ? activityResult.value.data : [],
         toast: message,
+        selected: {
+          ...state.selected,
+          collaborationRoomId: selectedCollaborationRoomId
+        },
         assessment: {
           assignments: assignmentsResult.status === "fulfilled" ? assignmentsResult.value.data : [],
           assignmentDetail,
@@ -371,6 +415,18 @@ class EduMindApp {
           studentPortfolio: studentPortfolioResult.status === "fulfilled" ? studentPortfolioResult.value.data : state.assessmentInsight.studentPortfolio,
           riskRegister: riskRegisterResult.status === "fulfilled" ? riskRegisterResult.value.data : state.assessmentInsight.riskRegister
         },
+        collaboration: {
+          rooms: roomRows,
+          workspace: collaborationWorkspaceResult.status === "fulfilled" ? collaborationWorkspaceResult.value.data : state.collaboration.workspace,
+          mentions: collaborationMentionsResult.status === "fulfilled" ? collaborationMentionsResult.value.data : state.collaboration.mentions,
+          tasks: collaborationTasksResult.status === "fulfilled" ? collaborationTasksResult.value.data : state.collaboration.tasks,
+          insight: collaborationInsightResult.status === "fulfilled" ? collaborationInsightResult.value.data : state.collaboration.insight,
+          decisions: collaborationDecisionsResult.status === "fulfilled" ? collaborationDecisionsResult.value.data : state.collaboration.decisions,
+          resources: collaborationResourcesResult.status === "fulfilled" ? collaborationResourcesResult.value.data : state.collaboration.resources,
+          checklist: collaborationChecklistResult.status === "fulfilled" ? collaborationChecklistResult.value.data : state.collaboration.checklist,
+          handoffs: collaborationHandoffsResult.status === "fulfilled" ? collaborationHandoffsResult.value.data : state.collaboration.handoffs,
+          audit: collaborationAuditResult.status === "fulfilled" ? collaborationAuditResult.value.data : state.collaboration.audit
+        },
         settings: {
           health: healthResult.status === "fulfilled" ? healthResult.value.data : null,
           modelConfig: buildModelConfig(dashboard.meta?.provider || "")
@@ -389,7 +445,29 @@ class EduMindApp {
       this.events.close();
     }
     this.events = new EventSource(`/api/events?token=${encodeURIComponent(this.api.token)}`);
-    for (const type of ["goal.changed", "task.changed", "note.changed", "message.created", "activity.created", "submission.created", "practice.completed"]) {
+    for (const type of [
+      "goal.changed",
+      "task.changed",
+      "note.changed",
+      "message.created",
+      "message.replied",
+      "mention.created",
+      "mention.read",
+      "room.created",
+      "room.member.changed",
+      "collaboration.task.created",
+      "collaboration.task.updated",
+      "room.summary.created",
+      "room.decision.created",
+      "room.resource.created",
+      "room.checklist.created",
+      "room.checklist.updated",
+      "room.handoff.created",
+      "room.handoff.updated",
+      "activity.created",
+      "submission.created",
+      "practice.completed"
+    ]) {
       this.events.addEventListener(type, () => this.refreshApp().catch(() => {}));
     }
     this.events.onerror = () => {
@@ -418,6 +496,56 @@ class EduMindApp {
       }
       if (action === "refresh") {
         await this.refreshApp();
+        return;
+      }
+      if (action === "select-collaboration-room") {
+        const roomId = actionButton.dataset.id;
+        this.setState({
+          route: "team",
+          selected: { ...this.store.get().selected, collaborationRoomId: roomId },
+          filters: { ...this.store.get().filters, collaboration: { ...this.store.get().filters.collaboration, roomId } }
+        });
+        await this.refreshApp();
+        return;
+      }
+      if (action === "complete-collaboration-task") {
+        await this.api.updateCollaborationTask(actionButton.dataset.id, { status: "done" });
+        await this.refreshApp("Collaboration task completed.");
+        return;
+      }
+      if (action === "reopen-collaboration-task") {
+        await this.api.updateCollaborationTask(actionButton.dataset.id, { status: "open" });
+        await this.refreshApp("Collaboration task reopened.");
+        return;
+      }
+      if (action === "complete-collaboration-checklist") {
+        await this.api.updateCollaborationChecklistItem(actionButton.dataset.id, { status: "done" });
+        await this.refreshApp("Checklist item completed.");
+        return;
+      }
+      if (action === "reopen-collaboration-checklist") {
+        await this.api.updateCollaborationChecklistItem(actionButton.dataset.id, { status: "open" });
+        await this.refreshApp("Checklist item reopened.");
+        return;
+      }
+      if (action === "accept-collaboration-handoff") {
+        await this.api.updateCollaborationHandoff(actionButton.dataset.id, { status: "accepted" });
+        await this.refreshApp("Handoff accepted.");
+        return;
+      }
+      if (action === "close-collaboration-handoff") {
+        await this.api.updateCollaborationHandoff(actionButton.dataset.id, { status: "closed" });
+        await this.refreshApp("Handoff closed.");
+        return;
+      }
+      if (action === "reopen-collaboration-handoff") {
+        await this.api.updateCollaborationHandoff(actionButton.dataset.id, { status: "open" });
+        await this.refreshApp("Handoff reopened.");
+        return;
+      }
+      if (action === "read-collaboration-mention") {
+        await this.api.markCollaborationMentionRead(actionButton.dataset.id);
+        await this.refreshApp("Mention marked as read.");
         return;
       }
       if (action === "logout") {
@@ -698,9 +826,196 @@ class EduMindApp {
         return;
       }
       if (form.dataset.form === "message") {
-        await this.api.sendMessage(data.content);
+        this.patchSaving("collaborationMessage", true);
+        try {
+          await this.api.sendMessage({
+            roomId: data.roomId || this.store.get().selected.collaborationRoomId || "room_ood",
+            content: data.content
+          });
+        } finally {
+          this.patchSaving("collaborationMessage", false);
+        }
         form.reset();
-        await this.refreshApp("消息已发送。");
+        await this.refreshApp("Message sent.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-filter") {
+        this.setState({
+          route: "team",
+          filters: { ...this.store.get().filters, collaboration: { ...this.store.get().filters.collaboration, ...data } },
+          selected: { ...this.store.get().selected, collaborationRoomId: data.roomId || this.store.get().selected.collaborationRoomId }
+        });
+        await this.refreshApp("Collaboration filters applied.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-room") {
+        this.patchSaving("collaborationRoom", true);
+        try {
+          const result = await this.api.createCollaborationRoom({
+            title: data.title,
+            courseId: data.courseId,
+            type: data.type,
+            visibility: data.visibility,
+            description: data.description,
+            tags: data.tags
+          });
+          this.setState({
+            route: "team",
+            selected: { ...this.store.get().selected, collaborationRoomId: result.data.id },
+            filters: { ...this.store.get().filters, collaboration: { ...this.store.get().filters.collaboration, roomId: result.data.id } }
+          });
+        } finally {
+          this.patchSaving("collaborationRoom", false);
+        }
+        form.reset();
+        await this.refreshApp("Collaboration room created.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-member") {
+        const roomId = data.roomId || this.store.get().selected.collaborationRoomId || "room_ood";
+        this.patchSaving("collaborationMember", true);
+        try {
+          await this.api.addCollaborationRoomMember(roomId, {
+            userId: data.userId,
+            displayName: data.displayName,
+            role: data.role,
+            notificationLevel: data.notificationLevel
+          });
+        } finally {
+          this.patchSaving("collaborationMember", false);
+        }
+        form.reset();
+        await this.refreshApp("Room member updated.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-reply") {
+        this.patchSaving("collaborationReply", true);
+        try {
+          await this.api.replyToCollaborationMessage(data.messageId, { content: data.content });
+        } finally {
+          this.patchSaving("collaborationReply", false);
+        }
+        form.reset();
+        await this.refreshApp("Reply added.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-task") {
+        const roomId = data.roomId || this.store.get().selected.collaborationRoomId || "room_ood";
+        this.patchSaving("collaborationTask", true);
+        try {
+          await this.api.createCollaborationTask({
+            roomId,
+            sourceMessageId: data.sourceMessageId,
+            title: data.title,
+            description: data.description,
+            assigneeId: data.assigneeId,
+            priority: data.priority,
+            status: data.status,
+            dueAt: data.dueAt,
+            labels: data.labels,
+            acceptanceCriteria: data.acceptanceCriteria
+          });
+        } finally {
+          this.patchSaving("collaborationTask", false);
+        }
+        form.reset();
+        await this.refreshApp("Collaboration task created.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-decision") {
+        const roomId = data.roomId || this.store.get().selected.collaborationRoomId || "room_ood";
+        this.patchSaving("collaborationDecision", true);
+        try {
+          await this.api.createCollaborationDecision({
+            roomId,
+            messageId: data.messageId,
+            title: data.title,
+            rationale: data.rationale,
+            impact: data.impact,
+            status: data.status,
+            tags: data.tags
+          });
+        } finally {
+          this.patchSaving("collaborationDecision", false);
+        }
+        form.reset();
+        await this.refreshApp("Collaboration decision recorded.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-resource") {
+        const roomId = data.roomId || this.store.get().selected.collaborationRoomId || "room_ood";
+        this.patchSaving("collaborationResource", true);
+        try {
+          await this.api.createCollaborationResource({
+            roomId,
+            title: data.title,
+            url: data.url,
+            type: data.type,
+            description: data.description,
+            tags: data.tags
+          });
+        } finally {
+          this.patchSaving("collaborationResource", false);
+        }
+        form.reset();
+        await this.refreshApp("Collaboration resource shared.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-checklist") {
+        const roomId = data.roomId || this.store.get().selected.collaborationRoomId || "room_ood";
+        this.patchSaving("collaborationChecklist", true);
+        try {
+          await this.api.createCollaborationChecklistItem({
+            roomId,
+            title: data.title,
+            description: data.description,
+            ownerId: data.ownerId,
+            status: data.status,
+            dueAt: data.dueAt,
+            sortOrder: data.sortOrder
+          });
+        } finally {
+          this.patchSaving("collaborationChecklist", false);
+        }
+        form.reset();
+        await this.refreshApp("Checklist item added.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-handoff") {
+        const roomId = data.roomId || this.store.get().selected.collaborationRoomId || "room_ood";
+        this.patchSaving("collaborationHandoff", true);
+        try {
+          await this.api.createCollaborationHandoff({
+            roomId,
+            toUserId: data.toUserId,
+            title: data.title,
+            context: data.context,
+            blockers: data.blockers,
+            nextSteps: data.nextSteps,
+            status: data.status
+          });
+        } finally {
+          this.patchSaving("collaborationHandoff", false);
+        }
+        form.reset();
+        await this.refreshApp("Handoff created.");
+        return;
+      }
+      if (form.dataset.form === "collaboration-summary") {
+        const roomId = data.roomId || this.store.get().selected.collaborationRoomId || "room_ood";
+        this.patchSaving("collaborationSummary", true);
+        try {
+          await this.api.createCollaborationSummary({
+            roomId,
+            summary: data.summary,
+            decisions: data.decisions,
+            risks: data.risks
+          });
+        } finally {
+          this.patchSaving("collaborationSummary", false);
+        }
+        form.reset();
+        await this.refreshApp("Collaboration summary generated.");
         return;
       }
       if (form.dataset.form === "assignment-filter") {

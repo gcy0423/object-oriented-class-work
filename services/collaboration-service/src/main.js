@@ -6,7 +6,22 @@ import { ActivityService } from "./application/activityService.js";
 import { CollaborationService } from "./application/collaborationService.js";
 import { SyncHub } from "./application/syncHub.js";
 import { loadConfig } from "./config.js";
-import { ActivityLogRepository, EventRepository, MessageRepository, RoomRepository } from "./domain/collaboration.js";
+import {
+  ActivityLogRepository,
+  AuditRepository,
+  ChecklistItemRepository,
+  CollaborationTaskRepository,
+  EventRepository,
+  HandoffNoteRepository,
+  MentionRepository,
+  MessageReplyRepository,
+  MessageRepository,
+  RoomDecisionRepository,
+  RoomMemberRepository,
+  RoomRepository,
+  RoomSummaryRepository,
+  SharedResourceRepository
+} from "./domain/collaboration.js";
 import { createCollaborationSeed } from "./infrastructure/seed.js";
 import { registerRoutes } from "./routes.js";
 
@@ -15,7 +30,17 @@ export function createApp(config = loadConfig()) {
   const ready = database.load();
   const repositories = {
     rooms: new RoomRepository(database),
+    members: new RoomMemberRepository(database),
     messages: new MessageRepository(database),
+    replies: new MessageReplyRepository(database),
+    mentions: new MentionRepository(database),
+    collaborationTasks: new CollaborationTaskRepository(database),
+    summaries: new RoomSummaryRepository(database),
+    decisions: new RoomDecisionRepository(database),
+    resources: new SharedResourceRepository(database),
+    checklist: new ChecklistItemRepository(database),
+    handoffs: new HandoffNoteRepository(database),
+    audits: new AuditRepository(database),
     activityLogs: new ActivityLogRepository(database),
     events: new EventRepository(database)
   };
@@ -29,7 +54,17 @@ export function createApp(config = loadConfig()) {
   const collaboration = new CollaborationService({
     database,
     rooms: repositories.rooms,
+    members: repositories.members,
     messages: repositories.messages,
+    replies: repositories.replies,
+    mentions: repositories.mentions,
+    tasks: repositories.collaborationTasks,
+    summaries: repositories.summaries,
+    decisions: repositories.decisions,
+    resources: repositories.resources,
+    checklist: repositories.checklist,
+    handoffs: repositories.handoffs,
+    audits: repositories.audits,
     activity,
     syncHub
   });

@@ -154,8 +154,7 @@ export function registerRoutes(router, config, services = {}) {
 
   router.get("/api/collaboration/messages", async (req) => {
     const user = await services.verifyUser(req);
-    const roomId = req.query.roomId ? `?roomId=${encodeURIComponent(req.query.roomId)}` : "";
-    return services.collaboration.get(`/api/collaboration/messages${roomId}`, {
+    return services.collaboration.get(withQuery("/api/collaboration/messages", req.query), {
       headers: buildUserHeaders(config, user)
     });
   });
@@ -163,6 +162,174 @@ export function registerRoutes(router, config, services = {}) {
   router.post("/api/collaboration/messages", async (req) => {
     const user = await services.verifyUser(req);
     return services.collaboration.post("/api/collaboration/messages", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/rooms", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/rooms", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/rooms", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post("/api/collaboration/rooms", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/rooms/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(`/api/collaboration/rooms/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/rooms/:id/members", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post(`/api/collaboration/rooms/${encodeURIComponent(req.params.id)}/members`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/rooms/:id/tasks", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery(`/api/collaboration/rooms/${encodeURIComponent(req.params.id)}/tasks`, req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/messages/:id/replies", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post(`/api/collaboration/messages/${encodeURIComponent(req.params.id)}/replies`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/mentions", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/mentions", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/collaboration/mentions/:id/read", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.patch(`/api/collaboration/mentions/${encodeURIComponent(req.params.id)}/read`, undefined, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/tasks", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/tasks", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/tasks", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post("/api/collaboration/tasks", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/collaboration/tasks/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.patch(`/api/collaboration/tasks/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/summaries", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post("/api/collaboration/summaries", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/rooms/:id/insight", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(`/api/collaboration/rooms/${encodeURIComponent(req.params.id)}/insight`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/decisions", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/decisions", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/decisions", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post("/api/collaboration/decisions", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/resources", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/resources", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/resources", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post("/api/collaboration/resources", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/checklist", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/checklist", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/checklist", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post("/api/collaboration/checklist", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/collaboration/checklist/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.patch(`/api/collaboration/checklist/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/handoffs", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/handoffs", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/collaboration/handoffs", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.post("/api/collaboration/handoffs", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/collaboration/handoffs/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.patch(`/api/collaboration/handoffs/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/collaboration/audit", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.collaboration.get(withQuery("/api/collaboration/audit", req.query), {
       headers: buildUserHeaders(config, user)
     });
   });

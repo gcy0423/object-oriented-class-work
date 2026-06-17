@@ -140,6 +140,32 @@ export class ApiClient {
   askAI(question) { return this.request("/api/ai/ask", { method: "POST", body: JSON.stringify({ question }) }); }
   generatePlan(goalId) { return this.request("/api/ai/plan", { method: "POST", body: JSON.stringify({ goalId }) }); }
 
-  messages() { return this.request("/api/collaboration/messages"); }
-  sendMessage(content) { return this.request("/api/collaboration/messages", { method: "POST", body: JSON.stringify({ content }) }); }
+  messages(params = {}) { return this.request(`/api/collaboration/messages${toQuery(params)}`); }
+  sendMessage(input) {
+    const body = typeof input === "string" ? { content: input } : input;
+    return this.request("/api/collaboration/messages", { method: "POST", body: JSON.stringify(body) });
+  }
+  collaborationRooms(params = {}) { return this.request(`/api/collaboration/rooms${toQuery(params)}`); }
+  createCollaborationRoom(input) { return this.request("/api/collaboration/rooms", { method: "POST", body: JSON.stringify(input) }); }
+  collaborationRoom(id) { return this.request(`/api/collaboration/rooms/${encodeURIComponent(id)}`); }
+  addCollaborationRoomMember(id, input) { return this.request(`/api/collaboration/rooms/${encodeURIComponent(id)}/members`, { method: "POST", body: JSON.stringify(input) }); }
+  replyToCollaborationMessage(id, input) { return this.request(`/api/collaboration/messages/${encodeURIComponent(id)}/replies`, { method: "POST", body: JSON.stringify(input) }); }
+  collaborationMentions(params = {}) { return this.request(`/api/collaboration/mentions${toQuery(params)}`); }
+  markCollaborationMentionRead(id) { return this.request(`/api/collaboration/mentions/${encodeURIComponent(id)}/read`, { method: "PATCH", body: JSON.stringify({}) }); }
+  collaborationTasks(params = {}) { return this.request(`/api/collaboration/tasks${toQuery(params)}`); }
+  createCollaborationTask(input) { return this.request("/api/collaboration/tasks", { method: "POST", body: JSON.stringify(input) }); }
+  updateCollaborationTask(id, input) { return this.request(`/api/collaboration/tasks/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  createCollaborationSummary(input) { return this.request("/api/collaboration/summaries", { method: "POST", body: JSON.stringify(input) }); }
+  collaborationRoomInsight(id) { return this.request(`/api/collaboration/rooms/${encodeURIComponent(id)}/insight`); }
+  collaborationDecisions(params = {}) { return this.request(`/api/collaboration/decisions${toQuery(params)}`); }
+  createCollaborationDecision(input) { return this.request("/api/collaboration/decisions", { method: "POST", body: JSON.stringify(input) }); }
+  collaborationResources(params = {}) { return this.request(`/api/collaboration/resources${toQuery(params)}`); }
+  createCollaborationResource(input) { return this.request("/api/collaboration/resources", { method: "POST", body: JSON.stringify(input) }); }
+  collaborationChecklist(params = {}) { return this.request(`/api/collaboration/checklist${toQuery(params)}`); }
+  createCollaborationChecklistItem(input) { return this.request("/api/collaboration/checklist", { method: "POST", body: JSON.stringify(input) }); }
+  updateCollaborationChecklistItem(id, input) { return this.request(`/api/collaboration/checklist/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  collaborationHandoffs(params = {}) { return this.request(`/api/collaboration/handoffs${toQuery(params)}`); }
+  createCollaborationHandoff(input) { return this.request("/api/collaboration/handoffs", { method: "POST", body: JSON.stringify(input) }); }
+  updateCollaborationHandoff(id, input) { return this.request(`/api/collaboration/handoffs/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  collaborationAudit(params = {}) { return this.request(`/api/collaboration/audit${toQuery(params)}`); }
 }
