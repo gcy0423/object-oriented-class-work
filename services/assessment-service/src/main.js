@@ -2,13 +2,17 @@ import { fileURLToPath } from "node:url";
 import { JsonDatabase } from "../../../shared/data/jsonDatabase.js";
 import { Router } from "../../../shared/http/router.js";
 import { createServiceServer } from "../../../shared/http/server.js";
+import { AdaptivePracticePlanner } from "./application/adaptivePracticePlanner.js";
+import { AssessmentPortfolioService } from "./application/assessmentPortfolioService.js";
 import { AssignmentService } from "./application/assignmentService.js";
 import { AssessmentFacade } from "./application/assessmentFacade.js";
 import { GradingService } from "./application/gradingService.js";
 import { MasteryService } from "./application/masteryService.js";
+import { MistakeAnalysisService } from "./application/mistakeAnalysisService.js";
 import { MistakeService } from "./application/mistakeService.js";
 import { PracticeService } from "./application/practiceService.js";
 import { QuestionBankService } from "./application/questionBankService.js";
+import { RubricInsightService } from "./application/rubricInsightService.js";
 import * as assignmentModule from "./domain/assignment.js";
 import { createAssessmentRepositories } from "./domain/assessment.js";
 import * as questionModule from "./domain/question.js";
@@ -74,6 +78,14 @@ export function createApp(config = loadConfig()) {
   const masteryService = new MasteryService({
     masteryRecords: repositories.masteryRecords
   });
+  const rubricInsightService = new RubricInsightService(repositories);
+  const mistakeAnalysisService = new MistakeAnalysisService(repositories);
+  const adaptivePracticePlanner = new AdaptivePracticePlanner(repositories);
+  const assessmentPortfolioService = new AssessmentPortfolioService({
+    ...repositories,
+    rubricInsightService,
+    mistakeAnalysisService
+  });
   const assessment = new AssessmentFacade({
     assignmentService,
     gradingService,
@@ -81,6 +93,10 @@ export function createApp(config = loadConfig()) {
     practiceService,
     mistakeService,
     masteryService,
+    rubricInsightService,
+    mistakeAnalysisService,
+    adaptivePracticePlanner,
+    assessmentPortfolioService,
     repositories
   });
 
@@ -94,6 +110,10 @@ export function createApp(config = loadConfig()) {
     practiceService,
     mistakeService,
     masteryService,
+    rubricInsightService,
+    mistakeAnalysisService,
+    adaptivePracticePlanner,
+    assessmentPortfolioService,
     assessment
   };
 

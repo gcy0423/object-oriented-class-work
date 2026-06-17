@@ -1,5 +1,13 @@
 import { requireInternal, requireUserContext } from "../../../shared/auth/userContext.js";
+import { ForbiddenError } from "../../../shared/http/errors.js";
 import { ok, readJson } from "../../../shared/http/response.js";
+import { isTeacherRole } from "./domain/assessment.js";
+
+function requireTeacher(user) {
+  if (!isTeacherRole(user.role)) {
+    throw new ForbiddenError("teacher role required");
+  }
+}
 
 export function registerRoutes(router, config, services) {
   router.get("/health", () => ok({
@@ -38,6 +46,13 @@ export function registerRoutes(router, config, services) {
     return ok(await services.assignmentService.getAssignmentDetail(user, req.params.id));
   });
 
+  router.get("/api/assignments/:id/grading-overview", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    requireTeacher(user);
+    return ok(services.rubricInsightService.buildAssignmentGradingOverview(req.params.id));
+  });
+
   router.post("/api/assignments/:id/submissions", async (req) => {
     await services.ready;
     const user = requireUserContext(req);
@@ -56,6 +71,13 @@ export function registerRoutes(router, config, services) {
     return ok(await services.gradingService.reviewSubmissionByAi(user, req.params.id));
   });
 
+  router.get("/api/submissions/:id/grading-insight", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    requireTeacher(user);
+    return ok(services.rubricInsightService.compareSubmissionGrades(req.params.id));
+  });
+
   router.post("/api/rubrics", async (req) => {
     await services.ready;
     const user = requireUserContext(req);
@@ -66,6 +88,12 @@ export function registerRoutes(router, config, services) {
     await services.ready;
     requireUserContext(req);
     return ok(services.assignmentService.listRubrics(req.query));
+  });
+
+  router.get("/api/rubrics/:id/insight", async (req) => {
+    await services.ready;
+    requireUserContext(req);
+    return ok(services.rubricInsightService.getRubricProfile(req.params.id));
   });
 
   router.post("/api/question-banks", async (req) => {
@@ -146,10 +174,52 @@ export function registerRoutes(router, config, services) {
     return ok(await services.practiceService.finishSession(user, req.params.id));
   });
 
+  router.get("/api/practice-sessions/:id/review", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.adaptivePracticePlanner.buildSessionReview(user, req.params.id));
+  });
+
+  router.post("/api/adaptive-practice-plan", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.adaptivePracticePlanner.buildPlan(user, await readJson(req)));
+  });
+
   router.get("/api/mistakes", async (req) => {
     await services.ready;
     const user = requireUserContext(req);
     return ok(services.mistakeService.listMistakes(user, req.query));
+  });
+
+  router.get("/api/mistake-analysis", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.mistakeAnalysisService.buildStudentReport(user, req.query));
+  });
+
+  router.get("/api/mistakes/:id/analysis", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.mistakeAnalysisService.getMistakeDetail(user, req.params.id));
+  });
+
+  router.get("/api/assessment/course-report", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.assessmentPortfolioService.buildCourseReport(user, req.query));
+  });
+
+  router.get("/api/assessment/student-portfolio", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.assessmentPortfolioService.buildStudentPortfolio(user, req.query));
+  });
+
+  router.get("/api/assessment/risk-register", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.assessmentPortfolioService.buildRiskRegister(user, req.query));
   });
 
   router.patch("/api/mistakes/:id/review", async (req) => {

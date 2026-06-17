@@ -21,6 +21,11 @@ function buildUserHeaders(config, user) {
   };
 }
 
+function withQuery(path, query) {
+  const params = new URLSearchParams(query).toString();
+  return `${path}${params ? `?${params}` : ""}`;
+}
+
 export function registerRoutes(router, config, services = {}) {
   router.get("/health", () => ok({
     service: config.serviceName,
@@ -215,6 +220,13 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/assignments/:id/grading-overview", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/assignments/${encodeURIComponent(req.params.id)}/grading-overview`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.post("/api/assignments/:id/submissions", async (req) => {
     const user = await services.verifyUser(req);
     return services.assessment.post(`/api/assignments/${encodeURIComponent(req.params.id)}/submissions`, await readJson(req), {
@@ -236,6 +248,13 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/submissions/:id/grading-insight", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/submissions/${encodeURIComponent(req.params.id)}/grading-insight`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.post("/api/rubrics", async (req) => {
     const user = await services.verifyUser(req);
     return services.assessment.post("/api/rubrics", await readJson(req), {
@@ -247,6 +266,13 @@ export function registerRoutes(router, config, services = {}) {
     const user = await services.verifyUser(req);
     const params = new URLSearchParams(req.query).toString();
     return services.assessment.get(`/api/rubrics${params ? `?${params}` : ""}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/rubrics/:id/insight", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/rubrics/${encodeURIComponent(req.params.id)}/insight`, {
       headers: buildUserHeaders(config, user)
     });
   });
@@ -345,10 +371,59 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/practice-sessions/:id/review", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/practice-sessions/${encodeURIComponent(req.params.id)}/review`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/adaptive-practice-plan", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.post("/api/adaptive-practice-plan", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.get("/api/mistakes", async (req) => {
     const user = await services.verifyUser(req);
     const params = new URLSearchParams(req.query).toString();
     return services.assessment.get(`/api/mistakes${params ? `?${params}` : ""}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/mistake-analysis", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/mistake-analysis", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/mistakes/:id/analysis", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/mistakes/${encodeURIComponent(req.params.id)}/analysis`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/assessment/course-report", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assessment/course-report", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/assessment/student-portfolio", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assessment/student-portfolio", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/assessment/risk-register", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assessment/risk-register", req.query), {
       headers: buildUserHeaders(config, user)
     });
   });

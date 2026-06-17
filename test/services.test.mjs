@@ -1283,6 +1283,14 @@ test("assessment-service handles assignments, grading, AI review, practice, mist
       assert.equal(rubricResponse.status, 200);
       assert.equal(rubricPayload.data.criteria.length, 2);
 
+      const rubricInsightResponse = await fetch(`${assessment.url}/api/rubrics/${rubricPayload.data.id}/insight`, {
+        headers: teacherHeaders
+      });
+      const rubricInsightPayload = await rubricInsightResponse.json();
+      assert.equal(rubricInsightResponse.status, 200);
+      assert.equal(rubricInsightPayload.data.totalScore, 100);
+      assert.ok(Array.isArray(rubricInsightPayload.data.improvementPlan));
+
       const invalidRubricResponse = await fetch(`${assessment.url}/api/rubrics`, {
         method: "POST",
         headers: teacherHeaders,
@@ -1382,6 +1390,28 @@ test("assessment-service handles assignments, grading, AI review, practice, mist
       assert.equal(aiReviewResponse.status, 200);
       assert.equal(aiReviewPayload.data.provider, "mock-local-llm");
 
+      const gradingOverviewResponse = await fetch(`${assessment.url}/api/assignments/${assignmentPayload.data.id}/grading-overview`, {
+        headers: teacherHeaders
+      });
+      const gradingOverviewPayload = await gradingOverviewResponse.json();
+      assert.equal(gradingOverviewResponse.status, 200);
+      assert.equal(gradingOverviewPayload.data.submissionCount, 1);
+      assert.equal(gradingOverviewPayload.data.consistency.sampleSize, 1);
+
+      const forbiddenOverviewResponse = await fetch(`${assessment.url}/api/assignments/${assignmentPayload.data.id}/grading-overview`, {
+        headers: studentHeaders
+      });
+      const forbiddenOverviewPayload = await forbiddenOverviewResponse.json();
+      assert.equal(forbiddenOverviewResponse.status, 403);
+      assert.equal(forbiddenOverviewPayload.code, "FORBIDDEN");
+
+      const gradingInsightResponse = await fetch(`${assessment.url}/api/submissions/${submissionPayload.data.id}/grading-insight`, {
+        headers: teacherHeaders
+      });
+      const gradingInsightPayload = await gradingInsightResponse.json();
+      assert.equal(gradingInsightResponse.status, 200);
+      assert.ok(gradingInsightPayload.data.comparison.some((item) => item.metric === "total-score-gap"));
+
       const questionBankResponse = await fetch(`${assessment.url}/api/question-banks`, {
         method: "POST",
         headers: teacherHeaders,
@@ -1477,6 +1507,79 @@ test("assessment-service handles assignments, grading, AI review, practice, mist
       const mistakesPayload = await mistakesResponse.json();
       assert.equal(mistakesResponse.status, 200);
       assert.ok(mistakesPayload.data.length >= 1);
+
+      const mistakeAnalysisResponse = await fetch(`${assessment.url}/api/mistake-analysis?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const mistakeAnalysisPayload = await mistakeAnalysisResponse.json();
+      assert.equal(mistakeAnalysisResponse.status, 200);
+      assert.equal(mistakeAnalysisPayload.data.openMistakes >= 1, true);
+      assert.ok(Array.isArray(mistakeAnalysisPayload.data.nextReviewQueue));
+
+      const mistakeDetailResponse = await fetch(`${assessment.url}/api/mistakes/${mistakesPayload.data[0].id}/analysis`, {
+        headers: studentHeaders
+      });
+      const mistakeDetailPayload = await mistakeDetailResponse.json();
+      assert.equal(mistakeDetailResponse.status, 200);
+      assert.equal(mistakeDetailPayload.data.mistake.id, mistakesPayload.data[0].id);
+
+      const sessionReviewResponse = await fetch(`${assessment.url}/api/practice-sessions/${practicePayload.data.id}/review`, {
+        headers: studentHeaders
+      });
+      const sessionReviewPayload = await sessionReviewResponse.json();
+      assert.equal(sessionReviewResponse.status, 200);
+      assert.equal(sessionReviewPayload.data.incorrectCount >= 1, true);
+
+      const adaptivePlanResponse = await fetch(`${assessment.url}/api/adaptive-practice-plan`, {
+        method: "POST",
+        headers: studentHeaders,
+        body: JSON.stringify({
+          courseId: "course_ood",
+          bankId: "qbank_ood",
+          questionCount: 4
+        })
+      });
+      const adaptivePlanPayload = await adaptivePlanResponse.json();
+      assert.equal(adaptivePlanResponse.status, 200);
+      assert.equal(adaptivePlanPayload.data.questions.length >= 3, true);
+      assert.ok(Array.isArray(adaptivePlanPayload.data.weakConcepts));
+
+      const studentPortfolioResponse = await fetch(`${assessment.url}/api/assessment/student-portfolio?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const studentPortfolioPayload = await studentPortfolioResponse.json();
+      assert.equal(studentPortfolioResponse.status, 200);
+      assert.equal(studentPortfolioPayload.data.ownerId, "user_student");
+      assert.equal(typeof studentPortfolioPayload.data.risk.score, "number");
+
+      const teacherPortfolioResponse = await fetch(`${assessment.url}/api/assessment/student-portfolio?courseId=course_ood&studentId=user_student`, {
+        headers: teacherHeaders
+      });
+      const teacherPortfolioPayload = await teacherPortfolioResponse.json();
+      assert.equal(teacherPortfolioResponse.status, 200);
+      assert.equal(teacherPortfolioPayload.data.assignmentProgress.submittedCount >= 1, true);
+
+      const courseReportResponse = await fetch(`${assessment.url}/api/assessment/course-report?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const courseReportPayload = await courseReportResponse.json();
+      assert.equal(courseReportResponse.status, 200);
+      assert.equal(courseReportPayload.data.assignmentCount >= 1, true);
+      assert.ok(Array.isArray(courseReportPayload.data.riskRegister));
+
+      const riskRegisterResponse = await fetch(`${assessment.url}/api/assessment/risk-register?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const riskRegisterPayload = await riskRegisterResponse.json();
+      assert.equal(riskRegisterResponse.status, 200);
+      assert.ok(riskRegisterPayload.data.items.some((item) => item.studentId === "user_student"));
+
+      const forbiddenCourseReportResponse = await fetch(`${assessment.url}/api/assessment/course-report?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const forbiddenCourseReportPayload = await forbiddenCourseReportResponse.json();
+      assert.equal(forbiddenCourseReportResponse.status, 403);
+      assert.equal(forbiddenCourseReportPayload.code, "FORBIDDEN");
 
       const reviewMistakeResponse = await fetch(`${assessment.url}/api/mistakes/${mistakesPayload.data[0].id}/review`, {
         method: "PATCH",
@@ -2069,6 +2172,15 @@ test("gateway proxies login, AI, collaboration APIs, SSE, and dashboard aggregat
       const createRubricPayload = await createRubricResponse.json();
       assert.equal(createRubricResponse.status, 200);
 
+      const gatewayRubricInsightResponse = await fetch(`${gateway.url}/api/rubrics/${createRubricPayload.data.id}/insight`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const gatewayRubricInsightPayload = await gatewayRubricInsightResponse.json();
+      assert.equal(gatewayRubricInsightResponse.status, 200);
+      assert.equal(gatewayRubricInsightPayload.data.totalScore, 100);
+
       const createAssignmentResponse = await fetch(`${gateway.url}/api/assignments`, {
         method: "POST",
         headers: teacherHeaders,
@@ -2112,6 +2224,24 @@ test("gateway proxies login, AI, collaboration APIs, SSE, and dashboard aggregat
       assert.equal(gatewayAiReviewResponse.status, 200);
       assert.equal(gatewayAiReviewPayload.data.provider, "mock-local-llm");
 
+      const gatewayGradingOverviewResponse = await fetch(`${gateway.url}/api/assignments/${createAssignmentPayload.data.id}/grading-overview`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const gatewayGradingOverviewPayload = await gatewayGradingOverviewResponse.json();
+      assert.equal(gatewayGradingOverviewResponse.status, 200);
+      assert.equal(gatewayGradingOverviewPayload.data.submissionCount, 1);
+
+      const gatewayGradingInsightResponse = await fetch(`${gateway.url}/api/submissions/${gatewaySubmissionPayload.data.id}/grading-insight`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const gatewayGradingInsightPayload = await gatewayGradingInsightResponse.json();
+      assert.equal(gatewayGradingInsightResponse.status, 200);
+      assert.ok(gatewayGradingInsightPayload.data.grades.some((grade) => grade.source === "ai"));
+
       const gatewayQuestionBanksResponse = await fetch(`${gateway.url}/api/question-banks?courseId=course_ood`, {
         headers: {
           authorization: `Bearer ${token}`
@@ -2153,6 +2283,64 @@ test("gateway proxies login, AI, collaboration APIs, SSE, and dashboard aggregat
       const gatewayMistakesPayload = await gatewayMistakesResponse.json();
       assert.equal(gatewayMistakesResponse.status, 200);
       assert.ok(Array.isArray(gatewayMistakesPayload.data));
+
+      const gatewaySessionReviewResponse = await fetch(`${gateway.url}/api/practice-sessions/${gatewayPracticePayload.data.id}/review`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewaySessionReviewPayload = await gatewaySessionReviewResponse.json();
+      assert.equal(gatewaySessionReviewResponse.status, 200);
+      assert.equal(typeof gatewaySessionReviewPayload.data.answeredCount, "number");
+
+      const gatewayAdaptivePlanResponse = await fetch(`${gateway.url}/api/adaptive-practice-plan`, {
+        method: "POST",
+        headers: authHeaders,
+        body: JSON.stringify({
+          courseId: "course_ood",
+          bankId: "qbank_ood",
+          questionCount: 3
+        })
+      });
+      const gatewayAdaptivePlanPayload = await gatewayAdaptivePlanResponse.json();
+      assert.equal(gatewayAdaptivePlanResponse.status, 200);
+      assert.equal(gatewayAdaptivePlanPayload.data.questions.length >= 3, true);
+
+      const gatewayMistakeAnalysisResponse = await fetch(`${gateway.url}/api/mistake-analysis?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayMistakeAnalysisPayload = await gatewayMistakeAnalysisResponse.json();
+      assert.equal(gatewayMistakeAnalysisResponse.status, 200);
+      assert.equal(typeof gatewayMistakeAnalysisPayload.data.totalMistakes, "number");
+
+      const gatewayPortfolioResponse = await fetch(`${gateway.url}/api/assessment/student-portfolio?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayPortfolioPayload = await gatewayPortfolioResponse.json();
+      assert.equal(gatewayPortfolioResponse.status, 200);
+      assert.equal(gatewayPortfolioPayload.data.ownerId, "user_student");
+
+      const gatewayCourseReportResponse = await fetch(`${gateway.url}/api/assessment/course-report?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const gatewayCourseReportPayload = await gatewayCourseReportResponse.json();
+      assert.equal(gatewayCourseReportResponse.status, 200);
+      assert.equal(gatewayCourseReportPayload.data.assignmentCount >= 1, true);
+
+      const gatewayRiskRegisterResponse = await fetch(`${gateway.url}/api/assessment/risk-register?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const gatewayRiskRegisterPayload = await gatewayRiskRegisterResponse.json();
+      assert.equal(gatewayRiskRegisterResponse.status, 200);
+      assert.equal(typeof gatewayRiskRegisterPayload.data.totalStudents, "number");
 
       const businessChunk = await readSseEvent(sseReader, "event: message.created");
       assert.match(businessChunk, /event: message.created/);
