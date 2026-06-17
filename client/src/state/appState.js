@@ -24,7 +24,10 @@ export function createInitialState() {
       practiceAnswer: false,
       profile: false,
       submission: false,
-      reminder: false
+      reminder: false,
+      knowledgePath: false,
+      knowledgePractice: false,
+      knowledgeContext: false
     },
     errors: {},
     filters: {
@@ -32,7 +35,8 @@ export function createInitialState() {
       questionBanks: { courseId: "", type: "", difficulty: "", keyword: "" },
       practice: { courseId: "", bankId: "", status: "", mistakeStatus: "" },
       analytics: { courseId: "", studentId: "" },
-      workbench: { courseId: "", category: "", reminderStatus: "" }
+      workbench: { courseId: "", category: "", reminderStatus: "" },
+      knowledge: { courseId: "", query: "object collaboration", category: "", difficulty: "", tag: "", conceptId: "" }
     },
     selected: {
       assignmentId: "",
@@ -47,7 +51,10 @@ export function createInitialState() {
       question: null,
       grade: null,
       profile: null,
-      reminder: null
+      reminder: null,
+      knowledgePath: { goalText: "object collaboration service boundary", days: 5 },
+      knowledgePractice: { conceptIds: "", limit: 4 },
+      knowledgeContext: { question: "How should the AI answer cite retrieved knowledge?", limit: 4 }
     },
     ui: {
       activePanel: "",
@@ -84,6 +91,17 @@ export function createInitialState() {
       engagement: null,
       courseDeepReport: null,
       studentProgress: null
+    },
+    knowledge: {
+      summary: null,
+      concepts: [],
+      selectedConcept: null,
+      searchResults: [],
+      graph: null,
+      recommendations: [],
+      learningPath: null,
+      practiceSet: null,
+      aiContext: null
     },
     settings: {
       health: null,

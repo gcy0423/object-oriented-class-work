@@ -2,6 +2,7 @@ import { escapeHtml } from "../utils/dom.js";
 
 export const routeTable = {
   workbench: { label: "Workbench", roles: ["student", "teacher", "admin"] },
+  knowledge: { label: "Knowledge", roles: ["student", "teacher", "admin"] },
   dashboard: { label: "总览", roles: ["student", "teacher", "admin"] },
   learning: { label: "学习", roles: ["student", "teacher", "admin"] },
   assignments: { label: "作业", roles: ["student", "teacher", "admin"] },
@@ -20,6 +21,7 @@ export function titleFor(route) {
 export function subtitleFor(route, user) {
   return {
     workbench: "A unified action desk for notifications, reminders, risk, engagement, and progress.",
+    knowledge: "Search the course knowledge base, inspect concept graph evidence, and build path or practice outputs.",
     dashboard: "统一查看学习、作业、练习、协作和服务状态。",
     learning: "管理目标、任务和课程笔记。",
     assignments: user?.role === "student" ? "查看作业、提交内容和阅读评分反馈。" : "发布、筛选、评分并查看 AI 初评。",

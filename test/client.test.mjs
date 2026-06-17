@@ -8,6 +8,7 @@ import { toQuery } from "../client/src/utils/query.js";
 import { compactErrors, validateAssignment, validateQuestion } from "../client/src/utils/validation.js";
 import { assignmentManageView } from "../client/src/views/assignmentManageView.js";
 import { analyticsView } from "../client/src/views/analyticsView.js";
+import { knowledgeView } from "../client/src/views/knowledgeView.js";
 import { practiceView } from "../client/src/views/practiceView.js";
 import { questionBankManageView } from "../client/src/views/questionBankManageView.js";
 import { settingsView } from "../client/src/views/settingsView.js";
@@ -80,6 +81,13 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.markNotificationRead("notification_1");
     await client.schedulerReminders({ status: "active" });
     await client.runSchedulerDue({ now: "2026-06-17T00:00:00.000Z" });
+    await client.knowledgeSummary();
+    await client.knowledgeConcepts({ courseId: "course_ood" });
+    await client.knowledgeSearch({ q: "sequence", limit: 3 });
+    await client.knowledgeGraph({ conceptId: "kc_sequence", depth: 2 });
+    await client.buildKnowledgeLearningPath({ courseId: "course_ood", conceptIds: ["kc_sequence"], days: 2 });
+    await client.buildKnowledgePracticeSet({ courseId: "course_ood", conceptIds: ["kc_sequence"], limit: 1 });
+    await client.buildKnowledgeAiContext({ courseId: "course_ood", question: "Why cite sources?", limit: 2 });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -96,7 +104,14 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/notifications?category=scheduler", method: "GET" },
     { url: "http://demo.local/api/notifications/notification_1/read", method: "PATCH" },
     { url: "http://demo.local/api/scheduler/reminders?status=active", method: "GET" },
-    { url: "http://demo.local/api/scheduler/run-due", method: "POST" }
+    { url: "http://demo.local/api/scheduler/run-due", method: "POST" },
+    { url: "http://demo.local/api/knowledge/summary", method: "GET" },
+    { url: "http://demo.local/api/knowledge/concepts?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/knowledge/search?q=sequence&limit=3", method: "GET" },
+    { url: "http://demo.local/api/knowledge/graph?conceptId=kc_sequence&depth=2", method: "GET" },
+    { url: "http://demo.local/api/knowledge/learning-path", method: "POST" },
+    { url: "http://demo.local/api/knowledge/practice-set", method: "POST" },
+    { url: "http://demo.local/api/knowledge/ai-context", method: "POST" }
   ]);
 });
 
@@ -124,10 +139,21 @@ test("v6 views render as importable ESM modules without build tools", () => {
   state.workbench.engagement = { activityCount: 1, messageCount: 1, channelMix: [{ channel: "message", count: 1 }], quietSignals: ["ok"] };
   state.workbench.courseDeepReport = { assignments: { published: 1, submitted: 1 }, practice: { sessionCount: 1, openMistakes: 0 }, mastery: { concepts: [{ concept: "UML", score: 80 }] } };
   state.workbench.studentProgress = { learning: { completedTaskCount: 1, taskCount: 2 }, assignments: { submittedCount: 1 }, grading: { averageScore: 90 }, practice: { averageCorrectRate: 80 }, nextFocus: ["Review"] };
+  state.knowledge.summary = { concepts: 3, articles: 2, chunks: 4, relations: 2 };
+  state.knowledge.concepts = [{ id: "kc_sequence", title: "Sequence Diagram", summary: "Object collaboration over time.", category: "design", difficulty: "intermediate", tags: ["UML"], learningObjectives: ["Explain lifelines"] }];
+  state.knowledge.selectedConcept = { id: "kc_sequence", title: "Sequence Diagram", summary: "Object collaboration over time.", category: "design", difficulty: "intermediate", tags: ["UML"], learningObjectives: ["Explain lifelines"], reviewCards: [{ question: "What is a lifeline?", answer: "An object timeline." }], chunks: [{ title: "Rule", kind: "rule", content: "Use messages to explain responsibility." }] };
+  state.knowledge.searchResults = [{ type: "concept", id: "kc_sequence", title: "Sequence Diagram", conceptId: "kc_sequence", conceptTitle: "Sequence Diagram", score: 12, matches: ["sequence"], preview: "Object collaboration over time." }];
+  state.knowledge.graph = { nodes: [{ id: "kc_sequence", title: "Sequence Diagram", category: "design", difficulty: "intermediate" }], edges: [] };
+  state.knowledge.recommendations = [{ conceptId: "kc_sequence", title: "Sequence Diagram", reason: "Useful for collaboration modeling.", nextActions: ["Draw one interaction"] }];
+  state.knowledge.learningPath = { totalConcepts: 1, totalMinutes: 60, schedule: [{ date: "2026-06-17", minutes: 60, items: [{ title: "Sequence Diagram", category: "design", difficulty: "intermediate", estimateMinutes: 60 }] }] };
+  state.knowledge.practiceSet = { conceptCount: 1, questionCount: 1, questions: [{ title: "Sequence Diagram", type: "short-answer", question: "Explain a lifeline.", referenceAnswer: "Object timeline." }] };
+  state.knowledge.aiContext = { query: "Why cite sources?", concepts: [{ title: "RAG", summary: "Retrieved evidence." }], promptHints: ["cite retrieved chunks"] };
   state.settings.health = { service: "gateway-service", status: "up", time: "2026-06-16T00:00:00.000Z", services: [] };
   state.settings.modelConfig = buildModelConfig(state.provider);
   const renderedWorkbench = workbenchView(state);
   assert.match(renderedWorkbench, /Learning Funnel/);
+  const renderedKnowledge = knowledgeView(state);
+  assert.match(renderedKnowledge, /Graph Evidence/);
 
   assert.match(assignmentManageView(state), /作业列表/);
   assert.match(questionBankManageView(state), /题库列表/);

@@ -3,6 +3,7 @@ import { assignmentManageView } from "./views/assignmentManageView.js";
 import { analyticsView } from "./views/analyticsView.js";
 import { aiView } from "./views/aiView.js";
 import { dashboardView } from "./views/dashboardView.js";
+import { knowledgeView } from "./views/knowledgeView.js";
 import { learningView } from "./views/learningView.js";
 import { practiceView } from "./views/practiceView.js";
 import { questionBankManageView } from "./views/questionBankManageView.js";
@@ -20,6 +21,7 @@ import { toastView } from "./widgets/toast.js";
 const views = {
   dashboard: dashboardView,
   workbench: workbenchView,
+  knowledge: knowledgeView,
   learning: learningView,
   assignments: assignmentManageView,
   "question-banks": questionBankManageView,
@@ -29,6 +31,10 @@ const views = {
   team: teamView,
   settings: settingsView
 };
+
+function splitIds(value) {
+  return String(value || "").split(/[,\s]+/).map((item) => item.trim()).filter(Boolean);
+}
 
 class EduMindApp {
   constructor(root) {
@@ -199,6 +205,39 @@ class EduMindApp {
         state.user?.id ? this.api.analyticsStudentProgress(state.user.id) : Promise.resolve({ data: null })
       ]);
 
+      const knowledgeCourseId = state.filters.knowledge.courseId || firstCourseId;
+      const knowledgeParams = {
+        ...(knowledgeCourseId ? { courseId: knowledgeCourseId } : {}),
+        ...(state.filters.knowledge.category ? { category: state.filters.knowledge.category } : {}),
+        ...(state.filters.knowledge.difficulty ? { difficulty: state.filters.knowledge.difficulty } : {}),
+        ...(state.filters.knowledge.tag ? { tag: state.filters.knowledge.tag } : {})
+      };
+      const [
+        knowledgeSummaryResult,
+        knowledgeConceptsResult,
+        knowledgeSearchResult,
+        knowledgeGraphResult,
+        knowledgeRecommendationsResult
+      ] = await Promise.allSettled([
+        this.api.knowledgeSummary(),
+        this.api.knowledgeConcepts(knowledgeParams),
+        this.api.knowledgeSearch({
+          ...(knowledgeCourseId ? { courseId: knowledgeCourseId } : {}),
+          q: state.filters.knowledge.query || "",
+          limit: 8
+        }),
+        this.api.knowledgeGraph({
+          ...(knowledgeCourseId ? { courseId: knowledgeCourseId } : {}),
+          ...(state.filters.knowledge.conceptId ? { conceptId: state.filters.knowledge.conceptId } : {}),
+          depth: state.filters.knowledge.conceptId ? 2 : 1
+        }),
+        this.api.knowledgeRecommendations({
+          ...(knowledgeCourseId ? { courseId: knowledgeCourseId } : {}),
+          goal: state.filters.knowledge.query || "",
+          limit: 5
+        })
+      ]);
+
       let assignmentDetail = state.assessment.assignmentDetail;
       if (state.selected.assignmentId) {
         try {
@@ -254,6 +293,17 @@ class EduMindApp {
           engagement: engagementResult.status === "fulfilled" ? engagementResult.value.data : state.workbench.engagement,
           courseDeepReport: courseDeepReportResult.status === "fulfilled" ? courseDeepReportResult.value.data : state.workbench.courseDeepReport,
           studentProgress: studentProgressResult.status === "fulfilled" ? studentProgressResult.value.data : state.workbench.studentProgress
+        },
+        knowledge: {
+          summary: knowledgeSummaryResult.status === "fulfilled" ? knowledgeSummaryResult.value.data : state.knowledge.summary,
+          concepts: knowledgeConceptsResult.status === "fulfilled" ? knowledgeConceptsResult.value.data : state.knowledge.concepts,
+          selectedConcept: state.knowledge.selectedConcept,
+          searchResults: knowledgeSearchResult.status === "fulfilled" ? knowledgeSearchResult.value.data : state.knowledge.searchResults,
+          graph: knowledgeGraphResult.status === "fulfilled" ? knowledgeGraphResult.value.data : state.knowledge.graph,
+          recommendations: knowledgeRecommendationsResult.status === "fulfilled" ? knowledgeRecommendationsResult.value.data : state.knowledge.recommendations,
+          learningPath: state.knowledge.learningPath,
+          practiceSet: state.knowledge.practiceSet,
+          aiContext: state.knowledge.aiContext
         },
         settings: {
           health: healthResult.status === "fulfilled" ? healthResult.value.data : null,
@@ -469,6 +519,37 @@ class EduMindApp {
         this.setState({ draft: { ...this.store.get().draft, reminder: null } });
         return;
       }
+      if (action === "select-knowledge-concept") {
+        const conceptId = actionButton.dataset.id;
+        if (!conceptId) {
+          return;
+        }
+        const state = this.store.get();
+        const courseId = state.filters.knowledge.courseId || state.dashboard?.courses?.[0]?.id || "";
+        const [profileResult, graphResult] = await Promise.allSettled([
+          this.api.knowledgeConceptProfile(conceptId),
+          this.api.knowledgeGraph({ ...(courseId ? { courseId } : {}), conceptId, depth: 2 })
+        ]);
+        this.setState({
+          route: "knowledge",
+          filters: { ...state.filters, knowledge: { ...state.filters.knowledge, conceptId } },
+          knowledge: {
+            ...state.knowledge,
+            selectedConcept: profileResult.status === "fulfilled" ? profileResult.value.data : state.knowledge.selectedConcept,
+            graph: graphResult.status === "fulfilled" ? graphResult.value.data : state.knowledge.graph
+          }
+        });
+        return;
+      }
+      if (action === "focus-knowledge-practice") {
+        const conceptId = actionButton.dataset.id;
+        this.setState({
+          route: "knowledge",
+          filters: { ...this.store.get().filters, knowledge: { ...this.store.get().filters.knowledge, conceptId } },
+          draft: { ...this.store.get().draft, knowledgePractice: { ...this.store.get().draft.knowledgePractice, conceptIds: conceptId } }
+        });
+        return;
+      }
       if (action === "view-course-analytics") {
         const result = await this.api.analyticsCourse(actionButton.dataset.id);
         this.setState({ analytics: { ...this.store.get().analytics, selectedCourse: result.data }, route: "analytics" });
@@ -619,6 +700,79 @@ class EduMindApp {
         this.setState({ draft: { ...this.store.get().draft, reminder: null }, route: "workbench" });
         form.reset();
         await this.refreshApp("Reminder created.");
+        return;
+      }
+      if (form.dataset.form === "knowledge-filter") {
+        this.setState({
+          route: "knowledge",
+          filters: { ...this.store.get().filters, knowledge: { ...this.store.get().filters.knowledge, ...data } }
+        });
+        await this.refreshApp("Knowledge filter applied.");
+        return;
+      }
+      if (form.dataset.form === "knowledge-path") {
+        if (!data.goalText) {
+          this.toast("Goal is required.");
+          return;
+        }
+        this.patchSaving("knowledgePath", true);
+        try {
+          const result = await this.api.buildKnowledgeLearningPath({
+            courseId: data.courseId,
+            goalText: data.goalText,
+            days: Number(data.days || 7)
+          });
+          this.setState({
+            route: "knowledge",
+            draft: { ...this.store.get().draft, knowledgePath: { goalText: data.goalText, days: data.days } },
+            knowledge: { ...this.store.get().knowledge, learningPath: result.data }
+          });
+        } finally {
+          this.patchSaving("knowledgePath", false);
+        }
+        this.toast("Learning path built.");
+        return;
+      }
+      if (form.dataset.form === "knowledge-practice") {
+        this.patchSaving("knowledgePractice", true);
+        try {
+          const result = await this.api.buildKnowledgePracticeSet({
+            courseId: data.courseId,
+            conceptIds: splitIds(data.conceptIds),
+            limit: Number(data.limit || 4)
+          });
+          this.setState({
+            route: "knowledge",
+            draft: { ...this.store.get().draft, knowledgePractice: { conceptIds: data.conceptIds, limit: data.limit } },
+            knowledge: { ...this.store.get().knowledge, practiceSet: result.data }
+          });
+        } finally {
+          this.patchSaving("knowledgePractice", false);
+        }
+        this.toast("Practice set built.");
+        return;
+      }
+      if (form.dataset.form === "knowledge-context") {
+        if (!data.question) {
+          this.toast("Question is required.");
+          return;
+        }
+        this.patchSaving("knowledgeContext", true);
+        try {
+          const result = await this.api.buildKnowledgeAiContext({
+            courseId: data.courseId,
+            question: data.question,
+            limit: Number(data.limit || 4)
+          });
+          this.setState({
+            route: "knowledge",
+            draft: { ...this.store.get().draft, knowledgeContext: { question: data.question, limit: data.limit } },
+            knowledge: { ...this.store.get().knowledge, aiContext: result.data }
+          });
+        } finally {
+          this.patchSaving("knowledgeContext", false);
+        }
+        this.toast("AI context built.");
         return;
       }
       if (form.dataset.form === "question-bank-filter") {

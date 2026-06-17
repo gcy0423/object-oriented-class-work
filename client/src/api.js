@@ -95,6 +95,16 @@ export class ApiClient {
   analyticsStudentProgress(id) { return this.request(`/api/analytics/students/${encodeURIComponent(id)}/progress-report`); }
   analyticsEngagement(params = {}) { return this.request(`/api/analytics/engagement${toQuery(params)}`); }
 
+  knowledgeSummary() { return this.request("/api/knowledge/summary"); }
+  knowledgeConcepts(params = {}) { return this.request(`/api/knowledge/concepts${toQuery(params)}`); }
+  knowledgeConceptProfile(id) { return this.request(`/api/knowledge/concepts/${encodeURIComponent(id)}`); }
+  knowledgeSearch(params = {}) { return this.request(`/api/knowledge/search${toQuery(params)}`); }
+  knowledgeGraph(params = {}) { return this.request(`/api/knowledge/graph${toQuery(params)}`); }
+  knowledgeRecommendations(params = {}) { return this.request(`/api/knowledge/recommendations${toQuery(params)}`); }
+  buildKnowledgeAiContext(input) { return this.request("/api/knowledge/ai-context", { method: "POST", body: JSON.stringify(input) }); }
+  buildKnowledgeLearningPath(input) { return this.request("/api/knowledge/learning-path", { method: "POST", body: JSON.stringify(input) }); }
+  buildKnowledgePracticeSet(input) { return this.request("/api/knowledge/practice-set", { method: "POST", body: JSON.stringify(input) }); }
+
   notifications(params = {}) { return this.request(`/api/notifications${toQuery(params)}`); }
   notificationSummary(params = {}) { return this.request(`/api/notifications/summary${toQuery(params)}`); }
   createNotification(input) { return this.request("/api/notifications", { method: "POST", body: JSON.stringify(input) }); }
