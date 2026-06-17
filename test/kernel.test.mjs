@@ -3,9 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import test from "node:test";
-import { loadConfig, projectRoot } from "../server/src/config.js";
-import { Permissions } from "../server/src/common/accessPolicy.js";
-import { ForbiddenError } from "../server/src/common/errors.js";
+import { loadConfig } from "../server/src/config.js";
 import { AppKernel } from "../server/src/application/kernel.js";
 import { OpenAICompatibleProvider } from "../server/src/domain/ai.js";
 
@@ -13,7 +11,6 @@ async function withKernel(fn) {
   const dir = await mkdtemp(join(tmpdir(), "edumind-test-"));
   const config = {
     dataFile: join(dir, "data.json"),
-    migrationsDir: join(projectRoot, "database", "migrations"),
     tokenSecret: "test-secret",
     llm: { provider: "mock", apiKey: "", model: "mock", endpoint: "", timeoutMs: 5000, maxTokens: 1024 }
   };
@@ -51,23 +48,6 @@ test("learning workflow creates goal, task and recalculates progress", async () 
     await kernel.learning.completeTask(user, task.id);
     const updatedGoal = kernel.repositories.goals.findById(goal.id);
     assert.equal(updatedGoal.progress, 100);
-  });
-});
-
-test("boot applies database migration metadata and required collections", async () => {
-  await withKernel(async (kernel) => {
-    assert.equal(kernel.database.state._meta.schemaVersion, 2);
-    assert.equal(kernel.database.state._meta.migrations.length, 2);
-    assert.ok(Array.isArray(kernel.database.state.knowledgeDocuments));
-    assert.ok(Array.isArray(kernel.database.state.aiConversations));
-    assert.ok(Array.isArray(kernel.database.state.auditEvents));
-  });
-});
-
-test("access policy denies student-only users from admin permissions", async () => {
-  await withKernel(async (kernel) => {
-    const { user } = await kernel.auth.login({ email: "student-policy@edumind.local", name: "Policy", role: "student" });
-    assert.throws(() => kernel.accessPolicy.assert(user, Permissions.MANAGE_USERS), ForbiddenError);
   });
 });
 

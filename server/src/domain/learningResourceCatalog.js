@@ -1,114 +1,141 @@
-export const LEARNING_RESOURCE_CATALOG = Object.freeze([
-  Object.freeze({
-    id: "ood_domain_modeling",
+const RESOURCE_DEFINITIONS = [
+  {
+    id: "res_ood_domain_modeling",
     courseId: "course_ood",
     courseTitle: "面向对象技术与方法",
     topic: "领域建模",
-    concept: "实体、值对象与聚合边界",
-    level: "项目实践",
-    promptHint: "回答领域建模问题时，优先说明实体身份、生命周期、值对象不可变性和聚合根职责。",
-    keywords: Object.freeze(["领域模型", "实体", "值对象", "聚合", "类图"])
-  }),
-  Object.freeze({
-    id: "ood_use_case",
+    concept: "从用例提取领域对象、属性和关联",
+    level: "core",
+    scenario: "用于解释学习目标、任务、作业、题库和协作消息等对象边界。",
+    checklist: [
+      "识别名词短语并区分实体、值对象和服务。",
+      "为核心对象补充不变量和生命周期状态。",
+      "用类图说明对象之间的一对多、多对多或组合关系。"
+    ],
+    promptHint: "回答领域建模问题时，优先结合 EduMind Agent 的 Course、LearningGoal、Assignment 和 QuestionBank。"
+  },
+  {
+    id: "res_ood_service_boundary",
     courseId: "course_ood",
     courseTitle: "面向对象技术与方法",
-    topic: "UML 用例分析",
-    concept: "参与者、用例、系统边界与权限",
-    level: "入门",
-    promptHint: "回答用例图问题时，先明确参与者和系统边界，再说明认证、鉴权和核心业务用例。",
-    keywords: Object.freeze(["用例图", "参与者", "权限", "系统边界"])
-  }),
-  Object.freeze({
-    id: "ood_sequence",
+    topic: "服务边界",
+    concept: "按业务能力拆分服务并保持数据所有权清晰",
+    level: "advanced",
+    scenario: "用于说明 identity、learning、assessment、ai、collaboration 和 analytics 的职责划分。",
+    checklist: [
+      "每个业务概念只能有一个写入方。",
+      "跨服务协作通过 HTTP API 或事件完成。",
+      "Gateway 只负责入口、鉴权、代理和聚合。"
+    ],
+    promptHint: "回答微服务拆分问题时，强调数据所有权、接口契约和失败隔离。"
+  },
+  {
+    id: "res_ood_design_pattern",
     courseId: "course_ood",
     courseTitle: "面向对象技术与方法",
-    topic: "顺序图",
-    concept: "对象协作与消息时序",
-    level: "进阶",
-    promptHint: "回答顺序图问题时，按照前端、控制器、应用服务、领域对象、仓储和外部服务的调用顺序组织。",
-    keywords: Object.freeze(["顺序图", "对象协作", "消息", "时序"])
-  }),
-  Object.freeze({
-    id: "ai_prompt_engineering",
+    topic: "设计模式",
+    concept: "Repository、Facade、Strategy 在项目中的落地",
+    level: "core",
+    scenario: "用于解释 JSON 持久化、AI Provider 切换和应用服务封装。",
+    checklist: [
+      "Repository 隔离存储细节。",
+      "Facade 聚合作业、题库、练习和掌握度能力。",
+      "Strategy 让 Mock、LM Studio 和 OpenAI-compatible Provider 可替换。"
+    ],
+    promptHint: "回答设计模式问题时，给出项目中的真实类名和调用路径。"
+  },
+  {
+    id: "res_ai_provider",
     courseId: "course_ai",
     courseTitle: "人工智能应用实践",
-    topic: "LLM 提示词",
-    concept: "系统提示、用户提示与上下文注入",
-    level: "项目实践",
-    promptHint: "回答 AI 接入问题时，说明系统提示词、用户输入、课程上下文和知识库检索结果如何共同构成消息。",
-    keywords: Object.freeze(["LLM", "提示词", "上下文", "Provider", "LM Studio"])
-  }),
-  Object.freeze({
-    id: "ai_provider_resilience",
-    courseId: "course_ai",
-    courseTitle: "人工智能应用实践",
-    topic: "AI 服务可靠性",
-    concept: "超时、重试、降级与错误映射",
-    level: "进阶",
-    promptHint: "回答 AI 稳定性问题时，说明超时时间、Provider 抽象、Mock 降级和统一错误码。",
-    keywords: Object.freeze(["超时", "重试", "降级", "错误处理"])
-  }),
-  Object.freeze({
-    id: "project_task_breakdown",
-    courseId: "course_project",
-    courseTitle: "软件项目管理",
-    topic: "任务拆解",
-    concept: "目标、任务、依赖与检查点",
-    level: "项目实践",
-    promptHint: "回答项目计划问题时，优先把目标拆成可验证任务，并给出依赖、负责人和验收标准。",
-    keywords: Object.freeze(["任务拆解", "里程碑", "验收", "计划"])
-  }),
-  Object.freeze({
-    id: "backend_auth",
-    courseId: "course_backend",
-    courseTitle: "服务端架构与接口设计",
-    topic: "认证与鉴权",
-    concept: "Token 校验、角色权限与资源归属",
-    level: "进阶",
-    promptHint: "回答权限问题时，区分认证、角色权限、资源所有者校验和审计记录。",
-    keywords: Object.freeze(["认证", "鉴权", "Token", "角色", "资源归属"])
-  }),
-  Object.freeze({
-    id: "backend_migration",
-    courseId: "course_backend",
-    courseTitle: "服务端架构与接口设计",
-    topic: "数据库迁移",
-    concept: "迁移版本、校验和与可追溯 schema",
-    level: "项目实践",
-    promptHint: "回答数据库演化问题时，说明迁移文件、版本记录、校验和和回滚策略。",
-    keywords: Object.freeze(["数据库", "迁移", "schema", "checksum", "SQL"])
-  })
-]);
+    topic: "LLM Provider",
+    concept: "OpenAI-compatible 接口与 LM Studio 本地模型接入",
+    level: "core",
+    scenario: "用于解释 qwen3.5-9b-glm5.1-distill-v1 的本地部署和离线演示策略。",
+    checklist: [
+      "普通测试使用 Mock Provider，不依赖本地模型。",
+      "真实模型测试通过 verifyLmStudio.mjs 单独执行。",
+      "Provider 返回 reasoning_content 时也能提取回答。"
+    ],
+    promptHint: "回答 AI 接入问题时，说明 endpoint 规范化、超时和 maxTokens 配置。"
+  },
+  {
+    id: "res_assessment_loop",
+    courseId: "course_ood",
+    courseTitle: "面向对象技术与方法",
+    topic: "作业与练习闭环",
+    concept: "Assignment、Submission、Question、PracticeSession、MistakeItem 协作",
+    level: "advanced",
+    scenario: "用于解释教师发布作业、学生提交、AI 初评、练习和错题本闭环。",
+    checklist: [
+      "作业提交与评分状态分离。",
+      "客观题自动判分，主观题保留待评状态。",
+      "错题进入 MistakeItem 并参与掌握度统计。"
+    ],
+    promptHint: "回答作业模块问题时，串联 assessment-service 的应用服务和领域对象。"
+  },
+  {
+    id: "res_frontend_workbench",
+    courseId: "course_ood",
+    courseTitle: "面向对象技术与方法",
+    topic: "前端工作台",
+    concept: "无构建工具的模块化 ESM 前端",
+    level: "practice",
+    scenario: "用于说明 client/src/views、forms、widgets、state 和 utils 的职责。",
+    checklist: [
+      "视图模块只负责页面组合。",
+      "表单模块负责输入校验和提交。",
+      "selectors 从原始状态派生权限、进度和统计。"
+    ],
+    promptHint: "回答前端结构问题时，说明页面、组件、状态和 API 客户端的分层。"
+  }
+];
+
+export const LEARNING_RESOURCE_CATALOG = Object.freeze(
+  RESOURCE_DEFINITIONS.map((item) =>
+    Object.freeze({
+      ...item,
+      checklist: Object.freeze(item.checklist),
+      quiz: Object.freeze({
+        question: `${item.concept} 适合解决什么项目问题？`,
+        answer: item.scenario
+      })
+    })
+  )
+);
 
 function tokenize(text) {
   return String(text || "")
     .toLowerCase()
-    .split(/\s+|，|。|、|；|：|,|\.|;|:|\/|-/)
-    .map((item) => item.trim())
+    .split(/\s+|,|\.|;|:|\?|!|，|。|；|：|？|！|、|\(|\)|（|）/)
     .filter(Boolean);
 }
 
-function scoreResource(item, tokens) {
-  const haystack = [
-    item.courseTitle,
-    item.topic,
-    item.concept,
-    item.level,
-    item.promptHint,
-    ...(item.keywords || [])
-  ]
-    .join(" ")
-    .toLowerCase();
-  return tokens.reduce((sum, token) => sum + (haystack.includes(token) ? 1 : 0), 0);
-}
-
 export function searchLearningResources(query, limit = 5) {
-  const tokens = tokenize(query);
-  if (!tokens.length) {
-    return [];
+  const normalizedQuery = String(query || "").trim().toLowerCase();
+  const tokens = tokenize(normalizedQuery);
+  if (!normalizedQuery && !tokens.length) {
+    return LEARNING_RESOURCE_CATALOG.slice(0, limit);
   }
-  return LEARNING_RESOURCE_CATALOG.map((item) => ({ item, score: scoreResource(item, tokens) }))
+
+  const scored = LEARNING_RESOURCE_CATALOG.map((item) => {
+    const haystack = [
+      item.courseTitle,
+      item.topic,
+      item.concept,
+      item.level,
+      item.scenario,
+      item.promptHint,
+      ...item.checklist
+    ]
+      .join(" ")
+      .toLowerCase();
+    const phraseScore = normalizedQuery && haystack.includes(normalizedQuery) ? 3 : 0;
+    const tokenScore = tokens.reduce((sum, token) => sum + (haystack.includes(token) ? 1 : 0), 0);
+    return { item, score: phraseScore + tokenScore };
+  });
+
+  return scored
     .filter((entry) => entry.score > 0)
     .sort((a, b) => b.score - a.score || a.item.id.localeCompare(b.item.id))
     .slice(0, limit)

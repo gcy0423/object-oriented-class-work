@@ -10,7 +10,6 @@ export function loadConfig(env = process.env) {
     port: Number(env.PORT || 4077),
     host: env.HOST || "127.0.0.1",
     dataFile: env.EDUMIND_DATA_FILE || join(projectRoot, "data", "app-data.json"),
-    migrationsDir: env.EDUMIND_MIGRATIONS_DIR || join(projectRoot, "database", "migrations"),
     clientRoot: env.EDUMIND_CLIENT_ROOT || join(projectRoot, "client"),
     tokenSecret: env.EDUMIND_TOKEN_SECRET || "edumind-local-development-secret",
     llm: {
