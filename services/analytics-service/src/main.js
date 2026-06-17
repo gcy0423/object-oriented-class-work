@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 import { Router } from "../../../shared/http/router.js";
 import { createServiceServer } from "../../../shared/http/server.js";
+import { AnalyticsInsightService } from "./application/analyticsInsightService.js";
 import { AnalyticsService } from "./application/analyticsService.js";
 import { loadConfig } from "./config.js";
 import { AIClient } from "./infrastructure/clients/aiClient.js";
@@ -13,6 +14,33 @@ import { registerRoutes } from "./routes.js";
 export function createApp(config = loadConfig()) {
   const services = {
     analytics: new AnalyticsService({
+      identityClient: new IdentityClient({
+        baseUrl: config.identityServiceUrl,
+        internalKey: config.internalKey,
+        timeoutMs: config.timeoutMs
+      }),
+      learningClient: new LearningClient({
+        baseUrl: config.learningServiceUrl,
+        internalKey: config.internalKey,
+        timeoutMs: config.timeoutMs
+      }),
+      assessmentClient: new AssessmentClient({
+        baseUrl: config.assessmentServiceUrl,
+        internalKey: config.internalKey,
+        timeoutMs: config.timeoutMs
+      }),
+      collaborationClient: new CollaborationClient({
+        baseUrl: config.collaborationServiceUrl,
+        internalKey: config.internalKey,
+        timeoutMs: config.timeoutMs
+      }),
+      aiClient: new AIClient({
+        baseUrl: config.aiServiceUrl,
+        internalKey: config.internalKey,
+        timeoutMs: config.timeoutMs
+      })
+    }),
+    insights: new AnalyticsInsightService({
       identityClient: new IdentityClient({
         baseUrl: config.identityServiceUrl,
         internalKey: config.internalKey,

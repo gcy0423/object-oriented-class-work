@@ -27,4 +27,29 @@ export function registerRoutes(router, config, services) {
     const user = requireUserContext(req);
     return ok(await services.analytics.getTeacherAnalytics(user));
   });
+
+  router.get("/api/analytics/funnel", async (req) => {
+    const user = requireUserContext(req);
+    return ok(await services.insights.getLearningFunnel(user, req.query));
+  });
+
+  router.get("/api/analytics/risk-board", async (req) => {
+    const user = requireUserContext(req);
+    return ok(await services.insights.getRiskBoard(user, req.query));
+  });
+
+  router.get("/api/analytics/courses/:id/deep-report", async (req) => {
+    const user = requireUserContext(req);
+    return ok(await services.insights.getCourseDeepReport(user, req.params.id));
+  });
+
+  router.get("/api/analytics/students/:id/progress-report", async (req) => {
+    const user = requireUserContext(req);
+    return ok(await services.insights.getStudentProgressReport(user, req.params.id));
+  });
+
+  router.get("/api/analytics/engagement", async (req) => {
+    const user = requireUserContext(req);
+    return ok(await services.insights.getEngagementReport(user, req.query));
+  });
 }

@@ -529,4 +529,39 @@ export function registerRoutes(router, config, services = {}) {
       headers: buildUserHeaders(config, user)
     });
   });
+
+  router.get("/api/analytics/funnel", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.analytics.get(withQuery("/api/analytics/funnel", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/analytics/risk-board", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.analytics.get(withQuery("/api/analytics/risk-board", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/analytics/courses/:id/deep-report", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.analytics.get(`/api/analytics/courses/${encodeURIComponent(req.params.id)}/deep-report`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/analytics/students/:id/progress-report", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.analytics.get(`/api/analytics/students/${encodeURIComponent(req.params.id)}/progress-report`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/analytics/engagement", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.analytics.get(withQuery("/api/analytics/engagement", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
 }

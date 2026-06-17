@@ -1905,6 +1905,53 @@ test("analytics-service aggregates student, course, and teacher statistics with 
       assert.equal(Array.isArray(teacherAnalyticsPayload.data.courses), true);
       assert.equal(Array.isArray(teacherAnalyticsPayload.data.students), true);
 
+      const funnelResponse = await fetch(`${analytics.url}/api/analytics/funnel?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const funnelPayload = await funnelResponse.json();
+      assert.equal(funnelResponse.status, 200);
+      assert.equal(funnelPayload.data.scope, "teacher");
+      assert.ok(funnelPayload.data.stages.some((stage) => stage.key === "practice-started"));
+
+      const studentFunnelResponse = await fetch(`${analytics.url}/api/analytics/funnel?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const studentFunnelPayload = await studentFunnelResponse.json();
+      assert.equal(studentFunnelResponse.status, 200);
+      assert.equal(studentFunnelPayload.data.scope, "student");
+      assert.equal(studentFunnelPayload.data.students[0].studentId, "user_student");
+
+      const riskBoardResponse = await fetch(`${analytics.url}/api/analytics/risk-board?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const riskBoardPayload = await riskBoardResponse.json();
+      assert.equal(riskBoardResponse.status, 200);
+      assert.equal(typeof riskBoardPayload.data.totalStudents, "number");
+      assert.ok(Array.isArray(riskBoardPayload.data.recommendedActions));
+
+      const deepReportResponse = await fetch(`${analytics.url}/api/analytics/courses/course_ood/deep-report`, {
+        headers: teacherHeaders
+      });
+      const deepReportPayload = await deepReportResponse.json();
+      assert.equal(deepReportResponse.status, 200);
+      assert.equal(deepReportPayload.data.courseId, "course_ood");
+      assert.equal(deepReportPayload.data.assignments.submitted >= 1, true);
+
+      const progressReportResponse = await fetch(`${analytics.url}/api/analytics/students/user_student/progress-report`, {
+        headers: studentHeaders
+      });
+      const progressReportPayload = await progressReportResponse.json();
+      assert.equal(progressReportResponse.status, 200);
+      assert.equal(progressReportPayload.data.studentId, "user_student");
+      assert.ok(Array.isArray(progressReportPayload.data.nextFocus));
+
+      const engagementResponse = await fetch(`${analytics.url}/api/analytics/engagement?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const engagementPayload = await engagementResponse.json();
+      assert.equal(engagementResponse.status, 200);
+      assert.equal(typeof engagementPayload.data.activityCount, "number");
+
       const forbiddenTeacherResponse = await fetch(`${analytics.url}/api/analytics/teacher`, {
         headers: studentHeaders
       });
@@ -1918,6 +1965,13 @@ test("analytics-service aggregates student, course, and teacher statistics with 
       const forbiddenStudentPayload = await forbiddenStudentResponse.json();
       assert.equal(forbiddenStudentResponse.status, 403);
       assert.equal(forbiddenStudentPayload.code, "FORBIDDEN");
+
+      const forbiddenRiskResponse = await fetch(`${analytics.url}/api/analytics/risk-board?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const forbiddenRiskPayload = await forbiddenRiskResponse.json();
+      assert.equal(forbiddenRiskResponse.status, 403);
+      assert.equal(forbiddenRiskPayload.code, "FORBIDDEN");
     } finally {
       await stopServers(apps.map((app) => app.server));
     }
@@ -2436,6 +2490,51 @@ test("gateway proxies analytics endpoints and keeps dashboard analytics up when 
       const teacherPayload = await teacherResponse.json();
       assert.equal(teacherResponse.status, 200);
       assert.equal(Array.isArray(teacherPayload.data.recentActivity), true);
+
+      const funnelResponse = await fetch(`${gateway.url}/api/analytics/funnel?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const funnelPayload = await funnelResponse.json();
+      assert.equal(funnelResponse.status, 200);
+      assert.ok(Array.isArray(funnelPayload.data.stages));
+
+      const riskBoardResponse = await fetch(`${gateway.url}/api/analytics/risk-board?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const riskBoardPayload = await riskBoardResponse.json();
+      assert.equal(riskBoardResponse.status, 200);
+      assert.equal(typeof riskBoardPayload.data.totalStudents, "number");
+
+      const deepReportResponse = await fetch(`${gateway.url}/api/analytics/courses/course_ood/deep-report`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const deepReportPayload = await deepReportResponse.json();
+      assert.equal(deepReportResponse.status, 200);
+      assert.equal(deepReportPayload.data.courseId, "course_ood");
+
+      const progressReportResponse = await fetch(`${gateway.url}/api/analytics/students/user_student/progress-report`, {
+        headers: {
+          authorization: `Bearer ${studentToken}`
+        }
+      });
+      const progressReportPayload = await progressReportResponse.json();
+      assert.equal(progressReportResponse.status, 200);
+      assert.equal(progressReportPayload.data.studentId, "user_student");
+
+      const engagementResponse = await fetch(`${gateway.url}/api/analytics/engagement?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const engagementPayload = await engagementResponse.json();
+      assert.equal(engagementResponse.status, 200);
+      assert.ok(Array.isArray(engagementPayload.data.channelMix));
 
       const dashboardResponse = await fetch(`${gateway.url}/api/dashboard`, {
         headers: {
