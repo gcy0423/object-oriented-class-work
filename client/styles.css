@@ -501,6 +501,132 @@ textarea:focus-visible,
   color: var(--muted);
 }
 
+.insight-metrics {
+  margin-bottom: 16px;
+}
+
+.insight-filter {
+  margin-bottom: 16px;
+}
+
+.insight-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(340px, 460px);
+  gap: 16px;
+  align-items: start;
+}
+
+.insight-main,
+.insight-side,
+.insight-action-list,
+.insight-concept-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.insight-key-values div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.insight-key-values dt,
+.insight-key-values dd {
+  margin: 0;
+}
+
+.insight-dimension-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.insight-dimension-grid article,
+.insight-mini-grid article,
+.insight-concept-grid article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.insight-dimension-grid .is-covered {
+  border-color: #badbcc;
+  background: #f4fbf7;
+}
+
+.insight-dimension-grid .is-missing {
+  border-color: #f1b4ae;
+  background: #fff7f7;
+}
+
+.insight-dimension-grid span {
+  display: block;
+  margin-top: 6px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.insight-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.insight-concept-grid {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  margin-bottom: 14px;
+}
+
+.insight-narrative-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.insight-narrative-grid article {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.insight-next-actions {
+  display: grid;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.insight-next-actions p {
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: var(--surface-soft);
+  color: var(--text);
+}
+
+.insight-timeline {
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 14px 0 0;
+  list-style: none;
+}
+
+.insight-timeline li {
+  display: grid;
+  grid-template-columns: 132px minmax(0, 1fr);
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.insight-timeline time {
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .course-card-grid {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
@@ -951,6 +1077,7 @@ textarea:focus-visible,
 }
 
 @media (max-width: 1180px) {
+  .insight-layout,
   .knowledge-layout,
   .workbench-grid,
   .two-column,
@@ -1006,6 +1133,9 @@ textarea:focus-visible,
   .metric-grid,
   .stats-grid,
   .filter-toolbar,
+  .insight-dimension-grid,
+  .insight-mini-grid,
+  .insight-timeline li,
   .knowledge-profile-grid,
   .knowledge-context-grid,
   .knowledge-edge,

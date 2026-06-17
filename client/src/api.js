@@ -63,9 +63,12 @@ export class ApiClient {
   submitAssignment(id, input) { return this.request(`/api/assignments/${encodeURIComponent(id)}/submissions`, { method: "POST", body: JSON.stringify(input) }); }
   gradeSubmission(id, input) { return this.request(`/api/submissions/${encodeURIComponent(id)}/grade`, { method: "POST", body: JSON.stringify(input) }); }
   reviewSubmissionWithAI(id) { return this.request(`/api/submissions/${encodeURIComponent(id)}/ai-review`, { method: "POST", body: JSON.stringify({}) }); }
+  assignmentGradingOverview(id) { return this.request(`/api/assignments/${encodeURIComponent(id)}/grading-overview`); }
+  submissionGradingInsight(id) { return this.request(`/api/submissions/${encodeURIComponent(id)}/grading-insight`); }
 
   rubrics(params = {}) { return this.request(`/api/rubrics${toQuery(params)}`); }
   createRubric(input) { return this.request("/api/rubrics", { method: "POST", body: JSON.stringify(input) }); }
+  rubricInsight(id) { return this.request(`/api/rubrics/${encodeURIComponent(id)}/insight`); }
 
   questionBanks(params = {}) { return this.request(`/api/question-banks${toQuery(params)}`); }
   createQuestionBank(input) { return this.request("/api/question-banks", { method: "POST", body: JSON.stringify(input) }); }
@@ -82,8 +85,15 @@ export class ApiClient {
   practiceSession(id) { return this.request(`/api/practice-sessions/${encodeURIComponent(id)}`); }
   submitPracticeAnswer(id, input) { return this.request(`/api/practice-sessions/${encodeURIComponent(id)}/answers`, { method: "POST", body: JSON.stringify(input) }); }
   finishPractice(id) { return this.request(`/api/practice-sessions/${encodeURIComponent(id)}/finish`, { method: "POST", body: JSON.stringify({}) }); }
+  practiceSessionReview(id) { return this.request(`/api/practice-sessions/${encodeURIComponent(id)}/review`); }
+  adaptivePracticePlan(input) { return this.request("/api/adaptive-practice-plan", { method: "POST", body: JSON.stringify(input) }); }
   mistakes(params = {}) { return this.request(`/api/mistakes${toQuery(params)}`); }
+  mistakeAnalysis(params = {}) { return this.request(`/api/mistake-analysis${toQuery(params)}`); }
+  mistakeDetailAnalysis(id) { return this.request(`/api/mistakes/${encodeURIComponent(id)}/analysis`); }
   reviewMistake(id, input = { status: "reviewed" }) { return this.request(`/api/mistakes/${encodeURIComponent(id)}/review`, { method: "PATCH", body: JSON.stringify(input) }); }
+  assessmentCourseReport(params = {}) { return this.request(`/api/assessment/course-report${toQuery(params)}`); }
+  assessmentStudentPortfolio(params = {}) { return this.request(`/api/assessment/student-portfolio${toQuery(params)}`); }
+  assessmentRiskRegister(params = {}) { return this.request(`/api/assessment/risk-register${toQuery(params)}`); }
 
   analyticsOverview() { return this.request("/api/analytics/overview"); }
   analyticsCourse(id) { return this.request(`/api/analytics/courses/${encodeURIComponent(id)}`); }

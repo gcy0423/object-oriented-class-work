@@ -6,6 +6,7 @@ import { buildModelConfig, canManageAssessment, selectPracticeProgress, selectQu
 import { formatDate, formatPercent } from "../client/src/utils/format.js";
 import { toQuery } from "../client/src/utils/query.js";
 import { compactErrors, validateAssignment, validateQuestion } from "../client/src/utils/validation.js";
+import { assessmentInsightView } from "../client/src/views/assessmentInsightView.js";
 import { assignmentManageView } from "../client/src/views/assignmentManageView.js";
 import { analyticsView } from "../client/src/views/analyticsView.js";
 import { knowledgeView } from "../client/src/views/knowledgeView.js";
@@ -88,6 +89,16 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.buildKnowledgeLearningPath({ courseId: "course_ood", conceptIds: ["kc_sequence"], days: 2 });
     await client.buildKnowledgePracticeSet({ courseId: "course_ood", conceptIds: ["kc_sequence"], limit: 1 });
     await client.buildKnowledgeAiContext({ courseId: "course_ood", question: "Why cite sources?", limit: 2 });
+    await client.assignmentGradingOverview("assignment_1");
+    await client.submissionGradingInsight("submission_1");
+    await client.rubricInsight("rubric_1");
+    await client.practiceSessionReview("practice_1");
+    await client.adaptivePracticePlan({ courseId: "course_ood", questionCount: 8 });
+    await client.mistakeAnalysis({ courseId: "course_ood" });
+    await client.mistakeDetailAnalysis("mistake_1");
+    await client.assessmentCourseReport({ courseId: "course_ood" });
+    await client.assessmentStudentPortfolio({ courseId: "course_ood", studentId: "user_student" });
+    await client.assessmentRiskRegister({ courseId: "course_ood" });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -111,7 +122,17 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/knowledge/graph?conceptId=kc_sequence&depth=2", method: "GET" },
     { url: "http://demo.local/api/knowledge/learning-path", method: "POST" },
     { url: "http://demo.local/api/knowledge/practice-set", method: "POST" },
-    { url: "http://demo.local/api/knowledge/ai-context", method: "POST" }
+    { url: "http://demo.local/api/knowledge/ai-context", method: "POST" },
+    { url: "http://demo.local/api/assignments/assignment_1/grading-overview", method: "GET" },
+    { url: "http://demo.local/api/submissions/submission_1/grading-insight", method: "GET" },
+    { url: "http://demo.local/api/rubrics/rubric_1/insight", method: "GET" },
+    { url: "http://demo.local/api/practice-sessions/practice_1/review", method: "GET" },
+    { url: "http://demo.local/api/adaptive-practice-plan", method: "POST" },
+    { url: "http://demo.local/api/mistake-analysis?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/mistakes/mistake_1/analysis", method: "GET" },
+    { url: "http://demo.local/api/assessment/course-report?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/assessment/student-portfolio?courseId=course_ood&studentId=user_student", method: "GET" },
+    { url: "http://demo.local/api/assessment/risk-register?courseId=course_ood", method: "GET" }
   ]);
 });
 
@@ -128,6 +149,8 @@ test("v6 views render as importable ESM modules without build tools", () => {
   state.assessment.questionBanks = [{ id: "bank_1", title: "设计模式题库", courseId: "course_ood", description: "题库说明" }];
   state.assessment.questions = [{ id: "q_1", bankId: "bank_1", courseId: "course_ood", type: "single_choice", stem: "题干", analysis: "解析", difficulty: "easy" }];
   state.assessment.practiceSession = { id: "practice_1", questions: [{ id: "q_1", stem: "题干", choices: [] }], answers: [] };
+  state.assessment.practiceHistory = [{ id: "practice_1", courseId: "course_ood", status: "finished", correctRate: 80 }];
+  state.assessment.mistakes = [{ id: "mistake_1", courseId: "course_ood", status: "open", questionId: "q_1" }];
   state.analytics.teacher = { courses: [], students: [], riskStudents: [], recentActivity: [] };
   state.workbench.notificationSummary = { unread: 1 };
   state.workbench.notifications = [{ id: "notification_1", title: "Notice", body: "Body", category: "scheduler", severity: "info", createdAt: "2026-06-16" }];
@@ -148,12 +171,24 @@ test("v6 views render as importable ESM modules without build tools", () => {
   state.knowledge.learningPath = { totalConcepts: 1, totalMinutes: 60, schedule: [{ date: "2026-06-17", minutes: 60, items: [{ title: "Sequence Diagram", category: "design", difficulty: "intermediate", estimateMinutes: 60 }] }] };
   state.knowledge.practiceSet = { conceptCount: 1, questionCount: 1, questions: [{ title: "Sequence Diagram", type: "short-answer", question: "Explain a lifeline.", referenceAnswer: "Object timeline." }] };
   state.knowledge.aiContext = { query: "Why cite sources?", concepts: [{ title: "RAG", summary: "Retrieved evidence." }], promptHints: ["cite retrieved chunks"] };
+  state.assessmentInsight.gradingOverview = { submissionCount: 1, gradedCount: 1, average: 90, bands: { excellent: 1 }, consistency: { status: "stable" }, rows: [{ submissionId: "submission_1", studentName: "Student", teacherScore: 90, aiScore: 88, scoreGap: 2, band: "excellent" }] };
+  state.assessmentInsight.rubricInsight = { totalScore: 100, qualityScore: 92, warnings: [], dimensionCoverage: [{ key: "modeling", covered: true }], criteria: [{ title: "Modeling", maxScore: 40, weight: 40, description: "Model quality" }], improvementPlan: ["Keep collecting samples."] };
+  state.assessmentInsight.submissionInsight = { assignment: { title: "Assignment" }, submission: { studentId: "user_student", submittedAt: "2026-06-16T00:00:00.000Z" }, comparison: [{ metric: "total-score-gap", teacher: 90, ai: 88, gap: 2, risk: "normal" }], recommendation: "Scores are consistent." };
+  state.assessmentInsight.sessionReview = { answeredCount: 2, correctCount: 1, incorrectCount: 1, pendingCount: 0, conceptBreakdown: [{ concept: "UML", correctRate: 50 }], difficultyBreakdown: { easy: { total: 1, correct: 1, correctRate: 100 } }, nextActions: ["Review UML."] };
+  state.assessmentInsight.adaptivePlan = { selectedCount: 1, targetCount: 8, estimatedMinutes: 10, weakConcepts: [{ concept: "UML" }], strategy: "Prioritize UML.", questions: [{ stem: "Question", concept: "UML", difficulty: "easy", reason: "Weak concept." }] };
+  state.assessmentInsight.mistakeAnalysis = { totalMistakes: 1, openMistakes: 1, reviewedMistakes: 0, concepts: [{ concept: "UML", priority: "high", openCount: 1, masteryScore: 50, remediation: { advice: "Review class diagrams." } }], nextReviewQueue: [{ mistakeId: "mistake_1", concept: "UML", priority: "high", stem: "Question", reason: "concept-confusion" }] };
+  state.assessmentInsight.mistakeDetail = { reason: "concept-confusion", mistake: { status: "open" }, question: { stem: "Question", analysis: "Analysis", answer: "A", difficulty: "easy" }, answer: { answer: "B" }, remediation: { advice: "Compare concepts.", evidenceToCollect: ["notes"] } };
+  state.assessmentInsight.courseReport = { assignmentCount: 1, submissionCount: 1, rubricCount: 1, gradedSubmissionCount: 1, gradeDistribution: { excellent: 1, good: 0, pass: 0, risk: 0 }, practiceEngagement: { sessionCount: 1 }, mistakeLoad: { openMistakes: 1 }, masteryCoverage: { averageMastery: 80 } };
+  state.assessmentInsight.studentPortfolio = { assignmentProgress: { totalAssignments: 1, completionRate: 100, rows: [{ title: "Assignment", submitted: true, teacherScore: 90, aiScore: 88 }] }, gradeTrend: { averageScore: 90 }, practiceSummary: { sessionCount: 1 }, risk: { level: "low", score: 0 }, evidenceTimeline: [{ at: "2026-06-16T00:00:00.000Z", summary: "Submitted assignment." }] };
+  state.assessmentInsight.riskRegister = { totalStudents: 1, highRiskCount: 0, mediumRiskCount: 0, lowRiskCount: 1, items: [{ studentId: "user_student", risk: { level: "low", score: 0 }, assignmentCompletionRate: 100, averageScore: 90, openMistakes: 1, weakConcepts: [{ concept: "UML" }] }] };
   state.settings.health = { service: "gateway-service", status: "up", time: "2026-06-16T00:00:00.000Z", services: [] };
   state.settings.modelConfig = buildModelConfig(state.provider);
   const renderedWorkbench = workbenchView(state);
   assert.match(renderedWorkbench, /Learning Funnel/);
   const renderedKnowledge = knowledgeView(state);
   assert.match(renderedKnowledge, /Graph Evidence/);
+  const renderedAssessmentInsight = assessmentInsightView(state);
+  assert.match(renderedAssessmentInsight, /Teacher Grading Insight/);
 
   assert.match(assignmentManageView(state), /作业列表/);
   assert.match(questionBankManageView(state), /题库列表/);

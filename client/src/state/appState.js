@@ -27,7 +27,8 @@ export function createInitialState() {
       reminder: false,
       knowledgePath: false,
       knowledgePractice: false,
-      knowledgeContext: false
+      knowledgeContext: false,
+      adaptivePlan: false
     },
     errors: {},
     filters: {
@@ -36,7 +37,8 @@ export function createInitialState() {
       practice: { courseId: "", bankId: "", status: "", mistakeStatus: "" },
       analytics: { courseId: "", studentId: "" },
       workbench: { courseId: "", category: "", reminderStatus: "" },
-      knowledge: { courseId: "", query: "object collaboration", category: "", difficulty: "", tag: "", conceptId: "" }
+      knowledge: { courseId: "", query: "object collaboration", category: "", difficulty: "", tag: "", conceptId: "" },
+      assessmentInsight: { courseId: "", assignmentId: "", rubricId: "", submissionId: "", practiceSessionId: "", mistakeId: "", studentId: "" }
     },
     selected: {
       assignmentId: "",
@@ -54,7 +56,8 @@ export function createInitialState() {
       reminder: null,
       knowledgePath: { goalText: "object collaboration service boundary", days: 5 },
       knowledgePractice: { conceptIds: "", limit: 4 },
-      knowledgeContext: { question: "How should the AI answer cite retrieved knowledge?", limit: 4 }
+      knowledgeContext: { question: "How should the AI answer cite retrieved knowledge?", limit: 4 },
+      adaptivePlan: { questionCount: 8, bankId: "" }
     },
     ui: {
       activePanel: "",
@@ -102,6 +105,18 @@ export function createInitialState() {
       learningPath: null,
       practiceSet: null,
       aiContext: null
+    },
+    assessmentInsight: {
+      gradingOverview: null,
+      rubricInsight: null,
+      submissionInsight: null,
+      sessionReview: null,
+      adaptivePlan: null,
+      mistakeAnalysis: null,
+      mistakeDetail: null,
+      courseReport: null,
+      studentPortfolio: null,
+      riskRegister: null
     },
     settings: {
       health: null,

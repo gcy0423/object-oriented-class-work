@@ -1,4 +1,5 @@
 import { ApiClient } from "./api.js";
+import { assessmentInsightView } from "./views/assessmentInsightView.js";
 import { assignmentManageView } from "./views/assignmentManageView.js";
 import { analyticsView } from "./views/analyticsView.js";
 import { aiView } from "./views/aiView.js";
@@ -26,6 +27,7 @@ const views = {
   assignments: assignmentManageView,
   "question-banks": questionBankManageView,
   practice: practiceView,
+  "assessment-insight": assessmentInsightView,
   analytics: analyticsView,
   ai: aiView,
   team: teamView,
@@ -34,6 +36,10 @@ const views = {
 
 function splitIds(value) {
   return String(value || "").split(/[,\s]+/).map((item) => item.trim()).filter(Boolean);
+}
+
+function firstItem(items) {
+  return Array.isArray(items) && items.length ? items[0] : null;
 }
 
 class EduMindApp {
@@ -258,6 +264,54 @@ class EduMindApp {
         }
       }
 
+      const assignmentRows = assignmentsResult.status === "fulfilled" ? assignmentsResult.value.data : [];
+      const rubricRows = rubricsResult.status === "fulfilled" ? rubricsResult.value.data : [];
+      const mistakeRows = mistakesResult.status === "fulfilled" ? mistakesResult.value.data : [];
+      const practiceRows = historyResult.status === "fulfilled" ? historyResult.value.data.items || historyResult.value.data : [];
+      const insightFilter = state.filters.assessmentInsight;
+      const insightCourseId = insightFilter.courseId || firstCourseId;
+      const courseAssignments = assignmentRows.filter((item) => !insightCourseId || item.courseId === insightCourseId);
+      const insightAssignmentId = insightFilter.assignmentId || state.selected.assignmentId || assignmentDetail?.assignment?.id || firstItem(courseAssignments)?.id || firstItem(assignmentRows)?.id || "";
+      let insightAssignmentDetail = assignmentDetail?.assignment?.id === insightAssignmentId ? assignmentDetail : null;
+      if (insightAssignmentId && !insightAssignmentDetail) {
+        try {
+          const detail = await this.api.assignmentDetail(insightAssignmentId);
+          insightAssignmentDetail = detail.data;
+        } catch {
+          insightAssignmentDetail = null;
+        }
+      }
+      const insightRubricId = insightFilter.rubricId || insightAssignmentDetail?.assignment?.rubricId || firstItem(rubricRows)?.id || "";
+      const insightSubmissionId = insightFilter.submissionId || firstItem(insightAssignmentDetail?.submissions || [])?.id || "";
+      const insightPracticeSessionId = insightFilter.practiceSessionId || state.selected.practiceSessionId || firstItem(practiceRows)?.id || "";
+      const insightMistakeId = insightFilter.mistakeId || firstItem(mistakeRows)?.id || "";
+      const insightStudentId = insightFilter.studentId || state.user?.id || "";
+      const learnerScope = {
+        ...(insightCourseId ? { courseId: insightCourseId } : {}),
+        ...(insightStudentId ? { studentId: insightStudentId } : {})
+      };
+      const [
+        gradingOverviewResult,
+        rubricInsightResult,
+        submissionInsightResult,
+        sessionReviewResult,
+        mistakeAnalysisResult,
+        mistakeDetailResult,
+        courseReportResult,
+        studentPortfolioResult,
+        riskRegisterResult
+      ] = await Promise.allSettled([
+        isTeacher && insightAssignmentId ? this.api.assignmentGradingOverview(insightAssignmentId) : Promise.resolve({ data: null }),
+        insightRubricId ? this.api.rubricInsight(insightRubricId) : Promise.resolve({ data: null }),
+        isTeacher && insightSubmissionId ? this.api.submissionGradingInsight(insightSubmissionId) : Promise.resolve({ data: null }),
+        insightPracticeSessionId ? this.api.practiceSessionReview(insightPracticeSessionId) : Promise.resolve({ data: null }),
+        insightCourseId ? this.api.mistakeAnalysis(learnerScope) : Promise.resolve({ data: null }),
+        insightMistakeId ? this.api.mistakeDetailAnalysis(insightMistakeId) : Promise.resolve({ data: null }),
+        isTeacher && insightCourseId ? this.api.assessmentCourseReport({ courseId: insightCourseId }) : Promise.resolve({ data: null }),
+        insightCourseId ? this.api.assessmentStudentPortfolio(learnerScope) : Promise.resolve({ data: null }),
+        isTeacher && insightCourseId ? this.api.assessmentRiskRegister({ courseId: insightCourseId }) : Promise.resolve({ data: null })
+      ]);
+
       this.setState({
         dashboard: dashboard.data,
         provider: dashboard.meta?.provider || "",
@@ -304,6 +358,18 @@ class EduMindApp {
           learningPath: state.knowledge.learningPath,
           practiceSet: state.knowledge.practiceSet,
           aiContext: state.knowledge.aiContext
+        },
+        assessmentInsight: {
+          gradingOverview: gradingOverviewResult.status === "fulfilled" ? gradingOverviewResult.value.data : state.assessmentInsight.gradingOverview,
+          rubricInsight: rubricInsightResult.status === "fulfilled" ? rubricInsightResult.value.data : state.assessmentInsight.rubricInsight,
+          submissionInsight: submissionInsightResult.status === "fulfilled" ? submissionInsightResult.value.data : state.assessmentInsight.submissionInsight,
+          sessionReview: sessionReviewResult.status === "fulfilled" ? sessionReviewResult.value.data : state.assessmentInsight.sessionReview,
+          adaptivePlan: state.assessmentInsight.adaptivePlan,
+          mistakeAnalysis: mistakeAnalysisResult.status === "fulfilled" ? mistakeAnalysisResult.value.data : state.assessmentInsight.mistakeAnalysis,
+          mistakeDetail: mistakeDetailResult.status === "fulfilled" ? mistakeDetailResult.value.data : state.assessmentInsight.mistakeDetail,
+          courseReport: courseReportResult.status === "fulfilled" ? courseReportResult.value.data : state.assessmentInsight.courseReport,
+          studentPortfolio: studentPortfolioResult.status === "fulfilled" ? studentPortfolioResult.value.data : state.assessmentInsight.studentPortfolio,
+          riskRegister: riskRegisterResult.status === "fulfilled" ? riskRegisterResult.value.data : state.assessmentInsight.riskRegister
         },
         settings: {
           health: healthResult.status === "fulfilled" ? healthResult.value.data : null,
@@ -550,6 +616,24 @@ class EduMindApp {
         });
         return;
       }
+      if (action === "load-submission-insight") {
+        const result = await this.api.submissionGradingInsight(actionButton.dataset.id);
+        this.setState({
+          route: "assessment-insight",
+          filters: { ...this.store.get().filters, assessmentInsight: { ...this.store.get().filters.assessmentInsight, submissionId: actionButton.dataset.id } },
+          assessmentInsight: { ...this.store.get().assessmentInsight, submissionInsight: result.data }
+        });
+        return;
+      }
+      if (action === "load-mistake-detail") {
+        const result = await this.api.mistakeDetailAnalysis(actionButton.dataset.id);
+        this.setState({
+          route: "assessment-insight",
+          filters: { ...this.store.get().filters, assessmentInsight: { ...this.store.get().filters.assessmentInsight, mistakeId: actionButton.dataset.id } },
+          assessmentInsight: { ...this.store.get().assessmentInsight, mistakeDetail: result.data }
+        });
+        return;
+      }
       if (action === "view-course-analytics") {
         const result = await this.api.analyticsCourse(actionButton.dataset.id);
         this.setState({ analytics: { ...this.store.get().analytics, selectedCourse: result.data }, route: "analytics" });
@@ -773,6 +857,38 @@ class EduMindApp {
           this.patchSaving("knowledgeContext", false);
         }
         this.toast("AI context built.");
+        return;
+      }
+      if (form.dataset.form === "assessment-insight-filter") {
+        this.setState({
+          route: "assessment-insight",
+          filters: { ...this.store.get().filters, assessmentInsight: { ...this.store.get().filters.assessmentInsight, ...data } }
+        });
+        await this.refreshApp("Assessment insight refreshed.");
+        return;
+      }
+      if (form.dataset.form === "adaptive-practice-plan") {
+        if (!data.courseId) {
+          this.toast("Course is required.");
+          return;
+        }
+        this.patchSaving("adaptivePlan", true);
+        try {
+          const result = await this.api.adaptivePracticePlan({
+            courseId: data.courseId,
+            studentId: data.studentId,
+            bankId: data.bankId,
+            questionCount: Number(data.questionCount || 8)
+          });
+          this.setState({
+            route: "assessment-insight",
+            draft: { ...this.store.get().draft, adaptivePlan: { bankId: data.bankId, questionCount: data.questionCount } },
+            assessmentInsight: { ...this.store.get().assessmentInsight, adaptivePlan: result.data }
+          });
+        } finally {
+          this.patchSaving("adaptivePlan", false);
+        }
+        this.toast("Adaptive practice plan built.");
         return;
       }
       if (form.dataset.form === "question-bank-filter") {
