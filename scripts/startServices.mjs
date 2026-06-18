@@ -11,6 +11,7 @@ const services = [
   { name: "collaboration-service", script: "services/collaboration-service/src/main.js" },
   { name: "analytics-service", script: "services/analytics-service/src/main.js" },
   { name: "report-service", script: "services/report-service/src/main.js" },
+  { name: "operations-service", script: "services/operations-service/src/main.js" },
   { name: "notification-service", script: "services/notification-service/src/main.js" },
   { name: "scheduler-service", script: "services/scheduler-service/src/main.js" },
   { name: "gateway-service", script: "services/gateway-service/src/main.js" }

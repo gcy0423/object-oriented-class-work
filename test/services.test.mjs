@@ -21,6 +21,7 @@ import { createApp as createIdentityApp } from "../services/identity-service/src
 import { createApp as createKnowledgeApp } from "../services/knowledge-service/src/main.js";
 import { createApp as createLearningApp } from "../services/learning-service/src/main.js";
 import { createApp as createNotificationApp } from "../services/notification-service/src/main.js";
+import { createApp as createOperationsApp } from "../services/operations-service/src/main.js";
 import { createApp as createReportApp } from "../services/report-service/src/main.js";
 import { createApp as createSchedulerApp } from "../services/scheduler-service/src/main.js";
 
@@ -152,6 +153,17 @@ function reportConfig(dir, overrides = {}) {
   };
 }
 
+function operationsConfig(dir, overrides = {}) {
+  return {
+    serviceName: "operations-service",
+    host: "127.0.0.1",
+    port: 0,
+    internalKey: INTERNAL_KEY,
+    dataFile: join(dir, "operations.json"),
+    ...overrides
+  };
+}
+
 function knowledgeConfig(dir, overrides = {}) {
   return {
     serviceName: "knowledge-service",
@@ -254,6 +266,8 @@ test("each service health endpoint returns ok", async () => {
       { createApp: createAiApp, config: aiConfig(dir, { learningServiceUrl: "http://127.0.0.1:65531" }) },
       { createApp: createCollaborationApp, config: collaborationConfig(dir) },
       { createApp: createAnalyticsApp, config: { serviceName: "analytics-service", host: "127.0.0.1", port: 0, internalKey: INTERNAL_KEY } },
+      { createApp: createReportApp, config: reportConfig(dir) },
+      { createApp: createOperationsApp, config: operationsConfig(dir) },
       { createApp: createKnowledgeApp, config: knowledgeConfig(dir) },
       { createApp: createNotificationApp, config: notificationConfig(dir) },
       { createApp: createSchedulerApp, config: schedulerConfig(dir) }
@@ -1035,6 +1049,147 @@ test("identity-service manages users, classrooms, groups, and role permissions",
   });
 });
 
+test("operations-service handles import preview, batch jobs, and audit digest", async () => {
+  await withTempDir(async (dir) => {
+    const operations = await startApp(createOperationsApp, operationsConfig(dir));
+    const teacherHeaders = {
+      "content-type": "application/json",
+      "x-edumind-user-id": "user_teacher",
+      "x-edumind-user-role": "teacher",
+      "x-edumind-user-name": encodeUserContextHeader("Teacher")
+    };
+    const studentHeaders = {
+      "content-type": "application/json",
+      "x-edumind-user-id": "user_student",
+      "x-edumind-user-role": "student",
+      "x-edumind-user-name": encodeUserContextHeader("Student")
+    };
+
+    try {
+      const catalogResponse = await fetch(`${operations.url}/api/operations/catalog`, {
+        headers: teacherHeaders
+      });
+      const catalogPayload = await catalogResponse.json();
+      assert.equal(catalogResponse.status, 200);
+      assert.ok(catalogPayload.data.importTargets.some((item) => item.key === "portfolioEvidence"));
+      assert.ok(catalogPayload.data.jobTypes.some((item) => item.key === "portfolio-refresh"));
+
+      const forbiddenDashboardResponse = await fetch(`${operations.url}/api/operations/dashboard`, {
+        headers: studentHeaders
+      });
+      const forbiddenDashboardPayload = await forbiddenDashboardResponse.json();
+      assert.equal(forbiddenDashboardResponse.status, 403);
+      assert.equal(forbiddenDashboardPayload.code, "FORBIDDEN");
+
+      const previewResponse = await fetch(`${operations.url}/api/operations/imports/preview`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          title: "Portfolio evidence JSON import",
+          target: "portfolioEvidence",
+          courseId: "course_ood",
+          format: "json",
+          payload: JSON.stringify([
+            { studentId: "user_student", courseId: "course_ood", type: "manual-evidence", summary: "Submitted class diagram revision with reflection notes.", score: 86, concept: "UML" },
+            { studentId: "", courseId: "course_ood", type: "manual-evidence", summary: "Missing student id" }
+          ])
+        })
+      });
+      const previewPayload = await previewResponse.json();
+      assert.equal(previewResponse.status, 200);
+      assert.equal(previewPayload.data.batch.summary.totalRows, 2);
+      assert.equal(previewPayload.data.batch.summary.validRows, 1);
+      assert.equal(previewPayload.data.batch.summary.errorRows, 1);
+
+      const importListResponse = await fetch(`${operations.url}/api/operations/imports?target=portfolioEvidence`, {
+        headers: teacherHeaders
+      });
+      const importListPayload = await importListResponse.json();
+      assert.equal(importListResponse.status, 200);
+      assert.ok(importListPayload.data.some((batch) => batch.id === previewPayload.data.batch.id));
+
+      const importDetailResponse = await fetch(`${operations.url}/api/operations/imports/${previewPayload.data.batch.id}`, {
+        headers: teacherHeaders
+      });
+      const importDetailPayload = await importDetailResponse.json();
+      assert.equal(importDetailResponse.status, 200);
+      assert.equal(importDetailPayload.data.rows.length, 2);
+
+      const commitResponse = await fetch(`${operations.url}/api/operations/imports/${previewPayload.data.batch.id}/commit`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({ allowWarnings: true })
+      });
+      const commitPayload = await commitResponse.json();
+      assert.equal(commitResponse.status, 200);
+      assert.equal(commitPayload.data.batch.status, "committed");
+      assert.equal(commitPayload.data.committedRows.length, 1);
+      assert.equal(commitPayload.data.job.type, "import-commit");
+
+      const createJobResponse = await fetch(`${operations.url}/api/operations/batch-jobs`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          title: "Risk recalculation",
+          type: "risk-recalculation",
+          courseId: "course_ood",
+          priority: "high",
+          params: { studentIds: ["user_student"] }
+        })
+      });
+      const createJobPayload = await createJobResponse.json();
+      assert.equal(createJobResponse.status, 200);
+      assert.equal(createJobPayload.data.job.status, "queued");
+      assert.equal(createJobPayload.data.steps.length, 4);
+
+      const runJobResponse = await fetch(`${operations.url}/api/operations/batch-jobs/${createJobPayload.data.job.id}/run`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({})
+      });
+      const runJobPayload = await runJobResponse.json();
+      assert.equal(runJobResponse.status, 200);
+      assert.equal(runJobPayload.data.job.status, "completed");
+      assert.equal(runJobPayload.data.steps.every((step) => step.status === "completed"), true);
+
+      const manualAuditResponse = await fetch(`${operations.url}/api/operations/audit`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          action: "operations.manual.portfolio-note",
+          resourceType: "portfolio",
+          resourceId: "user_student",
+          courseId: "course_ood",
+          severity: "warning",
+          summary: "Manual audit note for portfolio evidence review.",
+          metadata: { source: "test" }
+        })
+      });
+      const manualAuditPayload = await manualAuditResponse.json();
+      assert.equal(manualAuditResponse.status, 200);
+      assert.equal(manualAuditPayload.data.severity, "warning");
+
+      const digestResponse = await fetch(`${operations.url}/api/operations/audit/digest?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const digestPayload = await digestResponse.json();
+      assert.equal(digestResponse.status, 200);
+      assert.ok(digestPayload.data.total >= 4);
+      assert.ok(digestPayload.data.bySeverity.some((item) => item.severity === "warning" && item.count >= 1));
+
+      const dashboardResponse = await fetch(`${operations.url}/api/operations/dashboard?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const dashboardPayload = await dashboardResponse.json();
+      assert.equal(dashboardResponse.status, 200);
+      assert.ok(dashboardPayload.data.metrics.importBatchCount >= 2);
+      assert.ok(dashboardPayload.data.metrics.completedJobCount >= 2);
+    } finally {
+      await stopServers([operations.server]);
+    }
+  });
+});
+
 test("learning-service handles courses, dashboard, goals, tasks, notes, and internal context", async () => {
   await withTempDir(async (dir) => {
     const learning = await startApp(createLearningApp, learningConfig(dir));
@@ -1756,6 +1911,49 @@ test("assessment-service handles assignments, grading, AI review, practice, mist
       const teacherPortfolioPayload = await teacherPortfolioResponse.json();
       assert.equal(teacherPortfolioResponse.status, 200);
       assert.equal(teacherPortfolioPayload.data.assignmentProgress.submittedCount >= 1, true);
+
+      const deepPortfolioResponse = await fetch(`${assessment.url}/api/assessment/student-portfolio/deep?courseId=course_ood&studentId=user_student`, {
+        headers: teacherHeaders
+      });
+      const deepPortfolioPayload = await deepPortfolioResponse.json();
+      assert.equal(deepPortfolioResponse.status, 200);
+      assert.equal(deepPortfolioPayload.data.ownerId, "user_student");
+      assert.equal(typeof deepPortfolioPayload.data.quality.overallScore, "number");
+      assert.ok(Array.isArray(deepPortfolioPayload.data.competencyMap.concepts));
+      assert.ok(Array.isArray(deepPortfolioPayload.data.dossier.defenseClaims));
+      assert.ok(Array.isArray(deepPortfolioPayload.data.defenseNarrative.citations));
+
+      const evidenceMapResponse = await fetch(`${assessment.url}/api/assessment/student-portfolio/evidence-map?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const evidenceMapPayload = await evidenceMapResponse.json();
+      assert.equal(evidenceMapResponse.status, 200);
+      assert.equal(evidenceMapPayload.data.ownerId, "user_student");
+      assert.ok(evidenceMapPayload.data.totalEvidence >= 4);
+      assert.ok(Array.isArray(evidenceMapPayload.data.byType));
+
+      const interventionResponse = await fetch(`${assessment.url}/api/assessment/student-portfolio/intervention-plan?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const interventionPayload = await interventionResponse.json();
+      assert.equal(interventionResponse.status, 200);
+      assert.ok(interventionPayload.data.actionCount >= 1);
+      assert.ok(Array.isArray(interventionPayload.data.teacherReviewChecklist));
+      assert.ok(Array.isArray(interventionPayload.data.studentReflectionChecklist));
+
+      const portfolioBoardResponse = await fetch(`${assessment.url}/api/assessment/portfolio-board?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const portfolioBoardPayload = await portfolioBoardResponse.json();
+      assert.equal(portfolioBoardResponse.status, 200);
+      assert.ok(portfolioBoardPayload.data.rows.some((row) => row.studentId === "user_student"));
+
+      const forbiddenPortfolioBoardResponse = await fetch(`${assessment.url}/api/assessment/portfolio-board?courseId=course_ood`, {
+        headers: studentHeaders
+      });
+      const forbiddenPortfolioBoardPayload = await forbiddenPortfolioBoardResponse.json();
+      assert.equal(forbiddenPortfolioBoardResponse.status, 403);
+      assert.equal(forbiddenPortfolioBoardPayload.code, "FORBIDDEN");
 
       const courseReportResponse = await fetch(`${assessment.url}/api/assessment/course-report?courseId=course_ood`, {
         headers: teacherHeaders
@@ -2972,6 +3170,131 @@ test("gateway proxies report-service report APIs", async () => {
   });
 });
 
+test("gateway proxies operations import, batch, and audit APIs", async () => {
+  await withTempDir(async (dir) => {
+    const apps = [];
+    try {
+      const identity = await startApp(createIdentityApp, identityConfig(dir));
+      const operations = await startApp(createOperationsApp, operationsConfig(dir));
+      const gateway = await startApp(createGatewayApp, gatewayConfig([
+        { name: "identity-service", url: identity.url },
+        { name: "operations-service", url: operations.url }
+      ]));
+      apps.push(identity, operations, gateway);
+
+      const teacherLogin = await loginThroughGateway(gateway.url, {
+        email: "teacher@edumind.local",
+        name: "Teacher",
+        role: "teacher"
+      });
+      const studentLogin = await loginThroughGateway(gateway.url, {
+        email: "student@edumind.local",
+        name: "Student",
+        role: "student"
+      });
+      const teacherHeaders = {
+        authorization: `Bearer ${teacherLogin.payload.data.token}`,
+        "content-type": "application/json"
+      };
+      const studentHeaders = {
+        authorization: `Bearer ${studentLogin.payload.data.token}`,
+        "content-type": "application/json"
+      };
+
+      const catalogResponse = await fetch(`${gateway.url}/api/operations/catalog`, {
+        headers: teacherHeaders
+      });
+      const catalogPayload = await catalogResponse.json();
+      assert.equal(catalogResponse.status, 200);
+      assert.ok(catalogPayload.data.importTargets.length >= 4);
+
+      const forbiddenResponse = await fetch(`${gateway.url}/api/operations/dashboard`, {
+        headers: studentHeaders
+      });
+      const forbiddenPayload = await forbiddenResponse.json();
+      assert.equal(forbiddenResponse.status, 403);
+      assert.equal(forbiddenPayload.code, "FORBIDDEN");
+
+      const previewResponse = await fetch(`${gateway.url}/api/operations/imports/preview`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          title: "Gateway student import",
+          target: "students",
+          courseId: "course_ood",
+          format: "csv",
+          payload: "name,email,studentNo\nGateway Student,gateway-student@edumind.local,20269999"
+        })
+      });
+      const previewPayload = await previewResponse.json();
+      assert.equal(previewResponse.status, 200);
+      assert.equal(previewPayload.data.batch.summary.validRows, 1);
+
+      const detailResponse = await fetch(`${gateway.url}/api/operations/imports/${previewPayload.data.batch.id}`, {
+        headers: teacherHeaders
+      });
+      const detailPayload = await detailResponse.json();
+      assert.equal(detailResponse.status, 200);
+      assert.equal(detailPayload.data.rows[0].normalized.role, "student");
+
+      const commitResponse = await fetch(`${gateway.url}/api/operations/imports/${previewPayload.data.batch.id}/commit`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({})
+      });
+      const commitPayload = await commitResponse.json();
+      assert.equal(commitResponse.status, 200);
+      assert.equal(commitPayload.data.batch.status, "committed");
+
+      const jobResponse = await fetch(`${gateway.url}/api/operations/batch-jobs`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          title: "Gateway portfolio refresh",
+          type: "portfolio-refresh",
+          courseId: "course_ood",
+          params: { studentIds: ["user_student"] }
+        })
+      });
+      const jobPayload = await jobResponse.json();
+      assert.equal(jobResponse.status, 200);
+      assert.equal(jobPayload.data.job.status, "queued");
+
+      const runResponse = await fetch(`${gateway.url}/api/operations/batch-jobs/${jobPayload.data.job.id}/run`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({})
+      });
+      const runPayload = await runResponse.json();
+      assert.equal(runResponse.status, 200);
+      assert.equal(runPayload.data.job.progress, 100);
+
+      const jobsResponse = await fetch(`${gateway.url}/api/operations/batch-jobs?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const jobsPayload = await jobsResponse.json();
+      assert.equal(jobsResponse.status, 200);
+      assert.ok(jobsPayload.data.some((job) => job.id === jobPayload.data.job.id));
+
+      const auditResponse = await fetch(`${gateway.url}/api/operations/audit?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const auditPayload = await auditResponse.json();
+      assert.equal(auditResponse.status, 200);
+      assert.ok(auditPayload.data.some((event) => event.action === "operations.batch.completed"));
+
+      const digestResponse = await fetch(`${gateway.url}/api/operations/audit/digest?courseId=course_ood`, {
+        headers: teacherHeaders
+      });
+      const digestPayload = await digestResponse.json();
+      assert.equal(digestResponse.status, 200);
+      assert.ok(digestPayload.data.total >= 3);
+    } finally {
+      await stopServers(apps.map((app) => app.server));
+    }
+  });
+});
+
 test("gateway proxies identity class management APIs", async () => {
   await withTempDir(async (dir) => {
     const apps = [];
@@ -3733,6 +4056,42 @@ test("gateway proxies login, AI, collaboration APIs, SSE, and dashboard aggregat
       const gatewayPortfolioPayload = await gatewayPortfolioResponse.json();
       assert.equal(gatewayPortfolioResponse.status, 200);
       assert.equal(gatewayPortfolioPayload.data.ownerId, "user_student");
+
+      const gatewayDeepPortfolioResponse = await fetch(`${gateway.url}/api/assessment/student-portfolio/deep?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayDeepPortfolioPayload = await gatewayDeepPortfolioResponse.json();
+      assert.equal(gatewayDeepPortfolioResponse.status, 200);
+      assert.equal(typeof gatewayDeepPortfolioPayload.data.quality.overallScore, "number");
+
+      const gatewayEvidenceMapResponse = await fetch(`${gateway.url}/api/assessment/student-portfolio/evidence-map?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayEvidenceMapPayload = await gatewayEvidenceMapResponse.json();
+      assert.equal(gatewayEvidenceMapResponse.status, 200);
+      assert.equal(typeof gatewayEvidenceMapPayload.data.totalEvidence, "number");
+
+      const gatewayInterventionResponse = await fetch(`${gateway.url}/api/assessment/student-portfolio/intervention-plan?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${token}`
+        }
+      });
+      const gatewayInterventionPayload = await gatewayInterventionResponse.json();
+      assert.equal(gatewayInterventionResponse.status, 200);
+      assert.ok(Array.isArray(gatewayInterventionPayload.data.actions));
+
+      const gatewayPortfolioBoardResponse = await fetch(`${gateway.url}/api/assessment/portfolio-board?courseId=course_ood`, {
+        headers: {
+          authorization: `Bearer ${teacherToken}`
+        }
+      });
+      const gatewayPortfolioBoardPayload = await gatewayPortfolioBoardResponse.json();
+      assert.equal(gatewayPortfolioBoardResponse.status, 200);
+      assert.ok(Array.isArray(gatewayPortfolioBoardPayload.data.rows));
 
       const gatewayCourseReportResponse = await fetch(`${gateway.url}/api/assessment/course-report?courseId=course_ood`, {
         headers: {

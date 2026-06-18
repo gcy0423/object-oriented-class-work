@@ -7,6 +7,7 @@ import { dashboardView } from "./views/dashboardView.js";
 import { identityAdminView } from "./views/identityAdminView.js";
 import { knowledgeView } from "./views/knowledgeView.js";
 import { learningView } from "./views/learningView.js";
+import { operationsView } from "./views/operationsView.js";
 import { practiceView } from "./views/practiceView.js";
 import { questionBankManageView } from "./views/questionBankManageView.js";
 import { reportView } from "./views/reportView.js";
@@ -32,6 +33,7 @@ const views = {
   "assessment-insight": assessmentInsightView,
   reports: reportView,
   "identity-admin": identityAdminView,
+  operations: operationsView,
   analytics: analyticsView,
   ai: aiView,
   team: teamView,
@@ -426,6 +428,73 @@ class EduMindApp {
         }
       }
 
+      const operationFilter = state.filters.operations;
+      const operationCourseId = operationFilter.courseId || reportCourseId || firstCourseId;
+      const operationStudentId = operationFilter.studentId || reportStudentId || state.user?.id || "";
+      const operationParams = {
+        ...(operationCourseId ? { courseId: operationCourseId } : {})
+      };
+      const [
+        operationsCatalogResult,
+        operationsDashboardResult,
+        operationImportsResult,
+        operationJobsResult,
+        operationAuditsResult,
+        operationAuditDigestResult,
+        deepPortfolioResult,
+        evidenceMapResult,
+        interventionPlanResult,
+        portfolioBoardResult
+      ] = await Promise.allSettled([
+        isTeacher ? this.api.operationsCatalog() : Promise.resolve({ data: null }),
+        isTeacher ? this.api.operationsDashboard(operationParams) : Promise.resolve({ data: null }),
+        isTeacher ? this.api.operationImports({
+          ...operationParams,
+          ...(operationFilter.target ? { target: operationFilter.target } : {}),
+          ...(operationFilter.importStatus ? { status: operationFilter.importStatus } : {})
+        }) : Promise.resolve({ data: [] }),
+        isTeacher ? this.api.operationBatchJobs({
+          ...operationParams,
+          ...(operationFilter.jobType ? { type: operationFilter.jobType } : {}),
+          ...(operationFilter.jobStatus ? { status: operationFilter.jobStatus } : {})
+        }) : Promise.resolve({ data: [] }),
+        isTeacher ? this.api.operationAudit({
+          ...operationParams,
+          ...(operationFilter.severity ? { severity: operationFilter.severity } : {}),
+          limit: 80
+        }) : Promise.resolve({ data: [] }),
+        isTeacher ? this.api.operationAuditDigest({
+          ...operationParams,
+          ...(operationFilter.severity ? { severity: operationFilter.severity } : {})
+        }) : Promise.resolve({ data: null }),
+        isTeacher && operationCourseId ? this.api.assessmentStudentPortfolioDeep({ courseId: operationCourseId, studentId: operationStudentId }) : Promise.resolve({ data: null }),
+        isTeacher && operationCourseId ? this.api.assessmentStudentPortfolioEvidenceMap({ courseId: operationCourseId, studentId: operationStudentId }) : Promise.resolve({ data: null }),
+        isTeacher && operationCourseId ? this.api.assessmentStudentPortfolioInterventionPlan({ courseId: operationCourseId, studentId: operationStudentId }) : Promise.resolve({ data: null }),
+        isTeacher && operationCourseId ? this.api.assessmentPortfolioBoard({ courseId: operationCourseId }) : Promise.resolve({ data: null })
+      ]);
+      const operationImports = operationImportsResult.status === "fulfilled" ? operationImportsResult.value.data : state.operations.imports;
+      const operationJobs = operationJobsResult.status === "fulfilled" ? operationJobsResult.value.data : state.operations.jobs;
+      const selectedOperationImportId = state.selected.operationImportId || firstItem(operationImports)?.id || "";
+      const selectedOperationJobId = state.selected.operationJobId || firstItem(operationJobs)?.id || "";
+      let selectedOperationImport = state.operations.selectedImport;
+      let selectedOperationJob = state.operations.selectedJob;
+      if (isTeacher && selectedOperationImportId) {
+        try {
+          const result = await this.api.operationImportDetail(selectedOperationImportId);
+          selectedOperationImport = result.data;
+        } catch {
+          selectedOperationImport = state.operations.selectedImport;
+        }
+      }
+      if (isTeacher && selectedOperationJobId) {
+        try {
+          const result = await this.api.operationBatchJobDetail(selectedOperationJobId);
+          selectedOperationJob = result.data;
+        } catch {
+          selectedOperationJob = state.operations.selectedJob;
+        }
+      }
+
       this.setState({
         dashboard: dashboard.data,
         provider: dashboard.meta?.provider || "",
@@ -436,7 +505,9 @@ class EduMindApp {
           ...state.selected,
           collaborationRoomId: selectedCollaborationRoomId,
           identityUserId: selectedIdentityUserId,
-          classroomId: selectedClassroomId
+          classroomId: selectedClassroomId,
+          operationImportId: selectedOperationImportId,
+          operationJobId: selectedOperationJobId
         },
         assessment: {
           assignments: assignmentsResult.status === "fulfilled" ? assignmentsResult.value.data : [],
@@ -520,6 +591,20 @@ class EduMindApp {
           groups: identityGroups,
           roleMatrix: identityRoleMatrixResult.status === "fulfilled" ? identityRoleMatrixResult.value.data : state.identityAdmin.roleMatrix,
           dashboard: identityDashboardResult.status === "fulfilled" ? identityDashboardResult.value.data : state.identityAdmin.dashboard
+        },
+        operations: {
+          catalog: operationsCatalogResult.status === "fulfilled" ? operationsCatalogResult.value.data : state.operations.catalog,
+          dashboard: operationsDashboardResult.status === "fulfilled" ? operationsDashboardResult.value.data : state.operations.dashboard,
+          imports: operationImports,
+          selectedImport: selectedOperationImport,
+          jobs: operationJobs,
+          selectedJob: selectedOperationJob,
+          audits: operationAuditsResult.status === "fulfilled" ? operationAuditsResult.value.data : state.operations.audits,
+          auditDigest: operationAuditDigestResult.status === "fulfilled" ? operationAuditDigestResult.value.data : state.operations.auditDigest,
+          deepPortfolio: deepPortfolioResult.status === "fulfilled" ? deepPortfolioResult.value.data : state.operations.deepPortfolio,
+          evidenceMap: evidenceMapResult.status === "fulfilled" ? evidenceMapResult.value.data : state.operations.evidenceMap,
+          interventionPlan: interventionPlanResult.status === "fulfilled" ? interventionPlanResult.value.data : state.operations.interventionPlan,
+          portfolioBoard: portfolioBoardResult.status === "fulfilled" ? portfolioBoardResult.value.data : state.operations.portfolioBoard
         },
         settings: {
           health: healthResult.status === "fulfilled" ? healthResult.value.data : null,
@@ -883,6 +968,57 @@ class EduMindApp {
           filters: { ...this.store.get().filters, identityAdmin: { ...this.store.get().filters.identityAdmin, classroomId: actionButton.dataset.id } },
           identityAdmin: { ...this.store.get().identityAdmin, classroomDetail: result.data }
         });
+        return;
+      }
+      if (action === "view-operation-import") {
+        const result = await this.api.operationImportDetail(actionButton.dataset.id);
+        this.setState({
+          route: "operations",
+          selected: { ...this.store.get().selected, operationImportId: actionButton.dataset.id },
+          operations: { ...this.store.get().operations, selectedImport: result.data }
+        });
+        return;
+      }
+      if (action === "commit-operation-import") {
+        this.patchSaving("operationCommit", true);
+        try {
+          const result = await this.api.commitOperationImport(actionButton.dataset.id, { allowWarnings: true });
+          this.setState({
+            route: "operations",
+            selected: {
+              ...this.store.get().selected,
+              operationImportId: result.data.batch.id,
+              operationJobId: result.data.job.id
+            }
+          });
+        } finally {
+          this.patchSaving("operationCommit", false);
+        }
+        await this.refreshApp("Import batch committed.");
+        return;
+      }
+      if (action === "view-operation-job") {
+        const result = await this.api.operationBatchJobDetail(actionButton.dataset.id);
+        this.setState({
+          route: "operations",
+          selected: { ...this.store.get().selected, operationJobId: actionButton.dataset.id },
+          operations: { ...this.store.get().operations, selectedJob: result.data }
+        });
+        return;
+      }
+      if (action === "run-operation-job") {
+        this.patchSaving("operationJob", true);
+        try {
+          const result = await this.api.runOperationBatchJob(actionButton.dataset.id, {});
+          this.setState({
+            route: "operations",
+            selected: { ...this.store.get().selected, operationJobId: actionButton.dataset.id },
+            operations: { ...this.store.get().operations, selectedJob: result.data }
+          });
+        } finally {
+          this.patchSaving("operationJob", false);
+        }
+        await this.refreshApp("Batch job completed.");
         return;
       }
       if (action === "refresh-health") {
@@ -1302,6 +1438,91 @@ class EduMindApp {
         }
         form.reset();
         await this.refreshApp("Group member updated.");
+        return;
+      }
+      if (form.dataset.form === "operations-filter") {
+        this.setState({
+          route: "operations",
+          filters: { ...this.store.get().filters, operations: { ...this.store.get().filters.operations, ...data } }
+        });
+        await this.refreshApp("Operations filters applied.");
+        return;
+      }
+      if (form.dataset.form === "operations-import-preview") {
+        this.patchSaving("operationImport", true);
+        try {
+          const result = await this.api.previewOperationImport({
+            title: data.title,
+            courseId: data.courseId,
+            target: data.target,
+            format: data.format,
+            duplicatePolicy: data.duplicatePolicy,
+            payload: data.payload
+          });
+          this.setState({
+            route: "operations",
+            selected: { ...this.store.get().selected, operationImportId: result.data.batch.id },
+            draft: { ...this.store.get().draft, operationImport: { ...this.store.get().draft.operationImport, ...data } },
+            operations: { ...this.store.get().operations, selectedImport: result.data }
+          });
+        } finally {
+          this.patchSaving("operationImport", false);
+        }
+        await this.refreshApp("Import preview created.");
+        return;
+      }
+      if (form.dataset.form === "operations-batch-job") {
+        let params = {};
+        if (data.params) {
+          try {
+            params = JSON.parse(data.params);
+          } catch {
+            this.toast("Params must be valid JSON.");
+            return;
+          }
+        }
+        this.patchSaving("operationJob", true);
+        try {
+          const result = await this.api.createOperationBatchJob({
+            title: data.title,
+            courseId: data.courseId,
+            type: data.type,
+            priority: data.priority,
+            params
+          });
+          this.setState({
+            route: "operations",
+            selected: { ...this.store.get().selected, operationJobId: result.data.job.id },
+            draft: { ...this.store.get().draft, operationJob: { ...this.store.get().draft.operationJob, title: data.title, type: data.type, priority: data.priority } },
+            operations: { ...this.store.get().operations, selectedJob: result.data }
+          });
+        } finally {
+          this.patchSaving("operationJob", false);
+        }
+        await this.refreshApp("Batch job created.");
+        return;
+      }
+      if (form.dataset.form === "operations-audit") {
+        this.patchSaving("operationAudit", true);
+        try {
+          await this.api.createOperationAudit({
+            action: data.action,
+            resourceType: data.resourceType,
+            resourceId: data.resourceId,
+            courseId: data.courseId,
+            severity: data.severity,
+            summary: data.summary,
+            metadata: { source: "operations-ui" }
+          });
+          this.setState({
+            route: "operations",
+            draft: { ...this.store.get().draft, operationAudit: { ...this.store.get().draft.operationAudit, ...data } }
+          });
+        } finally {
+          this.patchSaving("operationAudit", false);
+        }
+        form.reset();
+        await this.refreshApp("Audit event recorded.");
         return;
       }
       if (form.dataset.form === "assignment-filter") {

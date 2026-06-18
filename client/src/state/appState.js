@@ -44,7 +44,11 @@ export function createInitialState() {
       classAssignment: false,
       group: false,
       groupMember: false,
-      identityProfile: false
+      identityProfile: false,
+      operationImport: false,
+      operationCommit: false,
+      operationJob: false,
+      operationAudit: false
     },
     errors: {},
     filters: {
@@ -57,7 +61,8 @@ export function createInitialState() {
       assessmentInsight: { courseId: "", assignmentId: "", rubricId: "", submissionId: "", practiceSessionId: "", mistakeId: "", studentId: "" },
       collaboration: { courseId: "", roomId: "", type: "", taskStatus: "", mentionStatus: "" },
       reports: { courseId: "", studentId: "", assignmentId: "", format: "markdown" },
-      identityAdmin: { role: "", status: "", courseId: "", classroomId: "", q: "" }
+      identityAdmin: { role: "", status: "", courseId: "", classroomId: "", q: "" },
+      operations: { courseId: "", target: "", importStatus: "", jobType: "", jobStatus: "", severity: "", studentId: "" }
     },
     selected: {
       assignmentId: "",
@@ -67,7 +72,9 @@ export function createInitialState() {
       studentId: "",
       collaborationRoomId: "",
       classroomId: "",
-      identityUserId: ""
+      identityUserId: "",
+      operationImportId: "",
+      operationJobId: ""
     },
     draft: {
       assignment: null,
@@ -92,7 +99,15 @@ export function createInitialState() {
       classAssignment: { userId: "", role: "student", status: "active" },
       group: { classroomId: "", name: "", leaderId: "", status: "active" },
       groupMember: { groupId: "", userId: "", role: "member", status: "active" },
-      identityProfile: { name: "", status: "active", role: "student", department: "", major: "", studentNo: "", teacherNo: "", phone: "" }
+      identityProfile: { name: "", status: "active", role: "student", department: "", major: "", studentNo: "", teacherNo: "", phone: "" },
+      operationImport: {
+        title: "Student evidence import",
+        target: "portfolioEvidence",
+        format: "json",
+        payload: "[{\"studentId\":\"user_student\",\"courseId\":\"course_ood\",\"type\":\"manual-evidence\",\"summary\":\"Submitted UML class diagram revision\",\"score\":86,\"concept\":\"UML class diagram\"}]"
+      },
+      operationJob: { title: "Portfolio refresh", type: "portfolio-refresh", priority: "normal" },
+      operationAudit: { action: "operations.manual.note", resourceType: "portfolio", severity: "info", summary: "" }
     },
     ui: {
       activePanel: "",
@@ -182,6 +197,20 @@ export function createInitialState() {
       groups: [],
       roleMatrix: null,
       dashboard: null
+    },
+    operations: {
+      catalog: null,
+      dashboard: null,
+      imports: [],
+      selectedImport: null,
+      jobs: [],
+      selectedJob: null,
+      audits: [],
+      auditDigest: null,
+      deepPortfolio: null,
+      evidenceMap: null,
+      interventionPlan: null,
+      portfolioBoard: null
     },
     settings: {
       health: null,

@@ -216,6 +216,30 @@ export function registerRoutes(router, config, services) {
     return ok(services.assessmentPortfolioService.buildStudentPortfolio(user, req.query));
   });
 
+  router.get("/api/assessment/student-portfolio/deep", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.portfolioDepthService.buildDeepPortfolio(user, req.query));
+  });
+
+  router.get("/api/assessment/student-portfolio/evidence-map", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.portfolioDepthService.buildEvidenceMap(user, req.query));
+  });
+
+  router.get("/api/assessment/student-portfolio/intervention-plan", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.portfolioDepthService.buildInterventionPlan(user, req.query));
+  });
+
+  router.get("/api/assessment/portfolio-board", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.portfolioDepthService.buildCoursePortfolioBoard(user, req.query));
+  });
+
   router.get("/api/assessment/risk-register", async (req) => {
     await services.ready;
     const user = requireUserContext(req);

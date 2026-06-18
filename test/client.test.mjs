@@ -11,6 +11,7 @@ import { assignmentManageView } from "../client/src/views/assignmentManageView.j
 import { analyticsView } from "../client/src/views/analyticsView.js";
 import { identityAdminView } from "../client/src/views/identityAdminView.js";
 import { knowledgeView } from "../client/src/views/knowledgeView.js";
+import { operationsView } from "../client/src/views/operationsView.js";
 import { practiceView } from "../client/src/views/practiceView.js";
 import { questionBankManageView } from "../client/src/views/questionBankManageView.js";
 import { reportView } from "../client/src/views/reportView.js";
@@ -100,6 +101,10 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.mistakeDetailAnalysis("mistake_1");
     await client.assessmentCourseReport({ courseId: "course_ood" });
     await client.assessmentStudentPortfolio({ courseId: "course_ood", studentId: "user_student" });
+    await client.assessmentStudentPortfolioDeep({ courseId: "course_ood", studentId: "user_student" });
+    await client.assessmentStudentPortfolioEvidenceMap({ courseId: "course_ood", studentId: "user_student" });
+    await client.assessmentStudentPortfolioInterventionPlan({ courseId: "course_ood", studentId: "user_student" });
+    await client.assessmentPortfolioBoard({ courseId: "course_ood" });
     await client.assessmentRiskRegister({ courseId: "course_ood" });
     await client.identityUsers({ role: "student", status: "active" });
     await client.identityUserProfile("user_student");
@@ -114,6 +119,19 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.addGroupMember("group_ood_alpha", { userId: "user_student" });
     await client.rolePermissions();
     await client.identityDashboard();
+    await client.operationsCatalog();
+    await client.operationsDashboard({ courseId: "course_ood" });
+    await client.operationImports({ target: "students" });
+    await client.operationImportDetail("import_1");
+    await client.previewOperationImport({ target: "students", rows: [] });
+    await client.commitOperationImport("import_1", { allowWarnings: true });
+    await client.operationBatchJobs({ status: "queued" });
+    await client.createOperationBatchJob({ type: "portfolio-refresh" });
+    await client.operationBatchJobDetail("job_1");
+    await client.runOperationBatchJob("job_1");
+    await client.operationAudit({ severity: "warning" });
+    await client.createOperationAudit({ action: "manual" });
+    await client.operationAuditDigest({ courseId: "course_ood" });
     await client.reportCatalog();
     await client.studentWeeklyReport({ courseId: "course_ood" });
     await client.courseWeeklyReport({ courseId: "course_ood", format: "markdown" });
@@ -153,6 +171,10 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/mistakes/mistake_1/analysis", method: "GET" },
     { url: "http://demo.local/api/assessment/course-report?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/assessment/student-portfolio?courseId=course_ood&studentId=user_student", method: "GET" },
+    { url: "http://demo.local/api/assessment/student-portfolio/deep?courseId=course_ood&studentId=user_student", method: "GET" },
+    { url: "http://demo.local/api/assessment/student-portfolio/evidence-map?courseId=course_ood&studentId=user_student", method: "GET" },
+    { url: "http://demo.local/api/assessment/student-portfolio/intervention-plan?courseId=course_ood&studentId=user_student", method: "GET" },
+    { url: "http://demo.local/api/assessment/portfolio-board?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/assessment/risk-register?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/identity/users?role=student&status=active", method: "GET" },
     { url: "http://demo.local/api/identity/users/user_student/profile", method: "GET" },
@@ -167,6 +189,19 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/groups/group_ood_alpha/members", method: "POST" },
     { url: "http://demo.local/api/role-permissions", method: "GET" },
     { url: "http://demo.local/api/admin/identity-dashboard", method: "GET" },
+    { url: "http://demo.local/api/operations/catalog", method: "GET" },
+    { url: "http://demo.local/api/operations/dashboard?courseId=course_ood", method: "GET" },
+    { url: "http://demo.local/api/operations/imports?target=students", method: "GET" },
+    { url: "http://demo.local/api/operations/imports/import_1", method: "GET" },
+    { url: "http://demo.local/api/operations/imports/preview", method: "POST" },
+    { url: "http://demo.local/api/operations/imports/import_1/commit", method: "POST" },
+    { url: "http://demo.local/api/operations/batch-jobs?status=queued", method: "GET" },
+    { url: "http://demo.local/api/operations/batch-jobs", method: "POST" },
+    { url: "http://demo.local/api/operations/batch-jobs/job_1", method: "GET" },
+    { url: "http://demo.local/api/operations/batch-jobs/job_1/run", method: "POST" },
+    { url: "http://demo.local/api/operations/audit?severity=warning", method: "GET" },
+    { url: "http://demo.local/api/operations/audit", method: "POST" },
+    { url: "http://demo.local/api/operations/audit/digest?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/reports/catalog", method: "GET" },
     { url: "http://demo.local/api/reports/student-weekly?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/reports/course-weekly?courseId=course_ood&format=markdown", method: "GET" },
@@ -269,6 +304,51 @@ test("v6 views render as importable ESM modules without build tools", () => {
     ]
   };
   state.identityAdmin.dashboard = { metrics: { userCount: 2, studentCount: 1, teacherCount: 1, classroomCount: 1, groupCount: 1, enrollmentCount: 2 } };
+  state.operations.catalog = {
+    importTargets: [{ key: "portfolioEvidence", required: ["studentId", "courseId", "summary"], optional: ["score"], identity: "summary" }],
+    jobTypes: [{ key: "portfolio-refresh", stepCount: 4, steps: ["collect-evidence", "recompute-quality"] }],
+    auditSeverities: ["info", "warning", "critical"]
+  };
+  state.operations.dashboard = {
+    metrics: { importBatchCount: 1, committedImportCount: 0, queuedJobCount: 1, completedJobCount: 1, auditEventCount: 2, criticalAuditCount: 0 }
+  };
+  state.operations.imports = [{
+    id: "import_1",
+    title: "Portfolio evidence import",
+    target: "portfolioEvidence",
+    courseId: "course_ood",
+    status: "validated",
+    summary: { totalRows: 1, validRows: 1, errorRows: 0 },
+    createdAt: "2026-06-16T00:00:00.000Z"
+  }];
+  state.operations.selectedImport = {
+    batch: state.operations.imports[0],
+    rows: [{ id: "row_1", rowNumber: 1, externalId: "e1", status: "valid", normalized: { studentId: "user_student", summary: "Evidence" }, errors: [], warnings: [] }]
+  };
+  state.operations.jobs = [{
+    id: "job_1",
+    title: "Portfolio refresh",
+    type: "portfolio-refresh",
+    courseId: "course_ood",
+    status: "queued",
+    priority: "normal",
+    progress: 0,
+    steps: [{ id: "step_1", key: "collect-evidence" }],
+    updatedAt: "2026-06-16T00:00:00.000Z"
+  }];
+  state.operations.selectedJob = {
+    job: state.operations.jobs[0],
+    steps: [{ id: "step_1", order: 1, key: "collect-evidence", title: "Collect evidence", status: "pending", output: {} }]
+  };
+  state.operations.audits = [{ id: "audit_1", action: "operations.import.previewed", resourceType: "import-batch", resourceId: "import_1", actorId: "user_teacher", severity: "info", summary: "Previewed import.", createdAt: "2026-06-16T00:00:00.000Z" }];
+  state.operations.auditDigest = { total: 1, bySeverity: [{ severity: "info", count: 1 }], recommendations: ["Audit trail is stable."] };
+  state.operations.deepPortfolio = {
+    quality: { overallScore: 82, tone: "stable", dimensions: [{ key: "completion", label: "Completion", score: 90, evidence: ["assignment_1"] }] },
+    defenseNarrative: { headline: "Portfolio score 82", paragraphs: ["Evidence is balanced."] }
+  };
+  state.operations.evidenceMap = { totalEvidence: 5, gaps: [{ message: "Add reviewed mistake evidence." }] };
+  state.operations.interventionPlan = { actionCount: 1, actions: [{ priority: "medium", title: "Review UML", reason: "Weak concept", evidence: ["mistake_1"] }] };
+  state.operations.portfolioBoard = { totalStudents: 1, averageQualityScore: 82 };
   state.settings.health = { service: "gateway-service", status: "up", time: "2026-06-16T00:00:00.000Z", services: [] };
   state.settings.modelConfig = buildModelConfig(state.provider);
   const renderedWorkbench = workbenchView(state);
@@ -283,6 +363,10 @@ test("v6 views render as importable ESM modules without build tools", () => {
   const renderedIdentity = identityAdminView(state);
   assert.match(renderedIdentity, /User Directory/);
   assert.match(renderedIdentity, /Role Permission Matrix/);
+  const renderedOperations = operationsView(state);
+  assert.match(renderedOperations, /Import Preview/);
+  assert.match(renderedOperations, /Audit Digest/);
+  assert.match(renderedOperations, /Deep Portfolio/);
 
   assert.match(assignmentManageView(state), /作业列表/);
   assert.match(questionBankManageView(state), /题库列表/);

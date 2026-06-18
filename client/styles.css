@@ -1340,10 +1340,112 @@ textarea:focus-visible,
   font-size: 15px;
 }
 
+.operations-filter {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  align-items: end;
+  margin-bottom: 14px;
+}
+
+.operations-metrics {
+  margin-bottom: 14px;
+}
+
+.operations-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(380px, 0.85fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.operations-main,
+.operations-side {
+  display: grid;
+  gap: 16px;
+}
+
+.operations-import-form {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.operations-import-form .panel-header,
+.operations-import-form .full-span,
+.operations-import-form .button-row {
+  grid-column: 1 / -1;
+}
+
+.operations-card-list,
+.operations-job-list {
+  display: grid;
+  gap: 12px;
+}
+
+.operations-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  background: #fff;
+}
+
+.operations-card.is-selected {
+  border-color: rgba(37, 99, 235, 0.4);
+  box-shadow: inset 3px 0 0 #2563eb;
+}
+
+.operations-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.operations-step-list,
+.operations-audit-list {
+  list-style: none;
+  display: grid;
+  gap: 10px;
+  padding: 0;
+  margin: 0;
+}
+
+.operations-step-list li,
+.operations-audit-list li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.operations-digest,
+.operations-dimension-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.operations-digest section,
+.operations-dimension-grid section {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: rgba(248, 250, 252, 0.82);
+  padding: 12px;
+}
+
+.operations-digest h3,
+.operations-dimension-grid h3 {
+  margin: 0 0 10px;
+  font-size: 15px;
+}
+
 @media (max-width: 1180px) {
   .insight-layout,
   .collaboration-layout,
   .identity-layout,
+  .operations-layout,
   .report-layout,
   .knowledge-layout,
   .workbench-grid,
@@ -1385,7 +1487,9 @@ textarea:focus-visible,
   }
 
   .identity-filter,
-  .identity-profile-form {
+  .identity-profile-form,
+  .operations-filter,
+  .operations-import-form {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
@@ -1420,6 +1524,13 @@ textarea:focus-visible,
     .identity-permission-grid,
     .identity-card-head,
     .identity-side-list li,
+    .operations-filter,
+    .operations-import-form,
+    .operations-card-head,
+    .operations-step-list li,
+    .operations-audit-list li,
+    .operations-digest,
+    .operations-dimension-grid,
     .knowledge-profile-grid,
   .knowledge-context-grid,
   .knowledge-edge,

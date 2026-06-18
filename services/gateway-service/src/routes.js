@@ -679,6 +679,34 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/assessment/student-portfolio/deep", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assessment/student-portfolio/deep", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/assessment/student-portfolio/evidence-map", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assessment/student-portfolio/evidence-map", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/assessment/student-portfolio/intervention-plan", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assessment/student-portfolio/intervention-plan", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/assessment/portfolio-board", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assessment/portfolio-board", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.get("/api/assessment/risk-register", async (req) => {
     const user = await services.verifyUser(req);
     return services.assessment.get(withQuery("/api/assessment/risk-register", req.query), {
@@ -973,6 +1001,97 @@ export function registerRoutes(router, config, services = {}) {
   router.get("/api/reports/ai-usage", async (req) => {
     const user = await services.verifyUser(req);
     return services.reports.get(withQuery("/api/reports/ai-usage", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/catalog", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get("/api/operations/catalog", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/dashboard", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get(withQuery("/api/operations/dashboard", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/imports", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get(withQuery("/api/operations/imports", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/operations/imports/preview", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.post("/api/operations/imports/preview", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/imports/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get(`/api/operations/imports/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/operations/imports/:id/commit", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.post(`/api/operations/imports/${encodeURIComponent(req.params.id)}/commit`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/batch-jobs", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get(withQuery("/api/operations/batch-jobs", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/operations/batch-jobs", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.post("/api/operations/batch-jobs", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/batch-jobs/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get(`/api/operations/batch-jobs/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/operations/batch-jobs/:id/run", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.post(`/api/operations/batch-jobs/${encodeURIComponent(req.params.id)}/run`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/audit", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get(withQuery("/api/operations/audit", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/operations/audit", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.post("/api/operations/audit", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/operations/audit/digest", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.operations.get(withQuery("/api/operations/audit/digest", req.query), {
       headers: buildUserHeaders(config, user)
     });
   });

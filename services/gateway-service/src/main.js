@@ -91,6 +91,10 @@ export function createApp(config = loadConfig()) {
     serviceName: "report-service",
     baseUrl: serviceMap.get("report-service")
   });
+  const operations = new ServiceClient({
+    serviceName: "operations-service",
+    baseUrl: serviceMap.get("operations-service")
+  });
   const verifyUser = async (req) => {
     const header = req.headers.authorization || "";
     const token = header.startsWith("Bearer ") ? header.slice(7) : req.query?.token || "";
@@ -141,6 +145,7 @@ export function createApp(config = loadConfig()) {
   services.notification = notification;
   services.scheduler = scheduler;
   services.reports = reports;
+  services.operations = operations;
   const router = new Router();
   registerRoutes(router, config, services);
   registerGatewayHealth(router, config);

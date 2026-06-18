@@ -13,7 +13,7 @@ export function canViewAnalytics(user) {
 }
 
 export function routeVisible(route, user) {
-  if (route === "analytics" || route === "question-banks" || route === "identity-admin") {
+  if (route === "analytics" || route === "question-banks" || route === "identity-admin" || route === "operations") {
     return canManageAssessment(user);
   }
   return true;

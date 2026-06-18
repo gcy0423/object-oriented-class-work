@@ -10,6 +10,7 @@ import { GradingService } from "./application/gradingService.js";
 import { MasteryService } from "./application/masteryService.js";
 import { MistakeAnalysisService } from "./application/mistakeAnalysisService.js";
 import { MistakeService } from "./application/mistakeService.js";
+import { PortfolioDepthService } from "./application/portfolioDepthService.js";
 import { PracticeService } from "./application/practiceService.js";
 import { QuestionBankService } from "./application/questionBankService.js";
 import { RubricInsightService } from "./application/rubricInsightService.js";
@@ -86,6 +87,11 @@ export function createApp(config = loadConfig()) {
     rubricInsightService,
     mistakeAnalysisService
   });
+  const portfolioDepthService = new PortfolioDepthService({
+    ...repositories,
+    assessmentPortfolioService,
+    mistakeAnalysisService
+  });
   const assessment = new AssessmentFacade({
     assignmentService,
     gradingService,
@@ -97,6 +103,7 @@ export function createApp(config = loadConfig()) {
     mistakeAnalysisService,
     adaptivePracticePlanner,
     assessmentPortfolioService,
+    portfolioDepthService,
     repositories
   });
 
@@ -114,6 +121,7 @@ export function createApp(config = loadConfig()) {
     mistakeAnalysisService,
     adaptivePracticePlanner,
     assessmentPortfolioService,
+    portfolioDepthService,
     assessment
   };
 

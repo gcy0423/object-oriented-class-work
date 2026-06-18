@@ -93,6 +93,10 @@ export class ApiClient {
   reviewMistake(id, input = { status: "reviewed" }) { return this.request(`/api/mistakes/${encodeURIComponent(id)}/review`, { method: "PATCH", body: JSON.stringify(input) }); }
   assessmentCourseReport(params = {}) { return this.request(`/api/assessment/course-report${toQuery(params)}`); }
   assessmentStudentPortfolio(params = {}) { return this.request(`/api/assessment/student-portfolio${toQuery(params)}`); }
+  assessmentStudentPortfolioDeep(params = {}) { return this.request(`/api/assessment/student-portfolio/deep${toQuery(params)}`); }
+  assessmentStudentPortfolioEvidenceMap(params = {}) { return this.request(`/api/assessment/student-portfolio/evidence-map${toQuery(params)}`); }
+  assessmentStudentPortfolioInterventionPlan(params = {}) { return this.request(`/api/assessment/student-portfolio/intervention-plan${toQuery(params)}`); }
+  assessmentPortfolioBoard(params = {}) { return this.request(`/api/assessment/portfolio-board${toQuery(params)}`); }
   assessmentRiskRegister(params = {}) { return this.request(`/api/assessment/risk-register${toQuery(params)}`); }
 
   analyticsOverview() { return this.request("/api/analytics/overview"); }
@@ -182,6 +186,20 @@ export class ApiClient {
   addGroupMember(id, input) { return this.request(`/api/groups/${encodeURIComponent(id)}/members`, { method: "POST", body: JSON.stringify(input) }); }
   rolePermissions() { return this.request("/api/role-permissions"); }
   identityDashboard() { return this.request("/api/admin/identity-dashboard"); }
+
+  operationsCatalog() { return this.request("/api/operations/catalog"); }
+  operationsDashboard(params = {}) { return this.request(`/api/operations/dashboard${toQuery(params)}`); }
+  operationImports(params = {}) { return this.request(`/api/operations/imports${toQuery(params)}`); }
+  operationImportDetail(id) { return this.request(`/api/operations/imports/${encodeURIComponent(id)}`); }
+  previewOperationImport(input) { return this.request("/api/operations/imports/preview", { method: "POST", body: JSON.stringify(input) }); }
+  commitOperationImport(id, input = {}) { return this.request(`/api/operations/imports/${encodeURIComponent(id)}/commit`, { method: "POST", body: JSON.stringify(input) }); }
+  operationBatchJobs(params = {}) { return this.request(`/api/operations/batch-jobs${toQuery(params)}`); }
+  createOperationBatchJob(input) { return this.request("/api/operations/batch-jobs", { method: "POST", body: JSON.stringify(input) }); }
+  operationBatchJobDetail(id) { return this.request(`/api/operations/batch-jobs/${encodeURIComponent(id)}`); }
+  runOperationBatchJob(id, input = {}) { return this.request(`/api/operations/batch-jobs/${encodeURIComponent(id)}/run`, { method: "POST", body: JSON.stringify(input) }); }
+  operationAudit(params = {}) { return this.request(`/api/operations/audit${toQuery(params)}`); }
+  createOperationAudit(input) { return this.request("/api/operations/audit", { method: "POST", body: JSON.stringify(input) }); }
+  operationAuditDigest(params = {}) { return this.request(`/api/operations/audit/digest${toQuery(params)}`); }
 
   reportCatalog() { return this.request("/api/reports/catalog"); }
   studentWeeklyReport(params = {}) { return this.request(`/api/reports/student-weekly${toQuery(params)}`); }
