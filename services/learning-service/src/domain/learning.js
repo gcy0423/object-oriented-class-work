@@ -117,4 +117,20 @@ export class NoteRepository extends LearningRepository {
   findByOwner(ownerId) {
     return this.where((note) => note.ownerId === ownerId);
   }
+
+  findByOwnerWithFilters(ownerId, filters = {}) {
+    const keyword = String(filters.q || "").trim().toLowerCase();
+    return this.where((note) => {
+      if (note.ownerId !== ownerId) {
+        return false;
+      }
+      if (filters.courseId && note.courseId !== filters.courseId) {
+        return false;
+      }
+      if (keyword && !`${note.title} ${note.content} ${(note.tags || []).join(" ")}`.toLowerCase().includes(keyword)) {
+        return false;
+      }
+      return true;
+    }).sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
+  }
 }

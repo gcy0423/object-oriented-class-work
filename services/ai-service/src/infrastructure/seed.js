@@ -29,6 +29,8 @@ export function createAiSeed(now = new Date()) {
     ],
     aiRequests: [],
     aiResponses: [],
-    providerHealth: []
+    providerHealth: [],
+    studentAiResults: [],
+    studentTaskDrafts: []
   };
 }

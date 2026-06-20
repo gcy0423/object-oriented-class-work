@@ -18,4 +18,13 @@ export class AIClient {
     });
     return response.data;
   }
+
+  async getStudentActionSummary(studentId) {
+    const response = await this.client.get(`/internal/student-ai/students/${encodeURIComponent(studentId)}/summary`, {
+      headers: {
+        "x-edumind-internal-key": this.internalKey
+      }
+    });
+    return response.data;
+  }
 }

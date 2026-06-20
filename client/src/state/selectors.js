@@ -37,11 +37,16 @@ export function selectAssignments(state) {
 
 export function selectAssignmentViewModel(state) {
   const assignments = selectAssignments(state);
+  const courses = state.dashboard?.courses || [];
+  const courseMap = new Map(courses.map((course) => [course.id, course]));
   const detail = state.assessment.assignmentDetail;
   return {
-    assignments,
+    assignments: assignments.map((assignment) => ({
+      ...assignment,
+      courseTitle: courseMap.get(assignment.courseId)?.title || ""
+    })),
     detail,
-    courses: state.dashboard?.courses || [],
+    courses,
     rubrics: state.assessment.rubrics || [],
     selectedAssignment: assignments.find((item) => item.id === state.selected.assignmentId) || detail?.assignment || null,
     canManage: canManageAssessment(state.user)
@@ -50,6 +55,8 @@ export function selectAssignmentViewModel(state) {
 
 export function selectQuestionBankViewModel(state) {
   const filters = state.filters.questionBanks;
+  const courses = state.dashboard?.courses || [];
+  const courseMap = new Map(courses.map((course) => [course.id, course]));
   const banks = (state.assessment.questionBanks || []).filter((bank) => {
     if (filters.courseId && bank.courseId !== filters.courseId) {
       return false;
@@ -75,9 +82,12 @@ export function selectQuestionBankViewModel(state) {
     return true;
   });
   return {
-    banks,
+    banks: banks.map((bank) => ({
+      ...bank,
+      courseTitle: courseMap.get(bank.courseId)?.title || ""
+    })),
     questions,
-    courses: state.dashboard?.courses || [],
+    courses,
     selectedBank: banks.find((item) => item.id === state.selected.questionBankId) || null,
     canManage: canManageAssessment(state.user)
   };
@@ -95,6 +105,8 @@ export function selectPracticeProgress(session) {
 
 export function selectPracticeViewModel(state) {
   const filters = state.filters.practice;
+  const courses = state.dashboard?.courses || [];
+  const courseMap = new Map(courses.map((course) => [course.id, course]));
   const history = (state.assessment.practiceHistory || []).filter((session) => {
     if (filters.courseId && session.courseId !== filters.courseId) {
       return false;
@@ -109,7 +121,10 @@ export function selectPracticeViewModel(state) {
   });
   const mistakes = (state.assessment.mistakes || []).filter((item) => !filters.mistakeStatus || item.status === filters.mistakeStatus);
   return {
-    banks: state.assessment.questionBanks || [],
+    banks: (state.assessment.questionBanks || []).map((bank) => ({
+      ...bank,
+      courseTitle: courseMap.get(bank.courseId)?.title || ""
+    })),
     session: state.assessment.practiceSession,
     history,
     mistakes,
@@ -131,12 +146,13 @@ export function selectAnalyticsViewModel(state) {
     }))
   }));
   const students = (teacher.students || []).map((student) => ({
-    id: student.id,
+    id: student.id || student.studentId,
     name: student.name,
     completionRate: student.learning?.completionRate ?? 0,
     studyMinutes: student.learning?.studyMinutes ?? 0,
     mistakeCount: student.assessment?.mistakeCount ?? 0,
     masteryScore: student.assessment?.masteryScore ?? 0,
+    aiCompletionRate: student.ai?.completionRate ?? 0,
     riskReasons: student.riskReasons || student.reasons || []
   }));
   return {

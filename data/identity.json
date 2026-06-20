@@ -17,6 +17,22 @@
       "avatar": "周",
       "createdAt": "2026-06-16",
       "updatedAt": "2026-06-16"
+    },
+    {
+      "id": "user_YWRtaW5A",
+      "createdAt": "2026-06-20T17:51:13.800Z",
+      "updatedAt": "2026-06-20T17:51:13.800Z",
+      "name": "林知夏",
+      "role": "admin",
+      "email": "admin@edumind.local",
+      "avatar": "林",
+      "status": "active",
+      "department": "",
+      "major": "",
+      "studentNo": "",
+      "teacherNo": "",
+      "phone": "",
+      "profile": {}
     }
   ],
   "sessions": []

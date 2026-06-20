@@ -15,6 +15,12 @@ docs/dev/versions/
   v4-assessment/
   v5-analytics-frontend/
   v6-frontend-workbench/
+  v7-student-ai-first-phase1/
+  v8-student-ai-first-phase2-ai-workflow/
+  v9-student-ai-first-phase3-complete-student-loop/
+  v10-teacher-student-ai-link/
+  v11-teacher-ai-first-frontend/
+  v12-real-account-auth-admin/
 ```
 
 版本文件夹一旦进入开发，除非发现错误，不随意重写历史结论。后续变化写到下一个版本的 delta 文档中。
@@ -54,3 +60,9 @@ docs/dev/versions/
 | `v4-assessment` | 新增作业、题库、练习、Rubric、评分、错题本 |
 | `v5-analytics-frontend` | 新增统计分析、教师工作台、前端完整接入 |
 | `v6-frontend-workbench` | 扩展前端工作台完整页面，并拆分 views/forms/widgets/state/utils |
+| `v7-student-ai-first-phase1` | 基于 student-ai-first-v2 重写真实学生端 AI-first 前端第一阶段 |
+| `v8-student-ai-first-phase2-ai-workflow` | 将学生端 AI-first fallback 升级为 ai-service/Gateway 正式结构化 AI 工作流 |
+| `v9-student-ai-first-phase3-complete-student-loop` | 除教师端联动外，收口学生端 AI-first 完整闭环 |
+| `v10-teacher-student-ai-link` | 将学生端 AI 过程证据接入教师端学情、批改和干预 |
+| `v11-teacher-ai-first-frontend` | 重写新版教师端 AI-first 前端，收敛布局稳定性、信息层级和上下文助手 |
+| `v12-real-account-auth-admin` | 建立真实账号、密码、注册、会话失效和管理员账号权限管理，移除旧 AI 页面入口 |

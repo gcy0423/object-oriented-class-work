@@ -13,7 +13,7 @@ function questionBankCards(banks = []) {
     <article class="course-item">
       <strong>${escapeHtml(bank.title)}</strong>
       <div class="muted">${escapeHtml(bank.description || "暂无题库说明。")}</div>
-      <div class="tag-row"><span class="tag">${escapeHtml(bank.courseId)}</span></div>
+      <div class="tag-row"><span class="tag">${escapeHtml(bank.courseTitle || bank.courseId)}</span></div>
       <div class="button-row"><button class="btn primary" data-action="start-practice" data-id="${attr(bank.id)}" data-course-id="${attr(bank.courseId)}">开始练习</button></div>
     </article>
   `).join("")}</div>`;

@@ -90,8 +90,8 @@ V2 corrected assumptions:
                 <div class="prompt-row">
                   <button type="button" data-view="learn">进入学习规划</button>
                   <button type="button" data-view="assignments">查看作业压力</button>
-                  <button type="button">总结薄弱点</button>
-                  <button type="button">生成练习</button>
+                  <button type="button" data-view="aiInsight">总结薄弱点</button>
+                  <button type="button" data-view="practiceSession">生成练习</button>
                 </div>
               </section>
 
@@ -206,7 +206,7 @@ V2 corrected assumptions:
                       <strong>整理领域模型与用例图说明</strong>
                       <p>文档产出 · 60 分钟 · 进行中</p>
                     </div>
-                    <button type="button">继续</button>
+                    <button type="button" data-view="learningTaskDetail">继续</button>
                   </article>
                   <article class="task-row">
                     <span class="task-index">02</span>
@@ -214,7 +214,7 @@ V2 corrected assumptions:
                       <strong>检查包图与服务边界一致性</strong>
                       <p>文档产出 · 35 分钟 · 待开始</p>
                     </div>
-                    <button type="button">拆解</button>
+                    <button type="button" data-view="learningTaskDetail">拆解</button>
                   </article>
                   <article class="task-row">
                     <span class="task-index">03</span>
@@ -222,7 +222,7 @@ V2 corrected assumptions:
                       <strong>完成 5 道类图关系练习</strong>
                       <p>练习巩固 · 25 分钟 · 待开始</p>
                     </div>
-                    <button type="button">开始</button>
+                    <button type="button" data-view="practiceSession">开始</button>
                   </article>
                 </div>
               </section>
@@ -242,7 +242,7 @@ V2 corrected assumptions:
                     <option>笔记整理</option>
                   </select>
                 </div>
-                <button class="outline-button full" type="button">手动新建</button>
+                <button class="outline-button full" type="button" data-view="learningTaskDetail">手动新建</button>
               </section>
 
               <section class="assistant-card">
@@ -255,7 +255,7 @@ V2 corrected assumptions:
                   <button type="button">作业推进</button>
                   <button type="button">笔记整理</button>
                 </div>
-                <button class="primary-button full" type="button">生成草稿</button>
+                <button class="primary-button full" type="button" data-view="learningTaskDetail">生成草稿</button>
               </section>
 
               <section class="assistant-card">
@@ -281,8 +281,8 @@ V2 corrected assumptions:
                   <li>建议拆成 2 个 20 分钟小任务</li>
                 </ul>
                 <div class="button-row">
-                  <button class="primary-button" type="button">确认加入</button>
-                  <button class="outline-button" type="button">继续编辑</button>
+                  <button class="primary-button" type="button" data-view="learningTaskDetail">确认加入</button>
+                  <button class="outline-button" type="button" data-view="learningTaskDetail">继续编辑</button>
                 </div>
               </section>
             </aside>
@@ -374,7 +374,7 @@ V2 corrected assumptions:
                 <textarea rows="4">帮我判断哪份作业最应该先做。</textarea>
                 <div class="action-list">
                   <button type="button">解释作业要求</button>
-                  <button type="button">生成提交提纲</button>
+                  <button type="button" data-view="assignmentSubmit">生成提交提纲</button>
                   <button type="button">检查草稿风险</button>
                 </div>
               </div>
@@ -411,8 +411,8 @@ V2 corrected assumptions:
                 </div>
                 <div class="operation-grid">
                   <button class="primary-button" type="button" data-view="assignmentSubmit">进入提交</button>
-                  <button class="outline-button" type="button">查看历史提交</button>
-                  <button class="outline-button" type="button">查看教师反馈</button>
+                  <button class="outline-button" type="button" data-view="assignmentHistory">查看历史提交</button>
+                  <button class="outline-button" type="button" data-view="assignmentFeedback">查看教师反馈</button>
                   <button class="outline-button" type="button">保存当前说明</button>
                 </div>
               </section>
@@ -465,9 +465,9 @@ V2 corrected assumptions:
                   <span>支持运行截图、设计文档、演示材料。当前：screenshot-dashboard.png、diagram-class.png</span>
                 </div>
                 <div class="button-row">
-                  <button class="primary-button" type="button">提交</button>
+                  <button class="primary-button" type="button" data-view="submitSuccess">提交</button>
                   <button class="outline-button" type="button">保存草稿</button>
-                  <button class="outline-button" type="button">预览</button>
+                  <button class="outline-button" type="button" data-view="assignmentPreview">预览</button>
                 </div>
               </section>
             </section>
@@ -515,7 +515,7 @@ V2 corrected assumptions:
                     <p>练习入口</p>
                     <h2>选择题库或让 AI 生成一组题</h2>
                   </div>
-                  <button class="primary-button" type="button">开始推荐练习</button>
+                <button class="primary-button" type="button" data-view="practiceSession">开始推荐练习</button>
                 </div>
                 <div class="assignment-list">
                   <button class="assignment-item active" type="button">
@@ -548,7 +548,7 @@ V2 corrected assumptions:
                       <strong>类之间的聚合与组合关系</strong>
                       <p>错 2 次 · 来自 UML 类图关系判断</p>
                     </div>
-                    <button type="button">回放</button>
+                    <button type="button" data-view="wrongQuestionDetail">回放</button>
                   </article>
                   <article class="task-row">
                     <span class="task-index">02</span>
@@ -556,7 +556,7 @@ V2 corrected assumptions:
                       <strong>包图表达模块边界</strong>
                       <p>错 1 次 · 来自包图与服务边界</p>
                     </div>
-                    <button type="button">复习</button>
+                    <button type="button" data-view="wrongQuestionDetail">复习</button>
                   </article>
                 </div>
               </section>
@@ -589,7 +589,7 @@ V2 corrected assumptions:
                 <p>AI 生成练习</p>
                 <textarea rows="5">围绕我的错题，再生成一组类图关系练习。</textarea>
                 <div class="action-list">
-                  <button type="button">生成同类题</button>
+                  <button type="button" data-view="practiceSession">生成同类题</button>
                   <button type="button">只练错题</button>
                   <button type="button">解释知识点</button>
                 </div>
@@ -613,7 +613,7 @@ V2 corrected assumptions:
                     <p>课程筛选</p>
                     <h2>先选课程，再看笔记</h2>
                   </div>
-                  <button class="outline-button" type="button">新建笔记</button>
+                  <button class="outline-button" type="button" data-view="noteEditor">新建笔记</button>
                 </div>
                 <div class="course-tabs">
                   <button class="active" type="button">面向对象技术与方法</button>
@@ -652,7 +652,7 @@ V2 corrected assumptions:
                     <p>笔记内容</p>
                     <h2>UML 复习摘要</h2>
                   </div>
-                  <button class="outline-button" type="button">编辑</button>
+                  <button class="outline-button" type="button" data-view="noteEditor">编辑</button>
                 </div>
                 <p class="detail-copy">类图用于表达领域对象、属性、方法与关系；包图用于表达模块边界；时序图用于表达对象之间的调用过程。结课设计文档中应说明这些图如何共同证明系统设计。</p>
               </section>
@@ -672,10 +672,450 @@ V2 corrected assumptions:
                 <p>AI 笔记对话</p>
                 <textarea rows="5">把这篇笔记整理成可放入结课设计文档的段落。</textarea>
                 <div class="action-list">
-                  <button type="button">生成摘要</button>
-                  <button type="button">转成作业段落</button>
-                  <button type="button">生成复习卡片</button>
+                  <button type="button" data-view="noteAiResult">生成摘要</button>
+                  <button type="button" data-view="noteAiResult">转成作业段落</button>
+                  <button type="button" data-view="noteAiResult">生成复习卡片</button>
                 </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-aiInsight">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="aiDesk">返回 AI 学习台</button>
+              <div class="page-title">
+                <p>AI 分析结果</p>
+                <h1>今天最大问题不是时间，而是类图关系不稳定</h1>
+                <span>AI 根据作业、练习、笔记和目标进度生成可执行建议，学生确认后再进入具体页面。</span>
+              </div>
+              <section class="task-board">
+                <div class="section-head">
+                  <div>
+                    <p>薄弱点排序</p>
+                    <h2>优先补聚合 / 组合关系</h2>
+                  </div>
+                  <button class="primary-button" type="button" data-view="practiceSession">生成专项练习</button>
+                </div>
+                <div class="bar-list">
+                  <div><span>聚合 / 组合关系</span><b style="width: 42%"></b><strong>42%</strong></div>
+                  <div><span>包图边界说明</span><b style="width: 58%"></b><strong>58%</strong></div>
+                  <div><span>截图与说明对应</span><b style="width: 63%"></b><strong>63%</strong></div>
+                </div>
+              </section>
+              <section class="task-board">
+                <div class="section-head">
+                  <div>
+                    <p>AI 行动建议</p>
+                    <h2>三步完成今天学习</h2>
+                  </div>
+                </div>
+                <div class="task-list">
+                  <article class="task-row active">
+                    <span class="task-index">01</span>
+                    <div><strong>做 8 道类图关系专项题</strong><p>预计 12 分钟 · 做完后自动进入错题回放</p></div>
+                    <button type="button" data-view="practiceSession">开始</button>
+                  </article>
+                  <article class="task-row">
+                    <span class="task-index">02</span>
+                    <div><strong>补充结课文档中的图文对应说明</strong><p>预计 20 分钟 · 关联作业提交</p></div>
+                    <button type="button" data-view="assignmentSubmit">去写</button>
+                  </article>
+                  <article class="task-row">
+                    <span class="task-index">03</span>
+                    <div><strong>把今天笔记整理成复习卡片</strong><p>预计 8 分钟 · 便于明天复习</p></div>
+                    <button type="button" data-view="noteAiResult">整理</button>
+                  </article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 判断依据</p>
+                <h2>作业和练习都指向同一薄弱点</h2>
+                <ul class="plain-list">
+                  <li>最近 2 次练习同类题错误率高</li>
+                  <li>作业草稿中类图说明偏短</li>
+                  <li>笔记里缺少生命周期关键词</li>
+                </ul>
+              </div>
+              <div class="assistant-card">
+                <p>继续追问</p>
+                <textarea rows="5">为什么聚合和组合总是容易混？</textarea>
+                <div class="action-list">
+                  <button type="button">讲给我听</button>
+                  <button type="button" data-view="practiceSession">出几道题</button>
+                  <button type="button" data-view="notes">找笔记</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-learningTaskDetail">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="learn">返回学习</button>
+              <div class="page-title">
+                <p>学习任务详情</p>
+                <h1>补充类图关系说明</h1>
+                <span>任务来自 AI 草稿，也可以手动编辑；确认后归入当前目标和课程。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head">
+                  <div>
+                    <p>任务内容</p>
+                    <h2>把任务拆成可完成步骤</h2>
+                  </div>
+                  <button class="outline-button" type="button">关联作业</button>
+                </div>
+                <div class="form-stack">
+                  <label><span>任务标题</span><input value="补充领域类图与包图关系说明" /></label>
+                  <label><span>预计时间</span><input value="25 分钟" /></label>
+                  <label><span>完成标准</span><textarea rows="5">补充 1 段说明，并在结课文档中标出至少 2 处截图引用。</textarea></label>
+                </div>
+              </section>
+              <section class="task-board">
+                <div class="section-head">
+                  <div>
+                    <p>执行步骤</p>
+                    <h2>今天只推进三件事</h2>
+                  </div>
+                </div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>看笔记中的类图关系段落</strong><p>已关联笔记「类图关系整理」</p></div><button type="button" data-view="notes">打开</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>补写图文对应说明</strong><p>进入提交页继续写</p></div><button type="button" data-view="assignmentSubmit">写作</button></article>
+                  <article class="task-row"><span class="task-index">03</span><div><strong>让 AI 检查证据链</strong><p>检查截图、术语、作业要求是否对应</p></div><button type="button" data-view="assignmentPreview">检查</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 任务规划</p>
+                <h2>建议先写作，再练题</h2>
+                <small>这项任务直接影响结课作业提交质量。</small>
+              </div>
+              <div class="assistant-card">
+                <p>调整任务</p>
+                <textarea rows="5">把这个任务拆得更细一点，我今天只剩 20 分钟。</textarea>
+                <div class="action-list">
+                  <button type="button">缩短任务</button>
+                  <button type="button">改到明天</button>
+                  <button type="button">加入计划</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-assignmentHistory">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="assignmentDetail">返回作业详情</button>
+              <div class="page-title">
+                <p>历史提交</p>
+                <h1>查看每次提交和草稿变化</h1>
+                <span>用于追踪修改过程，避免学生只看到最后一次结果。</span>
+              </div>
+              <section class="task-board">
+                <div class="section-head">
+                  <div>
+                    <p>提交记录</p>
+                    <h2>最近 3 次</h2>
+                  </div>
+                </div>
+                <div class="timeline-list">
+                  <div><time>06/15 22:18</time><span>正式提交 · 附件 3 个 · AI 检查 86 分</span></div>
+                  <div><time>06/15 21:40</time><span>保存草稿 · 补充类图说明 · 缺少截图引用</span></div>
+                  <div><time>06/14 19:05</time><span>首次草稿 · 文档结构完整，但作业要求覆盖不足</span></div>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 版本比较</p>
+                <h2>最后一次提交主要改进了结构</h2>
+                <ul class="plain-list">
+                  <li>新增系统架构说明</li>
+                  <li>仍需补截图与图关系</li>
+                  <li>建议查看教师反馈后再修订</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-assignmentFeedback">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="assignmentDetail">返回作业详情</button>
+              <div class="page-title">
+                <p>教师反馈</p>
+                <h1>把反馈转成下一步修改动作</h1>
+                <span>教师评语和 AI 辅导分开展示，避免学生把 AI 建议误认为最终评分。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head">
+                  <div>
+                    <p>教师评语</p>
+                    <h2>84 分 · 良好</h2>
+                  </div>
+                </div>
+                <p class="detail-copy">结构较完整，但类图、包图和截图之间的对应关系说明还可以更明确。建议补充关键截图引用。</p>
+              </section>
+              <section class="task-board">
+                <div class="section-head"><div><p>修改动作</p><h2>AI 转成 3 个可执行任务</h2></div></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>补 2 处截图引用</strong><p>对应教师反馈中的证据链不足</p></div><button type="button" data-view="assignmentSubmit">修改</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>补充组合关系说明</strong><p>从笔记中提取 1 段解释</p></div><button type="button" data-view="notes">找笔记</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 解读反馈</p>
+                <h2>不是重写全文，只需补证据链</h2>
+                <small>建议先改截图引用，再让 AI 检查是否覆盖作业要求。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-assignmentPreview">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="assignmentSubmit">返回提交</button>
+              <div class="page-title">
+                <p>提交预览</p>
+                <h1>提交前最后检查正文和附件</h1>
+                <span>预览页只做确认，不再混入大段编辑。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>预览内容</p><h2>结课设计文档说明</h2></div></div>
+                <p class="detail-copy">我将从领域模型、系统架构、AI 学习流程三个层面说明本项目的设计思路，并补充类图与包图之间的关系...</p>
+                <div class="upload-box"><strong>附件</strong><span>diagram-class.png、screenshot-dashboard.png、EduMindAgent.docx</span></div>
+                <div class="button-row">
+                  <button class="primary-button" type="button" data-view="submitSuccess">确认提交</button>
+                  <button class="outline-button" type="button" data-view="assignmentSubmit">返回修改</button>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 预检</p>
+                <h2>可以提交</h2>
+                <ul class="plain-list">
+                  <li>作业要求已覆盖</li>
+                  <li>附件数量正常</li>
+                  <li>截图引用还有 1 处可增强</li>
+                </ul>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-submitSuccess">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="assignments">返回作业</button>
+              <div class="page-title">
+                <p>提交成功</p>
+                <h1>已提交，后续反馈会进入作业详情</h1>
+                <span>提交完成后给出明确结果、可撤回窗口和下一步学习建议。</span>
+              </div>
+              <section class="task-board">
+                <div class="section-head"><div><p>提交结果</p><h2>结课设计文档说明 · 已提交</h2></div><span class="status-pill">06/15 22:18</span></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">✓</span><div><strong>等待教师批改</strong><p>预计 1-2 天内反馈</p></div><button type="button" data-view="assignmentHistory">查看记录</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>继续完成系统演示材料</strong><p>下一个截止事项</p></div><button type="button" data-view="assignments">查看</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 下一步</p>
+                <h2>可以切到练习巩固</h2>
+                <small>作业已提交，建议用 10 分钟巩固类图关系。</small>
+                <div class="action-list">
+                  <button type="button" data-view="practiceSession">开始练习</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-practiceSession">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="practice">返回练习</button>
+              <div class="page-title">
+                <p>练习答题</p>
+                <h1>专项练习 · UML 类图关系</h1>
+                <span>答题页聚焦当前题目，右侧 AI 只提供提示，不直接给答案。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>第 3 / 8 题</p><h2>组合关系最核心的特征是什么？</h2></div></div>
+                <div class="option-grid">
+                  <button type="button">A. 一个类临时调用另一个类</button>
+                  <button class="active" type="button">B. 部分对象生命周期依附于整体对象</button>
+                  <button type="button">C. 两个类共享同一个接口</button>
+                  <button type="button">D. 两个对象互相发送消息</button>
+                </div>
+                <div class="button-row">
+                  <button class="primary-button" type="button" data-view="practiceResult">提交本题</button>
+                  <button class="outline-button" type="button">标记不确定</button>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 提示</p>
+                <h2>先看生命周期</h2>
+                <small>如果整体对象消失，部分对象是否还能独立存在？这个问题能区分聚合和组合。</small>
+              </div>
+              <div class="assistant-card">
+                <p>练习进度</p>
+                <div class="meter"><span style="width: 38%"></span></div>
+                <small>已完成 3 / 8 · 正确 2 · 不确定 1</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-practiceResult">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="practice">返回练习</button>
+              <div class="page-title">
+                <p>练习结果</p>
+                <h1>8 题完成，类图关系仍需复习</h1>
+                <span>结果页把分数转成错题、知识点和下一步行动。</span>
+              </div>
+              <section class="course-info">
+                <div>
+                  <p>本次结果</p>
+                  <h2>正确率 63%</h2>
+                  <span>聚合/组合关系仍不稳定，建议立即回放错题。</span>
+                </div>
+                <div class="course-stat-grid">
+                  <div><strong>5</strong><span>答对</span></div>
+                  <div><strong>3</strong><span>错题</span></div>
+                  <div><strong>2</strong><span>不确定</span></div>
+                </div>
+              </section>
+              <section class="task-board">
+                <div class="section-head"><div><p>错题回放</p><h2>优先看这两题</h2></div></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>组合关系生命周期</strong><p>错误原因：把组合当成普通关联</p></div><button type="button" data-view="wrongQuestionDetail">回放</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>依赖关系使用场景</strong><p>错误原因：忽略“临时使用”关键词</p></div><button type="button" data-view="wrongQuestionDetail">回放</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 复习建议</p>
+                <h2>先回放错题，再生成 5 道同类题</h2>
+                <div class="action-list">
+                  <button type="button" data-view="wrongQuestionDetail">回放错题</button>
+                  <button type="button" data-view="practiceSession">再练一组</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-wrongQuestionDetail">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="practice">返回练习</button>
+              <div class="page-title">
+                <p>错题详情</p>
+                <h1>为什么这题选错</h1>
+                <span>错题页强调“错因”，不是只展示正确答案。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>题目</p><h2>组合关系最核心的特征是什么？</h2></div></div>
+                <div class="option-grid">
+                  <button class="danger-choice" type="button">A. 一个类临时调用另一个类 · 你的答案</button>
+                  <button class="active" type="button">B. 部分对象生命周期依附于整体对象 · 正确答案</button>
+                </div>
+              </section>
+              <section class="detail-card">
+                <div class="section-head"><div><p>错因解释</p><h2>你混淆了依赖和组合</h2></div></div>
+                <p class="detail-copy">“临时调用”通常对应依赖关系；组合强调整体和部分之间更强的拥有关系，部分对象通常不能脱离整体对象存在。</p>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 讲解</p>
+                <h2>用一句话记住</h2>
+                <small>组合关系看生命周期，依赖关系看临时使用。</small>
+              </div>
+              <div class="assistant-card">
+                <p>下一步</p>
+                <div class="action-list">
+                  <button type="button" data-view="practiceSession">生成同类题</button>
+                  <button type="button" data-view="notes">写入笔记</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-noteEditor">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="notes">返回笔记</button>
+              <div class="page-title">
+                <p>笔记编辑</p>
+                <h1>编辑课程笔记并保留 AI 整理入口</h1>
+                <span>笔记编辑页服务沉淀，不把所有 AI 输出直接写入正文。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>笔记正文</p><h2>类图关系整理</h2></div><button class="outline-button" type="button">关联任务</button></div>
+                <div class="form-stack">
+                  <label><span>标题</span><input value="类图关系整理" /></label>
+                  <label><span>内容</span><textarea rows="12">组合关系强调强拥有关系，部分对象生命周期依赖整体对象。聚合关系也表达整体-部分，但部分可以独立存在。</textarea></label>
+                </div>
+                <div class="button-row">
+                  <button class="primary-button" type="button" data-view="notes">保存笔记</button>
+                  <button class="outline-button" type="button" data-view="noteAiResult">AI 整理</button>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 笔记检查</p>
+                <h2>建议补一个反例</h2>
+                <small>当前笔记概念正确，但缺少对依赖关系的对比。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-noteAiResult">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="notes">返回笔记</button>
+              <div class="page-title">
+                <p>AI 整理结果</p>
+                <h1>确认后再写入笔记或作业</h1>
+                <span>AI 输出作为草稿，不自动覆盖原笔记。</span>
+              </div>
+              <section class="task-board">
+                <div class="section-head"><div><p>生成结果</p><h2>复习卡片和作业段落</h2></div></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>复习卡片</strong><p>组合看生命周期，依赖看临时使用。</p></div><button type="button">保存</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>作业段落</strong><p>在结课文档中说明类图关系的可复用段落。</p></div><button type="button" data-view="assignmentSubmit">插入</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 输出说明</p>
+                <h2>适合写入作业，但需要补截图</h2>
+                <small>建议插入提交页后再补充项目截图引用。</small>
               </div>
             </aside>
           </div>

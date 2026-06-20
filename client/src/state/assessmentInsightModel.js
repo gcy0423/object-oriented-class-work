@@ -32,10 +32,11 @@ function scoreSeverity(score) {
 }
 
 function summarizeBand(bands = {}) {
+  const labels = { excellent: "优秀", good: "良好", pass: "达标", risk: "风险" };
   return Object.entries(bands)
     .filter(([, count]) => count)
-    .map(([band, count]) => `${band}:${count}`)
-    .join(", ") || "no band data";
+    .map(([band, count]) => `${labels[band] || band}:${count}`)
+    .join("，") || "暂无分段数据";
 }
 
 function conceptName(row) {
@@ -53,70 +54,70 @@ function buildNarrativeCard(title, tone, lines = [], actions = []) {
 
 function buildGradingNarrative(overview) {
   if (!overview) {
-    return buildNarrativeCard("Grading overview", "neutral", ["No assignment grading overview is loaded."], ["Select an assignment with submissions."]);
+    return buildNarrativeCard("Grading overview", "neutral", ["暂无作业评分概览。"], ["请选择已有提交的作业。"]);
   }
   const consistency = overview.consistency || {};
   const gapLine = consistency.sampleSize
-    ? `Teacher/AI comparison sample=${consistency.sampleSize}, average gap=${consistency.averageGap}, high-risk gaps=${consistency.highRiskCount}.`
-    : "Teacher/AI comparison sample is not sufficient yet.";
+    ? `教师评分与 AI 评分样本 ${consistency.sampleSize} 条，平均差异 ${consistency.averageGap}，高风险差异 ${consistency.highRiskCount} 条。`
+    : "教师评分与 AI 评分样本仍不足。";
   const actions = [];
-  pushIf(actions, asNumber(consistency.highRiskCount) > 0, "Review submissions with high teacher/AI score gaps before publishing final feedback.");
-  pushIf(actions, asNumber(overview.gradedCount) < asNumber(overview.submissionCount), "Finish grading remaining submissions to stabilize class-level statistics.");
-  pushIf(actions, asNumber(overview.average) < 70, "Add a remediation task for students below pass band.");
+  pushIf(actions, asNumber(consistency.highRiskCount) > 0, "发布最终反馈前，优先复核教师与 AI 评分差异较大的提交。");
+  pushIf(actions, asNumber(overview.gradedCount) < asNumber(overview.submissionCount), "完成剩余提交评分，稳定班级统计。");
+  pushIf(actions, asNumber(overview.average) < 70, "为低于达标线的学生补充一项巩固任务。");
   if (!actions.length) {
-    actions.push("Keep using the current rubric and sample future submissions for consistency drift.");
+    actions.push("当前评分规则可继续使用，后续抽样复核评分一致性。");
   }
   return buildNarrativeCard("Grading overview", consistency.status || "stable", [
-    `Assignment ${overview.assignment?.title || overview.assignment?.id || ""} has ${overview.submissionCount || 0} submissions and ${overview.gradedCount || 0} graded rows.`,
-    `Average score is ${overview.average || 0}; score range is ${overview.minScore || 0}-${overview.maxScore || 0}.`,
-    `Band distribution: ${summarizeBand(overview.bands)}.`,
+    `当前作业共有 ${overview.submissionCount || 0} 份提交，已评分 ${overview.gradedCount || 0} 份。`,
+    `平均分 ${overview.average || 0}，分数范围 ${overview.minScore || 0}-${overview.maxScore || 0}。`,
+    `分段分布：${summarizeBand(overview.bands)}。`,
     gapLine
   ], actions);
 }
 
 function buildRubricNarrative(profile) {
   if (!profile) {
-    return buildNarrativeCard("Rubric quality", "neutral", ["No rubric profile is loaded."], ["Select a rubric to inspect criteria coverage."]);
+    return buildNarrativeCard("Rubric quality", "neutral", ["暂无评分规则画像。"], ["请选择评分规则查看覆盖度。"]);
   }
   const missing = (profile.dimensionCoverage || []).filter((item) => !item.covered).map((item) => item.key);
   const tone = missing.length || (profile.warnings || []).length ? "warning" : "stable";
   return buildNarrativeCard("Rubric quality", tone, [
-    `Rubric total score is ${profile.totalScore || 0}, quality score is ${profile.qualityScore || 0}%.`,
-    `${profile.criteria?.length || 0} criteria are available; missing dimensions: ${missing.join(", ") || "none"}.`,
-    `Weight spread is ${profile.weightBalance?.spread ?? 0} points.`
+    `评分规则总分 ${profile.totalScore || 0}，质量分 ${profile.qualityScore || 0}%。`,
+    `当前有 ${profile.criteria?.length || 0} 个评分项，缺失维度：${missing.join("，") || "无"}。`,
+    `权重差异为 ${profile.weightBalance?.spread ?? 0} 分。`
   ], [
     ...(profile.improvementPlan || []),
-    ...(missing.length ? ["Add explicit evidence requirements for each missing dimension."] : [])
+    ...(missing.length ? ["为缺失维度补充明确的证据要求。"] : [])
   ]);
 }
 
 function buildPortfolioNarrative(portfolio) {
   if (!portfolio) {
-    return buildNarrativeCard("Student portfolio", "neutral", ["No student portfolio is loaded."], ["Select a course and student scope."]);
+    return buildNarrativeCard("Student portfolio", "neutral", ["暂无学生档案。"], ["请选择课程和学生范围。"]);
   }
   const risk = portfolio.risk || {};
   const assignmentProgress = portfolio.assignmentProgress || {};
   const practice = portfolio.practiceSummary || {};
   const gradeTrend = portfolio.gradeTrend || {};
   const actions = [];
-  pushIf(actions, asNumber(assignmentProgress.completionRate) < 80, "Follow up on missing assignments and confirm due-date understanding.");
-  pushIf(actions, asNumber(gradeTrend.averageScore) < 70, "Use scored submissions to identify rubric dimensions needing reteaching.");
-  pushIf(actions, asNumber(practice.averageCorrectRate) < 70, "Schedule short practice sessions on low-correctness concepts.");
-  pushIf(actions, risk.level === "high", "Create a teacher intervention note and schedule a check-in.");
+  pushIf(actions, asNumber(assignmentProgress.completionRate) < 80, "跟进缺交作业，并确认学生理解截止时间。");
+  pushIf(actions, asNumber(gradeTrend.averageScore) < 70, "根据已评分提交定位需要重讲的评分维度。");
+  pushIf(actions, asNumber(practice.averageCorrectRate) < 70, "为正确率偏低的概念安排短练习。");
+  pushIf(actions, risk.level === "high", "创建教师干预记录，并安排一次跟进。");
   if (!actions.length) {
-    actions.push("Portfolio evidence is stable; keep weekly monitoring.");
+    actions.push("学生档案证据稳定，保持每周观察。");
   }
   return buildNarrativeCard("Student portfolio", risk.level || "low", [
-    `Assignment completion is ${percentText(assignmentProgress.completionRate)} with ${assignmentProgress.submittedCount || 0}/${assignmentProgress.totalAssignments || 0} submitted.`,
-    `Average score is ${gradeTrend.averageScore || 0}; teacher average is ${gradeTrend.teacherAverageScore || 0}.`,
-    `Practice sessions=${practice.sessionCount || 0}, finished=${practice.finishedCount || 0}, average correct=${percentText(practice.averageCorrectRate)}.`,
-    `Portfolio risk is ${risk.level || "low"} with score ${risk.score || 0}.`
+    `作业完成率 ${percentText(assignmentProgress.completionRate)}，已提交 ${assignmentProgress.submittedCount || 0}/${assignmentProgress.totalAssignments || 0}。`,
+    `平均分 ${gradeTrend.averageScore || 0}，教师评分均值 ${gradeTrend.teacherAverageScore || 0}。`,
+    `练习 ${practice.sessionCount || 0} 次，完成 ${practice.finishedCount || 0} 次，平均正确率 ${percentText(practice.averageCorrectRate)}。`,
+    `档案风险等级 ${risk.level || "low"}，风险分 ${risk.score || 0}。`
   ], actions);
 }
 
 function buildCourseNarrative(report) {
   if (!report) {
-    return buildNarrativeCard("Course report", "neutral", ["No course assessment report is loaded."], ["Teacher role can load course report."]);
+    return buildNarrativeCard("Course report", "neutral", ["暂无课程评测报告。"], ["请选择课程后刷新报告。"]);
   }
   const distribution = report.gradeDistribution || {};
   const engagement = report.practiceEngagement || {};
@@ -124,79 +125,79 @@ function buildCourseNarrative(report) {
   const mastery = report.masteryCoverage || {};
   const riskCount = (report.riskRegister || []).filter((item) => item.risk?.level === "high").length;
   const actions = [];
-  pushIf(actions, asNumber(distribution.risk) > 0, "Review risk-band submissions and attach rubric-level feedback.");
-  pushIf(actions, asNumber(engagement.finishRate) < 70, "Increase practice completion nudges through scheduler reminders.");
-  pushIf(actions, asNumber(mistakeLoad.openMistakes) > 0, "Use mistake load to prepare the next review session.");
-  pushIf(actions, asNumber(mastery.weakRecordCount) > 0, "Map weak mastery records back to knowledge concepts and practice sets.");
-  pushIf(actions, riskCount > 0, "Open the risk register before the next class intervention.");
+  pushIf(actions, asNumber(distribution.risk) > 0, "复核风险分段提交，并补充评分规则维度反馈。");
+  pushIf(actions, asNumber(engagement.finishRate) < 70, "通过提醒提高练习完成率。");
+  pushIf(actions, asNumber(mistakeLoad.openMistakes) > 0, "根据待复习错题准备下一次讲评。");
+  pushIf(actions, asNumber(mastery.weakRecordCount) > 0, "把薄弱掌握记录映射回知识概念和练习集。");
+  pushIf(actions, riskCount > 0, "课前先查看风险清单，再安排干预。");
   if (!actions.length) {
-    actions.push("Course evidence is balanced; continue collecting assessment data.");
+    actions.push("课程证据整体平衡，继续收集评测数据。");
   }
   return buildNarrativeCard("Course report", riskCount ? "warning" : "stable", [
-    `Course has ${report.assignmentCount || 0} assignments, ${report.submissionCount || 0} submissions, and ${report.gradedSubmissionCount || 0} graded submissions.`,
-    `Grade distribution: excellent=${distribution.excellent || 0}, good=${distribution.good || 0}, pass=${distribution.pass || 0}, risk=${distribution.risk || 0}.`,
-    `Practice finish rate=${percentText(engagement.finishRate)}, average correct=${percentText(engagement.averageCorrectRate)}.`,
-    `Open mistakes=${mistakeLoad.openMistakes || 0}, average mastery=${percentText(mastery.averageMastery)}.`
+    `课程共有 ${report.assignmentCount || 0} 个作业、${report.submissionCount || 0} 份提交、${report.gradedSubmissionCount || 0} 份已评分提交。`,
+    `成绩分布：优秀 ${distribution.excellent || 0}，良好 ${distribution.good || 0}，达标 ${distribution.pass || 0}，风险 ${distribution.risk || 0}。`,
+    `练习完成率 ${percentText(engagement.finishRate)}，平均正确率 ${percentText(engagement.averageCorrectRate)}。`,
+    `待复习错题 ${mistakeLoad.openMistakes || 0} 个，平均掌握度 ${percentText(mastery.averageMastery)}。`
   ], actions);
 }
 
 function buildMistakeNarrative(report) {
   if (!report) {
-    return buildNarrativeCard("Mistake analysis", "neutral", ["No mistake analysis is loaded."], ["Load mistake analysis from current course."]);
+    return buildNarrativeCard("Mistake analysis", "neutral", ["暂无错题分析。"], ["请选择课程后刷新错题分析。"]);
   }
   const high = (report.concepts || []).filter((item) => item.priority === "high");
   const reasons = Object.entries(report.reasonSummary || {}).map(([reason, count]) => `${reason}:${count}`).join(", ");
   return buildNarrativeCard("Mistake analysis", high.length ? "high" : "stable", [
-    `Total mistakes=${report.totalMistakes || 0}, open=${report.openMistakes || 0}, reviewed=${report.reviewedMistakes || 0}.`,
-    `High-priority concepts=${high.map((item) => item.concept).join(", ") || "none"}.`,
-    `Reason summary: ${reasons || "none"}.`
+    `错题总数 ${report.totalMistakes || 0}，待复习 ${report.openMistakes || 0}，已复习 ${report.reviewedMistakes || 0}。`,
+    `高优先级概念：${high.map((item) => item.concept).join("，") || "无"}。`,
+    `原因概览：${reasons || "无"}。`
   ], [
-    ...high.slice(0, 3).map((item) => `Review ${item.concept}: ${item.remediation?.advice || "practice again"}`),
-    ...(high.length ? ["Use the review queue to inspect concrete wrong-answer evidence."] : ["Keep reviewing newly opened mistakes weekly."])
+    ...high.slice(0, 3).map((item) => `复习 ${item.concept}：${item.remediation?.advice || "再做一组练习"}`),
+    ...(high.length ? ["从复习队列查看具体错因证据。"] : ["保持每周复习新增错题。"])
   ]);
 }
 
 function buildSessionNarrative(review) {
   if (!review) {
-    return buildNarrativeCard("Practice review", "neutral", ["No practice session review is loaded."], ["Select a practice session to inspect answer breakdown."]);
+    return buildNarrativeCard("Practice review", "neutral", ["暂无练习复盘。"], ["请选择练习记录查看答题拆解。"]);
   }
   const total = asNumber(review.correctCount) + asNumber(review.incorrectCount);
   const rate = total ? Math.round((asNumber(review.correctCount) / total) * 100) : 0;
   const weakConcepts = (review.conceptBreakdown || []).filter((item) => asNumber(item.correctRate) < 70);
   return buildNarrativeCard("Practice review", weakConcepts.length ? "warning" : "stable", [
-    `Answered=${review.answeredCount || 0}, correct=${review.correctCount || 0}, incorrect=${review.incorrectCount || 0}, pending=${review.pendingCount || 0}.`,
-    `Judged correct rate is ${rate}%.`,
-    `Weak concepts: ${weakConcepts.map((item) => item.concept).join(", ") || "none"}.`
+    `已答 ${review.answeredCount || 0} 题，正确 ${review.correctCount || 0}，错误 ${review.incorrectCount || 0}，待判定 ${review.pendingCount || 0}。`,
+    `已判定正确率 ${rate}%。`,
+    `薄弱概念：${weakConcepts.map((item) => item.concept).join("，") || "无"}。`
   ], [
     ...(review.nextActions || []),
-    ...(weakConcepts.length ? ["Generate an adaptive plan from the weak concepts."] : ["Move to mixed review after one day."])
+    ...(weakConcepts.length ? ["根据薄弱概念生成自适应练习。"] : ["隔一天后进入混合复习。"])
   ]);
 }
 
 function buildAdaptivePlanNarrative(plan) {
   if (!plan) {
-    return buildNarrativeCard("Adaptive plan", "neutral", ["No adaptive practice plan is loaded."], ["Build a plan from current weakness evidence."]);
+    return buildNarrativeCard("Adaptive plan", "neutral", ["暂无自适应练习方案。"], ["可基于当前薄弱证据生成练习方案。"]);
   }
   return buildNarrativeCard("Adaptive plan", plan.selectedCount < plan.targetCount ? "warning" : "stable", [
-    `Selected ${plan.selectedCount || 0}/${plan.targetCount || 0} questions, estimated ${plan.estimatedMinutes || 0} minutes.`,
-    `Weak concept count=${plan.weakConcepts?.length || 0}; coverage concept count=${plan.coverage?.conceptCount || 0}.`,
+    `已选 ${plan.selectedCount || 0}/${plan.targetCount || 0} 题，预计 ${plan.estimatedMinutes || 0} 分钟。`,
+    `薄弱概念 ${plan.weakConcepts?.length || 0} 个，覆盖概念 ${plan.coverage?.conceptCount || 0} 个。`,
     plan.strategy || ""
   ], [
-    "Start with the first weak concept, then interleave two non-weak questions.",
-    "After completion, refresh the session review to validate improvement."
+    "先做第一个薄弱概念，再穿插两道非薄弱题。",
+    "完成后刷新练习复盘，验证是否改善。"
   ]);
 }
 
 function buildRiskNarrative(register) {
   if (!register) {
-    return buildNarrativeCard("Risk register", "neutral", ["No risk register is loaded."], ["Teacher role can load risk register."]);
+    return buildNarrativeCard("Risk register", "neutral", ["暂无风险清单。"], ["请选择课程后查看风险清单。"]);
   }
   return buildNarrativeCard("Risk register", register.highRiskCount ? "high" : "stable", [
-    `Students=${register.totalStudents || 0}, high=${register.highRiskCount || 0}, medium=${register.mediumRiskCount || 0}, low=${register.lowRiskCount || 0}.`,
-    `Top risk student=${register.items?.[0]?.studentId || "none"} with score ${register.items?.[0]?.risk?.score ?? 0}.`
+    `学生 ${register.totalStudents || 0} 人，高风险 ${register.highRiskCount || 0}，中风险 ${register.mediumRiskCount || 0}，低风险 ${register.lowRiskCount || 0}。`,
+    `最高风险学生风险分 ${register.items?.[0]?.risk?.score ?? 0}。`
   ], [
-    ...(register.items || []).filter((item) => item.risk?.level === "high").slice(0, 3).map((item) => `Schedule intervention for ${item.studentId}.`),
-    "Use portfolio evidence before sending any intervention message."
+    ...(register.items || []).filter((item) => item.risk?.level === "high").slice(0, 3).map(() => "为高风险学生安排干预。"),
+    "发送干预消息前先查看学生档案证据。"
   ]);
 }
 

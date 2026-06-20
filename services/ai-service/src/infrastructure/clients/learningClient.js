@@ -18,4 +18,22 @@ export class LearningClient {
     });
     return response.data;
   }
+
+  async createTaskForUser(userId, input) {
+    const response = await this.client.post(`/internal/learning/users/${encodeURIComponent(userId)}/tasks`, input, {
+      headers: {
+        "x-edumind-internal-key": this.internalKey
+      }
+    });
+    return response.data;
+  }
+
+  async createNoteForUser(userId, input) {
+    const response = await this.client.post(`/internal/learning/users/${encodeURIComponent(userId)}/notes`, input, {
+      headers: {
+        "x-edumind-internal-key": this.internalKey
+      }
+    });
+    return response.data;
+  }
 }

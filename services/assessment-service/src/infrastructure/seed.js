@@ -17,6 +17,7 @@ export function createAssessmentSeed(now = new Date()) {
       }
     ],
     submissions: [],
+    submissionDrafts: [],
     rubrics: [
       {
         id: "rubric_ood_modeling",
@@ -61,6 +62,7 @@ export function createAssessmentSeed(now = new Date()) {
     ],
     grades: [],
     feedbackItems: [],
+    uploads: [],
     questionBanks: [
       {
         id: "qbank_ood",

@@ -172,6 +172,34 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/notes", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.learning.get(withQuery("/api/notes", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/notes/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.learning.get(`/api/notes/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/notes/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.learning.patch(`/api/notes/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.delete("/api/notes/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.learning.delete(`/api/notes/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.get("/api/dashboard", async (req) => {
     const user = await services.verifyUser(req);
     const [learningDashboard, assessmentDashboard, identityUsers, activityLogs, providerHealth, analyticsOverview] = await Promise.allSettled([
@@ -240,6 +268,179 @@ export function registerRoutes(router, config, services = {}) {
     const user = await services.verifyUser(req);
     return services.ai.post("/api/ai/summarize", await readJson(req), {
       headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/student-ai/daily-plan", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/student-ai/daily-plan", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/student-ai/weakness-insight", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/student-ai/weakness-insight", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/student-ai/task-drafts", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/student-ai/task-drafts", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/student-ai/assignment-guide", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/student-ai/assignment-guide", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/student-ai/submission-check", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/student-ai/submission-check", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/student-ai/note-organize", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/student-ai/note-organize", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/student-ai/results", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(withQuery("/api/student-ai/results", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/student-ai/results/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(`/api/student-ai/results/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/student-ai/results/:id/actions/:actionId", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.patch(`/api/student-ai/results/${encodeURIComponent(req.params.id)}/actions/${encodeURIComponent(req.params.actionId)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/student-ai/timeline", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(withQuery("/api/student-ai/timeline", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/student-ai/task-drafts", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get("/api/student-ai/task-drafts", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/student-ai/task-drafts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.patch(`/api/student-ai/task-drafts/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.delete("/api/student-ai/task-drafts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.delete(`/api/student-ai/task-drafts/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/student-ai/task-drafts/:id/confirm", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post(`/api/student-ai/task-drafts/${encodeURIComponent(req.params.id)}/confirm`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/note-organize-results", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get("/api/note-organize-results", {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/note-organize-results/:id/save-note", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post(`/api/note-organize-results/${encodeURIComponent(req.params.id)}/save-note`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/teacher/students/:id/ai-results", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(withQuery(`/api/teacher/students/${encodeURIComponent(req.params.id)}/ai-results`, req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/teacher/students/:id/ai-timeline", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(withQuery(`/api/teacher/students/${encodeURIComponent(req.params.id)}/ai-timeline`, req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/teacher/students/:id/interventions", async (req) => {
+    const user = await services.verifyUser(req);
+    const body = await readJson(req);
+    const studentId = req.params.id;
+    const reason = body.reason || "教师根据学生 AI 过程证据发起干预。";
+    const message = body.message || "建议优先根据 AI 自检和学习时间线补齐薄弱环节。";
+    const courseId = body.courseId || null;
+    const dueAt = body.dueAt || null;
+    const notification = await services.notification.post("/api/notifications", {
+      recipientId: studentId,
+      title: "教师干预建议",
+      body: message,
+      type: "teacher.intervention",
+      category: "system",
+      severity: "warning",
+      channels: body.channels || ["in_app"],
+      data: { reason, courseId, dueAt }
+    }, {
+      headers: buildUserHeaders(config, user)
+    });
+    let reminder = null;
+    if (dueAt) {
+      reminder = await services.scheduler.post("/api/scheduler/reminders", {
+        ownerId: studentId,
+        createdBy: user.id,
+        courseId,
+        title: "教师干预提醒",
+        message,
+        targetType: "teacher_intervention",
+        targetId: notification.data.id,
+        dueAt,
+        channels: body.channels || ["in_app"],
+        severity: "warning",
+        metadata: { reason }
+      }, {
+        headers: buildUserHeaders(config, user)
+      });
+    }
+    return ok({
+      studentId,
+      reason,
+      message,
+      notification: notification.data,
+      reminder: reminder?.data || null
     });
   });
 
@@ -492,6 +693,62 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.get("/api/assignment-submission-drafts", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(withQuery("/api/assignment-submission-drafts", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/assignment-submission-drafts", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.post("/api/assignment-submission-drafts", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/assignment-submission-drafts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.patch(`/api/assignment-submission-drafts/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.delete("/api/assignment-submission-drafts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.delete(`/api/assignment-submission-drafts/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/assignment-submission-drafts/:id/submit", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.post(`/api/assignment-submission-drafts/${encodeURIComponent(req.params.id)}/submit`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/uploads", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.post("/api/uploads", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/uploads/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/uploads/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.delete("/api/uploads/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.delete(`/api/uploads/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
   router.post("/api/submissions/:id/grade", async (req) => {
     const user = await services.verifyUser(req);
     return services.assessment.post(`/api/submissions/${encodeURIComponent(req.params.id)}/grade`, await readJson(req), {
@@ -509,6 +766,20 @@ export function registerRoutes(router, config, services = {}) {
   router.get("/api/submissions/:id/grading-insight", async (req) => {
     const user = await services.verifyUser(req);
     return services.assessment.get(`/api/submissions/${encodeURIComponent(req.params.id)}/grading-insight`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/assignments/:id/student-ai-evidence", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/assignments/${encodeURIComponent(req.params.id)}/student-ai-evidence`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/submissions/:id/student-ai-evidence", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.get(`/api/submissions/${encodeURIComponent(req.params.id)}/student-ai-evidence`, {
       headers: buildUserHeaders(config, user)
     });
   });

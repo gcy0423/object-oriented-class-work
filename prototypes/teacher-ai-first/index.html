@@ -241,7 +241,7 @@ Teacher-side AI-first prototype assumptions:
                 <p>AI 生成作业</p>
                 <textarea rows="5">根据 UML 类图关系薄弱点，生成一份补充练习作业。</textarea>
                 <div class="action-list">
-                  <button type="button">生成作业草稿</button>
+                  <button type="button" data-view="assignmentDraft">生成作业草稿</button>
                   <button type="button" data-view="assignmentPublish">生成评分规则</button>
                   <button type="button">生成讲评提纲</button>
                 </div>
@@ -286,9 +286,9 @@ Teacher-side AI-first prototype assumptions:
                   </div>
                 </div>
                 <div class="button-row">
-                  <button class="primary-button" type="button">确认发布</button>
+                  <button class="primary-button" type="button" data-view="publishSuccess">确认发布</button>
                   <button class="outline-button" type="button">保存草稿</button>
-                  <button class="outline-button" type="button">预览学生端</button>
+                  <button class="outline-button" type="button" data-view="assignmentStudentPreview">预览学生端</button>
                 </div>
               </section>
             </section>
@@ -332,7 +332,7 @@ Teacher-side AI-first prototype assumptions:
                     <p>作业要求</p>
                     <h2>说明图和系统实现之间的关系</h2>
                   </div>
-                  <button class="outline-button" type="button">编辑作业</button>
+                  <button class="outline-button" type="button" data-view="assignmentDraft">编辑作业</button>
                 </div>
                 <p class="detail-copy">学生需要说明领域类图、包图、时序图和服务边界之间的关系，并提交系统运行截图。</p>
               </section>
@@ -381,7 +381,7 @@ Teacher-side AI-first prototype assumptions:
                 <textarea rows="5">根据这些提交情况，生成课堂讲评提纲。</textarea>
                 <div class="action-list">
                   <button type="button">生成讲评</button>
-                  <button type="button">生成未提交提醒</button>
+                  <button type="button" data-view="interventionConfirm">生成未提交提醒</button>
                   <button type="button">生成优秀样例点评</button>
                 </div>
               </div>
@@ -404,7 +404,7 @@ Teacher-side AI-first prototype assumptions:
                     <p>待批改队列</p>
                     <h2>按优先级排序</h2>
                   </div>
-                  <button class="outline-button" type="button">批量 AI 初评</button>
+                  <button class="outline-button" type="button" data-view="batchGradingResult">批量 AI 初评</button>
                 </div>
                 <div class="task-list">
                   <article class="task-row active">
@@ -421,7 +421,7 @@ Teacher-side AI-first prototype assumptions:
                       <strong>陈远 · 结课设计文档说明</strong>
                       <p>AI 初评 76 · 说明偏短</p>
                     </div>
-                    <button type="button">批改</button>
+                    <button type="button" data-view="gradingDetail">批改</button>
                   </article>
                   <article class="task-row">
                     <span class="task-index">03</span>
@@ -429,7 +429,7 @@ Teacher-side AI-first prototype assumptions:
                       <strong>宋雨 · AI 问答实验记录</strong>
                       <p>AI 初评 88 · 可快速确认</p>
                     </div>
-                    <button type="button">批改</button>
+                    <button type="button" data-view="gradingDetail">批改</button>
                   </article>
                 </div>
               </section>
@@ -449,9 +449,9 @@ Teacher-side AI-first prototype assumptions:
                 <p>AI 批改助手</p>
                 <textarea rows="5">帮我优先找出最需要人工仔细看的提交。</textarea>
                 <div class="action-list">
-                  <button type="button">重排队列</button>
+                  <button type="button" data-view="batchGradingResult">重排队列</button>
                   <button type="button">生成反馈模板</button>
-                  <button type="button">查看异常提交</button>
+                  <button type="button" data-view="batchGradingResult">查看异常提交</button>
                 </div>
               </div>
             </aside>
@@ -495,7 +495,7 @@ Teacher-side AI-first prototype assumptions:
                 </div>
                 <textarea rows="5">结构较清楚，但截图和图之间的对应关系还可以更明确。</textarea>
                 <div class="button-row">
-                  <button class="primary-button" type="button">保存评分</button>
+                  <button class="primary-button" type="button" data-view="feedbackPublish">保存评分</button>
                   <button class="outline-button" type="button">采用 AI 反馈</button>
                 </div>
               </section>
@@ -547,7 +547,7 @@ Teacher-side AI-first prototype assumptions:
                     <p>课程与题库</p>
                     <h2>面向对象技术与方法</h2>
                   </div>
-                  <button class="outline-button" type="button">新建题库</button>
+                  <button class="outline-button" type="button" data-view="questionDetail">新建题库</button>
                 </div>
                 <div class="course-tabs">
                   <button class="active" type="button">UML 类图关系</button>
@@ -562,18 +562,18 @@ Teacher-side AI-first prototype assumptions:
                     <p>题目列表</p>
                     <h2>当前题库题目</h2>
                   </div>
-                  <button class="primary-button" type="button">新增题目</button>
+                  <button class="primary-button" type="button" data-view="questionDetail">新增题目</button>
                 </div>
                 <div class="assignment-list">
-                  <button class="assignment-item active" type="button">
+                  <button class="assignment-item active" type="button" data-view="questionDetail">
                     <strong>聚合与组合关系如何区分？</strong>
                     <span>单选 · 中等 · 正确率 58%</span>
                   </button>
-                  <button class="assignment-item" type="button">
+                  <button class="assignment-item" type="button" data-view="questionDetail">
                     <strong>类图中的依赖关系适合表达什么？</strong>
                     <span>单选 · 简单 · 正确率 76%</span>
                   </button>
-                  <button class="assignment-item" type="button">
+                  <button class="assignment-item" type="button" data-view="questionDetail">
                     <strong>阅读类图并说明模块边界</strong>
                     <span>简答 · 困难 · 正确率 43%</span>
                   </button>
@@ -729,7 +729,7 @@ Teacher-side AI-first prototype assumptions:
                       <strong>陈远</strong>
                       <p>未提交 2 项 · 类图关系正确率 42%</p>
                     </div>
-                    <button type="button">干预</button>
+                    <button type="button" data-view="studentProfile">干预</button>
                   </article>
                   <article class="task-row">
                     <span class="task-index">02</span>
@@ -737,7 +737,7 @@ Teacher-side AI-first prototype assumptions:
                       <strong>宋雨</strong>
                       <p>错题未复习 · 最近 3 天无学习记录</p>
                     </div>
-                    <button type="button">提醒</button>
+                    <button type="button" data-view="interventionConfirm">提醒</button>
                   </article>
                 </div>
               </section>
@@ -771,7 +771,7 @@ Teacher-side AI-first prototype assumptions:
                 <p>AI 干预建议</p>
                 <textarea rows="5">给风险学生生成一条提醒，并附上补充练习建议。</textarea>
                 <div class="action-list">
-                  <button type="button">生成提醒</button>
+                  <button type="button" data-view="interventionConfirm">生成提醒</button>
                   <button type="button">生成补充练习</button>
                   <button type="button">生成课堂讲解稿</button>
                 </div>
@@ -795,7 +795,7 @@ Teacher-side AI-first prototype assumptions:
                     <p>待协作事项</p>
                     <h2>AI 汇总需要他人参与的任务</h2>
                   </div>
-                  <button class="primary-button" type="button">新建协作</button>
+                  <button class="primary-button" type="button" data-view="collaborationDetail">新建协作</button>
                 </div>
                 <div class="task-list">
                   <article class="task-row active">
@@ -804,7 +804,7 @@ Teacher-side AI-first prototype assumptions:
                       <strong>请助教复核 2 份异常提交</strong>
                       <p>批改 · 截图与文档不一致 · 建议今天完成</p>
                     </div>
-                    <button type="button">分派</button>
+                    <button type="button" data-view="collaborationDetail">分派</button>
                   </article>
                   <article class="task-row">
                     <span class="task-index">02</span>
@@ -820,7 +820,7 @@ Teacher-side AI-first prototype assumptions:
                       <strong>同步风险学生干预记录</strong>
                       <p>学情 · 5 名学生 · 需要辅导员知晓</p>
                     </div>
-                    <button type="button">同步</button>
+                    <button type="button" data-view="collaborationDetail">同步</button>
                   </article>
                 </div>
               </section>
@@ -850,10 +850,347 @@ Teacher-side AI-first prototype assumptions:
                 <p>AI 生成协作消息</p>
                 <textarea rows="5">帮我写一条给助教的复核任务说明，语气简洁。</textarea>
                 <div class="action-list">
-                  <button type="button">发给助教</button>
-                  <button type="button">发给课程组</button>
-                  <button type="button">发给辅导员</button>
+                  <button type="button" data-view="collaborationDetail">发给助教</button>
+                  <button type="button" data-view="collaborationDetail">发给课程组</button>
+                  <button type="button" data-view="collaborationDetail">发给辅导员</button>
                 </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-aiPlanDetail">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="aiDesk">返回 AI 教学台</button>
+              <div class="page-title">
+                <p>AI 今日方案</p>
+                <h1>把 AI 判断变成可确认的教学处理顺序</h1>
+                <span>AI 只生成建议方案，教师决定是否执行、调整顺序或分派给助教。</span>
+              </div>
+              <section class="task-board">
+                <div class="section-head"><div><p>处理顺序</p><h2>建议今天先处理 4 件事</h2></div><button class="outline-button" type="button">调整顺序</button></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>批量初评 8 份结课设计文档</strong><p>预计 15 分钟，人工确认 45 分钟</p></div><button type="button" data-view="batchGradingResult">执行</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>确认 2 份异常提交</strong><p>截图与文档引用不一致</p></div><button type="button" data-view="gradingDetail">查看</button></article>
+                  <article class="task-row"><span class="task-index">03</span><div><strong>给 5 名风险学生生成提醒</strong><p>未提交、错题未复习、学习记录中断</p></div><button type="button" data-view="interventionConfirm">生成</button></article>
+                  <article class="task-row"><span class="task-index">04</span><div><strong>生成 UML 类图关系补充练习</strong><p>进入题库确认后发布</p></div><button type="button" data-view="questionDraft">生成</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 依据</p>
+                <h2>批改阻塞后续讲评</h2>
+                <ul class="plain-list">
+                  <li>8 份待批改已经超过 24 小时</li>
+                  <li>风险学生提醒需要基于批改结果更准确</li>
+                  <li>题库补练可在讲评后发布</li>
+                </ul>
+              </div>
+              <div class="assistant-card">
+                <p>方案调整</p>
+                <textarea rows="5">把风险学生提醒提前到批改之前。</textarea>
+                <div class="action-list">
+                  <button type="button">重排方案</button>
+                  <button type="button" data-view="collaborationDetail">分派助教</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-assignmentDraft">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="assignments">返回作业</button>
+              <div class="page-title">
+                <p>作业草稿</p>
+                <h1>编辑 AI 生成的作业草稿</h1>
+                <span>草稿页用于确认作业目标、题量、要求、Rubric 和面向学生的呈现。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>基础信息</p><h2>UML 类图关系补充练习</h2></div><button class="outline-button" type="button">重新生成</button></div>
+                <div class="form-stack">
+                  <label><span>标题</span><input value="UML 类图关系补充练习" /></label>
+                  <label><span>面向学生的要求</span><textarea rows="6">完成 5 道 UML 类图关系题，并用自己的话说明聚合、组合、依赖三种关系的区别。</textarea></label>
+                  <label><span>评分规则</span><textarea rows="5">题目正确率 60%，概念说明 30%，提交规范 10%。</textarea></label>
+                </div>
+              </section>
+              <section class="submission-card">
+                <div class="section-head"><div><p>确认动作</p><h2>进入发布前检查</h2></div></div>
+                <div class="button-row">
+                  <button class="primary-button" type="button" data-view="assignmentPublish">去发布确认</button>
+                  <button class="outline-button" type="button">保存草稿</button>
+                  <button class="outline-button" type="button" data-view="assignmentStudentPreview">预览学生端</button>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 草稿检查</p>
+                <h2>适合作为短作业，不适合再加简答</h2>
+                <small>本周已有结课文档任务，建议控制完成时间在 20 分钟内。</small>
+              </div>
+              <div class="assistant-card">
+                <p>AI 修改</p>
+                <textarea rows="5">把这份作业改成更轻量的课后巩固任务。</textarea>
+                <div class="action-list">
+                  <button type="button">减少题量</button>
+                  <button type="button">生成 Rubric</button>
+                  <button type="button">改写说明</button>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-assignmentStudentPreview">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="assignmentPublish">返回发布确认</button>
+              <div class="page-title">
+                <p>学生端预览</p>
+                <h1>学生将看到这份作业</h1>
+                <span>发布前从学生视角检查标题、要求、截止时间和 AI 可辅助的范围。</span>
+              </div>
+              <section class="detail-card">
+                <div class="section-head"><div><p>作业卡片</p><h2>UML 类图关系补充练习</h2></div><span class="status-pill">06/21 截止</span></div>
+                <p class="detail-copy">完成 5 道 UML 类图关系题，并用 150 字说明聚合、组合、依赖三种关系的区别。</p>
+              </section>
+              <section class="task-board">
+                <div class="section-head"><div><p>学生可用 AI</p><h2>允许解释题意，不允许直接给答案</h2></div></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>解释作业要求</strong><p>帮助学生理解任务边界</p></div><button type="button">允许</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>生成答案</strong><p>不允许直接生成可提交内容</p></div><button type="button">禁止</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 预览检查</p>
+                <h2>学生端说明清楚</h2>
+                <small>建议补一句“可以使用课堂笔记，但需自己完成说明”。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-publishSuccess">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="assignments">返回作业</button>
+              <div class="page-title">
+                <p>发布成功</p>
+                <h1>作业已发布，后续进入跟踪和提醒</h1>
+                <span>发布后不把教师带回空白状态，而是给出监控、提醒和讲评准备入口。</span>
+              </div>
+              <section class="task-board">
+                <div class="section-head"><div><p>后续动作</p><h2>AI 已建立跟踪任务</h2></div></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>24 小时后检查未开始学生</strong><p>自动进入作业压力分析</p></div><button type="button" data-view="assignments">查看</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>生成课堂讲评草稿</strong><p>提交后根据错题和作业结果生成</p></div><button type="button">准备</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 监控</p>
+                <h2>已加入作业压力雷达</h2>
+                <small>如果 48 小时后完成率低于 40%，建议自动提醒。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-batchGradingResult">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="grading">返回批改</button>
+              <div class="page-title">
+                <p>批量初评结果</p>
+                <h1>AI 初评完成，教师先处理异常项</h1>
+                <span>批量结果页不直接发布成绩，只帮助教师排序和筛出需要人工复核的提交。</span>
+              </div>
+              <section class="course-info">
+                <div><p>初评概览</p><h2>8 份提交已初评</h2><span>2 份异常、4 份可快速确认、2 份需要详细批注。</span></div>
+                <div class="course-stat-grid">
+                  <div><strong>82</strong><span>均分</span></div>
+                  <div><strong>2</strong><span>异常</span></div>
+                  <div><strong>4</strong><span>快确认</span></div>
+                </div>
+              </section>
+              <section class="task-board">
+                <div class="section-head"><div><p>异常提交</p><h2>优先复核</h2></div></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>林知夏 · 截图引用不足</strong><p>AI 初评 82，建议人工确认</p></div><button type="button" data-view="gradingDetail">批改</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>陈远 · 类图说明偏短</strong><p>AI 初评 76，需要详细反馈</p></div><button type="button" data-view="gradingDetail">批改</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 排序理由</p>
+                <h2>异常项会影响最终讲评</h2>
+                <small>建议先确认异常项，再批量采用低风险反馈。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-feedbackPublish">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="gradingDetail">返回批改详情</button>
+              <div class="page-title">
+                <p>反馈发布确认</p>
+                <h1>确认分数和反馈再发给学生</h1>
+                <span>最终评分动作保持教师确认，AI 反馈只是可采纳草稿。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>最终反馈</p><h2>林知夏 · 84 分 · 良好</h2></div></div>
+                <textarea rows="6">结构较清楚，但截图和图之间的对应关系还可以更明确。建议补充关键截图引用。</textarea>
+                <div class="button-row">
+                  <button class="primary-button" type="button" data-view="grading">发布反馈</button>
+                  <button class="outline-button" type="button" data-view="gradingDetail">继续修改</button>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 发送前检查</p>
+                <h2>反馈具体且语气适中</h2>
+                <small>没有发现分数和评语冲突。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-questionDetail">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="questionBank">返回题库</button>
+              <div class="page-title">
+                <p>题目详情</p>
+                <h1>编辑题目、解析和使用记录</h1>
+                <span>题库中的题目需要能被查看、编辑和分析，而不只是列表。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>题干</p><h2>聚合与组合关系如何区分？</h2></div><button class="outline-button" type="button">复制为新题</button></div>
+                <div class="form-stack">
+                  <label><span>题干内容</span><textarea rows="4">下列哪一项最能说明 UML 类图中组合关系区别于聚合关系的核心特征？</textarea></label>
+                  <label><span>解析</span><textarea rows="4">组合关系强调强拥有关系，部分对象通常不能脱离整体对象独立存在。</textarea></label>
+                </div>
+              </section>
+              <section class="course-info">
+                <div><p>使用记录</p><h2>最近 3 次练习正确率 58%</h2><span>适合继续用于课后巩固，但不建议作为考试题。</span></div>
+                <div class="course-stat-grid">
+                  <div><strong>58%</strong><span>正确率</span></div>
+                  <div><strong>中等</strong><span>难度</span></div>
+                  <div><strong>42</strong><span>使用次数</span></div>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 题目诊断</p>
+                <h2>题目区分度较好</h2>
+                <small>建议增加一个更贴近项目文档的干扰项。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-studentProfile">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="analytics">返回学情</button>
+              <div class="page-title">
+                <p>学生画像</p>
+                <h1>陈远 · 风险原因不是单一未提交</h1>
+                <span>学生画像把作业、练习、登录、反馈放在一起，帮助教师决定干预方式。</span>
+              </div>
+              <section class="course-info">
+                <div><p>风险摘要</p><h2>连续 3 天未复习错题</h2><span>结课文档未提交，类图关系正确率 42%。</span></div>
+                <div class="course-stat-grid">
+                  <div><strong>42%</strong><span>正确率</span></div>
+                  <div><strong>2</strong><span>未提交</span></div>
+                  <div><strong>3 天</strong><span>无记录</span></div>
+                </div>
+              </section>
+              <section class="task-board">
+                <div class="section-head"><div><p>干预建议</p><h2>先提醒，再安排补练</h2></div></div>
+                <div class="task-list">
+                  <article class="task-row active"><span class="task-index">01</span><div><strong>发送温和提醒</strong><p>说明未提交事项和补交入口</p></div><button type="button" data-view="interventionConfirm">生成</button></article>
+                  <article class="task-row"><span class="task-index">02</span><div><strong>推送 5 道类图关系题</strong><p>低压力补练</p></div><button type="button" data-view="questionDraft">生成</button></article>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 判断</p>
+                <h2>适合提醒，不适合直接警告</h2>
+                <small>学生最近不是全科下滑，而是集中在一个知识点和提交行为上。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-interventionConfirm">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="analytics">返回学情</button>
+              <div class="page-title">
+                <p>干预确认</p>
+                <h1>确认提醒内容后再发送</h1>
+                <span>AI 生成提醒草稿，但是否发送、发给谁、语气如何由教师确认。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>发送对象</p><h2>5 名风险学生</h2></div><button class="outline-button" type="button">编辑名单</button></div>
+                <textarea rows="7">你还有 2 项作业未提交，建议今天先完成结课设计文档说明。如果卡在类图关系，可以先完成系统推荐的 5 道补充练习。</textarea>
+                <div class="button-row">
+                  <button class="primary-button" type="button" data-view="analytics">确认发送</button>
+                  <button class="outline-button" type="button">保存草稿</button>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 语气检查</p>
+                <h2>语气温和，目标明确</h2>
+                <small>建议附上练习入口，减少学生不知道从哪里开始的问题。</small>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="view" id="view-collaborationDetail">
+          <div class="detail-grid">
+            <section class="content-panel">
+              <button class="back-button" type="button" data-view="collaboration">返回协作</button>
+              <div class="page-title">
+                <p>协作任务详情</p>
+                <h1>请助教复核 2 份异常提交</h1>
+                <span>协作详情页明确对象、截止时间、上下文和 AI 生成的消息，避免只是一条通知。</span>
+              </div>
+              <section class="submission-card">
+                <div class="section-head"><div><p>任务说明</p><h2>异常提交复核</h2></div><button class="outline-button" type="button">选择负责人</button></div>
+                <div class="form-stack">
+                  <label><span>负责人</span><input value="助教 · 李明" /></label>
+                  <label><span>截止时间</span><input value="今天 18:00 前" /></label>
+                  <label><span>说明</span><textarea rows="5">请复核林知夏和陈远的结课设计文档提交，重点看截图引用与类图说明是否一致。</textarea></label>
+                </div>
+                <div class="button-row">
+                  <button class="primary-button" type="button" data-view="collaboration">确认分派</button>
+                  <button class="outline-button" type="button">保存草稿</button>
+                </div>
+              </section>
+            </section>
+            <aside class="assistant-panel">
+              <div class="assistant-card current">
+                <p>AI 协作消息</p>
+                <h2>已生成简洁说明</h2>
+                <small>消息包含任务对象、截止时间和复核重点，可以直接发送给助教。</small>
               </div>
             </aside>
           </div>

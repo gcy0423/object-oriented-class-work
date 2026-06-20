@@ -17,6 +17,8 @@ import { workbenchView } from "./views/workbenchView.js";
 import { createInitialState } from "./state/appState.js";
 import { buildModelConfig, canManageAssessment, routeVisible, withErrorPatch, withLoadingPatch, withSavingPatch } from "./state/selectors.js";
 import { Store } from "./state/viewState.js";
+import { defaultRouteForUser, handleStudentAction, handleStudentSubmit, hydrateStudentWorkspace, renderStudentRoute, studentRouteVisible } from "./studentRuntime.js";
+import { defaultRouteForTeacher, handleTeacherAction, hydrateTeacherWorkspace, renderTeacherRoute, teacherRouteVisible } from "./teacherRuntime.js";
 import { readCheckedValues, readFormData } from "./utils/dom.js";
 import { compactErrors, validateAssignment, validateGrade, validateProfile, validateQuestion, validateQuestionBank } from "./utils/validation.js";
 import { routeTable, shellLayout, subtitleFor, titleFor } from "./widgets/layout.js";
@@ -54,10 +56,17 @@ class EduMindApp {
     this.api = new ApiClient();
     this.store = new Store(createInitialState());
     this.events = null;
+    this.isHydrating = false;
+    this.isRefreshing = false;
+    this.eventRefreshTimer = null;
+    this.lastEventRefreshAt = 0;
     this.store.subscribe(() => this.render());
     this.root.addEventListener("click", (event) => this.handleClick(event));
     this.root.addEventListener("submit", (event) => this.handleSubmit(event));
     this.root.addEventListener("change", (event) => this.handleChange(event));
+    if (typeof window !== "undefined") {
+      window.addEventListener("hashchange", () => this.syncRouteFromLocation());
+    }
   }
 
   async start() {
@@ -79,7 +88,52 @@ class EduMindApp {
       this.renderLogin();
       return;
     }
-    const route = routeVisible(state.route, state.user) ? state.route : "dashboard";
+    if (this.isHydrating) {
+      const route = this.resolveRoute(this.readRoute() || state.route, state.user);
+      if (studentRouteVisible(route, state.user)) {
+        this.root.innerHTML = `
+          ${renderStudentRoute({ ...state, route })}
+          ${toastView(state.toast)}
+        `;
+        return;
+      }
+      if (teacherRouteVisible(route, state.user)) {
+        this.root.innerHTML = `
+          ${renderTeacherRoute({ ...state, route })}
+          ${toastView(state.toast)}
+        `;
+        return;
+      }
+      this.root.innerHTML = `
+        ${shellLayout({
+          state: { ...state, route },
+          title: titleFor(route),
+          subtitle: subtitleFor(route, state.user),
+          content: `<section class="panel"><div class="empty-state">正在加载工作台数据...</div></section>`
+        })}
+        ${toastView(state.toast)}
+      `;
+      return;
+    }
+    const route = studentRouteVisible(state.route, state.user)
+      ? state.route
+      : routeVisible(state.route, state.user)
+        ? state.route
+        : defaultRouteForUser(state.user);
+    if (studentRouteVisible(route, state.user)) {
+      this.root.innerHTML = `
+        ${renderStudentRoute({ ...state, route })}
+        ${toastView(state.toast)}
+      `;
+      return;
+    }
+    if (teacherRouteVisible(route, state.user)) {
+      this.root.innerHTML = `
+        ${renderTeacherRoute({ ...state, route })}
+        ${toastView(state.toast)}
+      `;
+      return;
+    }
     const view = views[route] || views.dashboard;
     this.root.innerHTML = `
       ${shellLayout({
@@ -97,7 +151,7 @@ class EduMindApp {
       <section class="login-wrap">
         <div class="login-copy">
           <h1>EduMind Agent</h1>
-          <p>把学习、作业、题库、练习、统计、协作和 AI 面板放进一个原生 ESM 工作台，继续保持零构建依赖。</p>
+          <p>把学习计划、作业反馈、课程练习和协作消息集中到一个清晰的学习工作台。</p>
         </div>
         <form class="login-panel form-grid" data-form="login">
           <h2>进入系统</h2>
@@ -127,21 +181,32 @@ class EduMindApp {
   }
 
   async loadSession() {
+    this.isHydrating = true;
     this.patchLoading("session", true);
     try {
       const me = await this.api.me();
       const route = this.readRoute();
-      this.setState({ user: me.data.user, route, draft: { ...this.store.get().draft, profile: me.data.user } });
+      const normalizedRoute = this.resolveRoute(route, me.data.user);
+      this.writeRoute(normalizedRoute);
+      this.setState({ user: me.data.user, route: normalizedRoute, draft: { ...this.store.get().draft, profile: me.data.user } });
       await this.refreshApp();
       this.connectEvents();
     } finally {
       this.patchLoading("session", false);
+      this.isHydrating = false;
+      this.syncRouteFromLocation();
     }
   }
 
   readRoute() {
     const value = typeof window !== "undefined" ? String(window.location.hash || "").replace(/^#/, "") : "";
-    return routeTable[value] ? value : "dashboard";
+    if (!value) {
+      return "";
+    }
+    if (routeTable[value] || value.startsWith("student-") || value.startsWith("teacher-")) {
+      return value;
+    }
+    return "dashboard";
   }
 
   writeRoute(route) {
@@ -150,7 +215,49 @@ class EduMindApp {
     }
   }
 
+  resolveRoute(route, user = this.store.get().user) {
+    if (user?.role === "student" && (!route || route === "dashboard")) {
+      return defaultRouteForUser(user, "");
+    }
+    if ((user?.role === "teacher" || user?.role === "admin") && (!route || route === "dashboard" || route === "analytics" || route === "workbench" || route === "assessment-insight")) {
+      return defaultRouteForTeacher(user, route);
+    }
+    if (teacherRouteVisible(route, user)) {
+      return route;
+    }
+    if (user?.role === "teacher" || user?.role === "admin") {
+      return defaultRouteForTeacher(user, route);
+    }
+    if (studentRouteVisible(route, user) || routeVisible(route, user)) {
+      return route;
+    }
+    return user?.role === "teacher" || user?.role === "admin" ? defaultRouteForTeacher(user, "") : defaultRouteForUser(user, "");
+  }
+
+  syncRouteFromLocation() {
+    if (this.isHydrating) {
+      return;
+    }
+    const state = this.store.get();
+    if (!state.user) {
+      return;
+    }
+    const route = this.resolveRoute(this.readRoute(), state.user);
+    if (route !== this.readRoute()) {
+      this.writeRoute(route);
+    }
+    if (route !== state.route) {
+      this.setState({ route });
+      hydrateStudentWorkspace(this, { ...state, route }).catch(() => {});
+      hydrateTeacherWorkspace(this, { ...state, route }).catch(() => {});
+    }
+  }
+
   async refreshApp(message = "") {
+    if (this.isRefreshing) {
+      return;
+    }
+    this.isRefreshing = true;
     const state = this.store.get();
     this.patchLoading("dashboard", true);
     try {
@@ -216,6 +323,22 @@ class EduMindApp {
         workbenchCourseId ? this.api.analyticsCourseDeepReport(workbenchCourseId) : Promise.resolve({ data: null }),
         state.user?.id ? this.api.analyticsStudentProgress(state.user.id) : Promise.resolve({ data: null })
       ]);
+
+      const [
+        studentAiResultsResult,
+        studentAiTimelineResult,
+        studentTaskDraftsResult,
+        studentSubmissionDraftResult,
+        noteOrganizeHistoryResult
+      ] = state.user?.role === "student"
+        ? await Promise.allSettled([
+          this.api.studentAiResults({ type: "daily_plan", limit: 1 }),
+          this.api.studentAiTimeline({ limit: 12 }),
+          this.api.studentAiTaskDrafts(),
+          this.api.submissionDraft(state.selected.assignmentId ? { assignmentId: state.selected.assignmentId } : {}),
+          this.api.noteOrganizeResults()
+        ])
+        : [null, null, null, null, null];
 
       const knowledgeCourseId = state.filters.knowledge.courseId || firstCourseId;
       const knowledgeParams = {
@@ -300,6 +423,7 @@ class EduMindApp {
         gradingOverviewResult,
         rubricInsightResult,
         submissionInsightResult,
+        submissionEvidenceResult,
         sessionReviewResult,
         mistakeAnalysisResult,
         mistakeDetailResult,
@@ -310,6 +434,7 @@ class EduMindApp {
         isTeacher && insightAssignmentId ? this.api.assignmentGradingOverview(insightAssignmentId) : Promise.resolve({ data: null }),
         insightRubricId ? this.api.rubricInsight(insightRubricId) : Promise.resolve({ data: null }),
         isTeacher && insightSubmissionId ? this.api.submissionGradingInsight(insightSubmissionId) : Promise.resolve({ data: null }),
+        isTeacher && insightSubmissionId ? this.api.submissionStudentAiEvidence(insightSubmissionId) : Promise.resolve({ data: null }),
         insightPracticeSessionId ? this.api.practiceSessionReview(insightPracticeSessionId) : Promise.resolve({ data: null }),
         insightCourseId ? this.api.mistakeAnalysis(learnerScope) : Promise.resolve({ data: null }),
         insightMistakeId ? this.api.mistakeDetailAnalysis(insightMistakeId) : Promise.resolve({ data: null }),
@@ -523,7 +648,9 @@ class EduMindApp {
           overview: overviewResult.status === "fulfilled" ? overviewResult.value.data : null,
           teacher: teacherResult.status === "fulfilled" ? teacherResult.value.data : null,
           selectedCourse: state.analytics.selectedCourse,
-          selectedStudent: state.analytics.selectedStudent
+          selectedStudent: state.analytics.selectedStudent,
+          selectedStudentAiResults: state.analytics.selectedStudentAiResults || [],
+          selectedStudentAiTimeline: state.analytics.selectedStudentAiTimeline || []
         },
         workbench: {
           notifications: notificationsResult.status === "fulfilled" ? notificationsResult.value.data.items || [] : state.workbench.notifications,
@@ -553,7 +680,9 @@ class EduMindApp {
         assessmentInsight: {
           gradingOverview: gradingOverviewResult.status === "fulfilled" ? gradingOverviewResult.value.data : state.assessmentInsight.gradingOverview,
           rubricInsight: rubricInsightResult.status === "fulfilled" ? rubricInsightResult.value.data : state.assessmentInsight.rubricInsight,
-          submissionInsight: submissionInsightResult.status === "fulfilled" ? submissionInsightResult.value.data : state.assessmentInsight.submissionInsight,
+          submissionInsight: submissionInsightResult.status === "fulfilled"
+            ? { ...submissionInsightResult.value.data, aiEvidence: submissionEvidenceResult.status === "fulfilled" ? submissionEvidenceResult.value.data : null }
+            : state.assessmentInsight.submissionInsight,
           sessionReview: sessionReviewResult.status === "fulfilled" ? sessionReviewResult.value.data : state.assessmentInsight.sessionReview,
           adaptivePlan: state.assessmentInsight.adaptivePlan,
           mistakeAnalysis: mistakeAnalysisResult.status === "fulfilled" ? mistakeAnalysisResult.value.data : state.assessmentInsight.mistakeAnalysis,
@@ -609,14 +738,55 @@ class EduMindApp {
         settings: {
           health: healthResult.status === "fulfilled" ? healthResult.value.data : null,
           modelConfig: buildModelConfig(dashboard.meta?.provider || "")
-        }
+        },
+        student: state.user?.role === "student" ? {
+          ...state.student,
+          ai: {
+            ...state.student.ai,
+            dailyPlan: studentAiResultsResult?.status === "fulfilled"
+              ? firstItem(studentAiResultsResult.value.data.items || []) || state.student.ai.dailyPlan
+              : state.student.ai.dailyPlan,
+            timeline: studentAiTimelineResult?.status === "fulfilled" ? studentAiTimelineResult.value.data.items || [] : state.student.ai.timeline,
+            organizeHistory: noteOrganizeHistoryResult?.status === "fulfilled" ? noteOrganizeHistoryResult.value.data.items || [] : state.student.ai.organizeHistory
+          },
+          learning: {
+            ...state.student.learning,
+            taskDrafts: studentTaskDraftsResult?.status === "fulfilled" ? studentTaskDraftsResult.value.data.items || [] : state.student.learning.taskDrafts
+          },
+          assignments: {
+            ...state.student.assignments,
+            submitDraft: studentSubmissionDraftResult?.status === "fulfilled" && studentSubmissionDraftResult.value.data
+              ? studentSubmissionDraftResult.value.data
+              : state.student.assignments.submitDraft
+          }
+        } : state.student
       });
+      this.syncRouteFromLocation();
+      if (state.user?.role === "student") {
+        hydrateStudentWorkspace(this, this.store.get()).catch(() => {});
+      }
+      if (state.user?.role === "teacher" || state.user?.role === "admin") {
+        hydrateTeacherWorkspace(this, this.store.get()).catch(() => {});
+      }
       if (message) {
         setTimeout(() => this.setState({ toast: "" }), 2600);
       }
     } finally {
       this.patchLoading("dashboard", false);
+      this.isRefreshing = false;
     }
+  }
+
+  scheduleEventRefresh() {
+    const now = Date.now();
+    if (this.eventRefreshTimer || now - this.lastEventRefreshAt < 5000) {
+      return;
+    }
+    this.eventRefreshTimer = setTimeout(() => {
+      this.eventRefreshTimer = null;
+      this.lastEventRefreshAt = Date.now();
+      this.refreshApp().catch(() => {});
+    }, 250);
   }
 
   connectEvents() {
@@ -647,7 +817,7 @@ class EduMindApp {
       "submission.created",
       "practice.completed"
     ]) {
-      this.events.addEventListener(type, () => this.refreshApp().catch(() => {}));
+      this.events.addEventListener(type, () => this.scheduleEventRefresh());
     }
     this.events.onerror = () => {
       this.events?.close();
@@ -667,8 +837,14 @@ class EduMindApp {
     }
     const action = actionButton.dataset.action;
     try {
+      if (await handleStudentAction(this, actionButton)) {
+        return;
+      }
+      if (await handleTeacherAction(this, actionButton)) {
+        return;
+      }
       if (action === "route") {
-        const route = actionButton.dataset.route;
+        const route = this.resolveRoute(actionButton.dataset.route);
         this.writeRoute(route);
         this.setState({ route });
         return;
@@ -924,11 +1100,14 @@ class EduMindApp {
         return;
       }
       if (action === "load-submission-insight") {
-        const result = await this.api.submissionGradingInsight(actionButton.dataset.id);
+        const [result, evidence] = await Promise.all([
+          this.api.submissionGradingInsight(actionButton.dataset.id),
+          this.api.submissionStudentAiEvidence(actionButton.dataset.id)
+        ]);
         this.setState({
           route: "assessment-insight",
           filters: { ...this.store.get().filters, assessmentInsight: { ...this.store.get().filters.assessmentInsight, submissionId: actionButton.dataset.id } },
-          assessmentInsight: { ...this.store.get().assessmentInsight, submissionInsight: result.data }
+          assessmentInsight: { ...this.store.get().assessmentInsight, submissionInsight: { ...result.data, aiEvidence: evidence.data } }
         });
         return;
       }
@@ -947,8 +1126,35 @@ class EduMindApp {
         return;
       }
       if (action === "view-student") {
-        const result = await this.api.analyticsStudent(actionButton.dataset.id);
-        this.setState({ analytics: { ...this.store.get().analytics, selectedStudent: result.data }, route: "analytics" });
+        const [result, aiResults, aiTimeline] = await Promise.all([
+          this.api.analyticsStudent(actionButton.dataset.id),
+          this.api.teacherStudentAiResults(actionButton.dataset.id, { limit: 8 }),
+          this.api.teacherStudentAiTimeline(actionButton.dataset.id, { limit: 12 })
+        ]);
+        this.setState({
+          analytics: {
+            ...this.store.get().analytics,
+            selectedStudent: result.data,
+            selectedStudentAiResults: aiResults.data.items || [],
+            selectedStudentAiTimeline: aiTimeline.data.items || []
+          },
+          route: "analytics"
+        });
+        return;
+      }
+      if (action === "send-ai-intervention") {
+        const student = this.store.get().analytics.selectedStudent;
+        if (!student) {
+          return;
+        }
+        await this.api.createTeacherIntervention(actionButton.dataset.id, {
+          courseId: student.learning?.goals?.[0]?.courseId || "",
+          reason: "教师基于学生 AI 行动完成率和提交证据发起干预。",
+          message: `建议先补齐 ${student.recommendations?.[0] || "当前最关键的一项学习行动"}。`,
+          dueAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
+          channels: ["in_app"]
+        });
+        await this.refreshApp("教师干预提醒已发送。");
         return;
       }
       if (action === "view-identity-profile") {
@@ -1041,9 +1247,24 @@ class EduMindApp {
       if (form.dataset.form === "login") {
         const result = await this.api.login(data);
         this.api.setToken(result.data.token);
-        this.setState({ user: result.data.user, draft: { ...this.store.get().draft, profile: result.data.user } });
-        await this.refreshApp("登录成功。");
+        const requestedRoute = this.resolveRoute(this.readRoute(), result.data.user);
+        const initialRoute = this.resolveRoute("", result.data.user);
+        const nextRoute = requestedRoute || initialRoute;
+        if (this.readRoute() !== nextRoute) {
+          this.writeRoute(nextRoute);
+        }
+        this.isHydrating = true;
+        this.setState({ user: result.data.user, route: nextRoute, draft: { ...this.store.get().draft, profile: result.data.user } });
+        try {
+          await this.refreshApp("登录成功。");
+        } finally {
+          this.isHydrating = false;
+        }
+        this.setState({ route: nextRoute });
         this.connectEvents();
+        return;
+      }
+      if (await handleStudentSubmit(this, form, data)) {
         return;
       }
       if (form.dataset.form === "goal") {

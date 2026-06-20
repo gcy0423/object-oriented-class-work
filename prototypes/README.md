@@ -17,12 +17,23 @@ D:\Project\mxdx\object-oriented-class-work\prototypes\student-ai-first-v2\index.
 页面范围：
 
 - AI 学习台
+- AI 分析结果
 - 学习
+- 学习任务详情
 - 作业
 - 作业详情
 - 作业提交
+- 作业历史
+- 教师反馈
+- 提交预览
+- 提交成功
 - 练习与错题
+- 练习答题
+- 练习结果
+- 错题详情
 - 课程笔记
+- 笔记编辑
+- AI 笔记整理结果
 
 ## 教师端
 
@@ -33,15 +44,25 @@ D:\Project\mxdx\object-oriented-class-work\prototypes\teacher-ai-first\index.htm
 页面范围：
 
 - AI 教学台
+- AI 今日方案
 - 作业
+- 作业草稿
 - 发布确认
+- 学生端预览
+- 发布成功
 - 作业详情
 - 批改
+- 批量初评结果
 - 批改详情
+- 反馈发布确认
 - 题库
+- 题目详情
 - 题目草稿
 - 学情分析
+- 学生画像
+- 干预确认
 - 协作
+- 协作任务详情
 
 ## 当前设计原则
 

@@ -1,8 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { ApiClient } from "../client/src/api.js";
+import { StudentAiAdapter } from "../client/src/ai/studentAiAdapter.js";
 import { createInitialState } from "../client/src/state/appState.js";
 import { buildModelConfig, canManageAssessment, selectPracticeProgress, selectQuestionBankViewModel } from "../client/src/state/selectors.js";
+import { selectStudentAiContext, selectStudentAssignmentsModel, selectStudentPracticeSessionModel } from "../client/src/state/studentSelectors.js";
+import { selectTeacherAiPanelModel } from "../client/src/state/teacherSelectors.js";
 import { formatDate, formatPercent } from "../client/src/utils/format.js";
 import { toQuery } from "../client/src/utils/query.js";
 import { compactErrors, validateAssignment, validateQuestion } from "../client/src/utils/validation.js";
@@ -16,6 +19,27 @@ import { practiceView } from "../client/src/views/practiceView.js";
 import { questionBankManageView } from "../client/src/views/questionBankManageView.js";
 import { reportView } from "../client/src/views/reportView.js";
 import { settingsView } from "../client/src/views/settingsView.js";
+import { studentAiView } from "../client/src/views/student/studentAiView.js";
+import { studentAiInsightView } from "../client/src/views/student/studentAiInsightView.js";
+import { studentLearningView } from "../client/src/views/student/studentLearningView.js";
+import { studentTaskDetailView } from "../client/src/views/student/studentTaskDetailView.js";
+import { studentAssignmentsView } from "../client/src/views/student/studentAssignmentsView.js";
+import { studentAssignmentDetailView } from "../client/src/views/student/studentAssignmentDetailView.js";
+import { studentSubmitView } from "../client/src/views/student/studentSubmitView.js";
+import { studentSubmitPreviewView } from "../client/src/views/student/studentSubmitPreviewView.js";
+import { studentSubmitSuccessView } from "../client/src/views/student/studentSubmitSuccessView.js";
+import { studentAssignmentHistoryView } from "../client/src/views/student/studentAssignmentHistoryView.js";
+import { studentFeedbackView } from "../client/src/views/student/studentFeedbackView.js";
+import { studentPracticeView } from "../client/src/views/student/studentPracticeView.js";
+import { studentPracticeSessionView } from "../client/src/views/student/studentPracticeSessionView.js";
+import { studentPracticeResultView } from "../client/src/views/student/studentPracticeResultView.js";
+import { studentMistakeDetailView } from "../client/src/views/student/studentMistakeDetailView.js";
+import { studentNotesView } from "../client/src/views/student/studentNotesView.js";
+import { studentNoteEditorView } from "../client/src/views/student/studentNoteEditorView.js";
+import { studentNoteAiResultView } from "../client/src/views/student/studentNoteAiResultView.js";
+import { STUDENT_PRIMARY_ROUTES, studentRouteTable } from "../client/src/views/studentRouteTable.js";
+import { defaultRouteForUser, hydrateStudentWorkspace } from "../client/src/studentRuntime.js";
+import { defaultRouteForTeacher, hydrateTeacherWorkspace, renderTeacherRoute } from "../client/src/teacherRuntime.js";
 import { workbenchView } from "../client/src/views/workbenchView.js";
 
 test("format and query utilities support v6 view rendering", () => {
@@ -79,6 +103,10 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.deleteQuestion("question_1");
     await client.practiceSessions({ courseId: "course_ood" });
     await client.health();
+    await client.studentDashboard();
+    await client.studentCourses();
+    await client.studentAssignments({ status: "published" });
+    await client.studentAssignmentDetail("assignment_1");
     await client.analyticsFunnel({ courseId: "course_ood" });
     await client.notificationSummary();
     await client.notifications({ category: "scheduler" });
@@ -138,6 +166,13 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     await client.assignmentGradingReport("assignment_1", { format: "csv" });
     await client.mistakeReviewReport({ studentId: "user_student" });
     await client.aiUsageReport({ format: "html" });
+    await client.summarizeNote({ noteId: "note_1" });
+    await client.studentAiDailyPlan({ focus: "today" });
+    await client.studentAiWeaknessInsight({ courseId: "course_ood" });
+    await client.studentAiTaskDraft({ request: "拆任务" });
+    await client.studentAiAssignmentGuide({ assignment: { id: "assignment_1" } });
+    await client.studentAiSubmissionCheck({ draft: { content: "draft" } });
+    await client.studentAiNoteOrganize({ courseId: "course_ood", note: { title: "UML" } });
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -149,6 +184,10 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/questions/question_1", method: "DELETE" },
     { url: "http://demo.local/api/practice-sessions?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/health", method: "GET" },
+    { url: "http://demo.local/api/dashboard", method: "GET" },
+    { url: "http://demo.local/api/courses", method: "GET" },
+    { url: "http://demo.local/api/assignments?status=published", method: "GET" },
+    { url: "http://demo.local/api/assignments/assignment_1", method: "GET" },
     { url: "http://demo.local/api/analytics/funnel?courseId=course_ood", method: "GET" },
     { url: "http://demo.local/api/notifications/summary", method: "GET" },
     { url: "http://demo.local/api/notifications?category=scheduler", method: "GET" },
@@ -207,8 +246,339 @@ test("ApiClient v6 methods call expected paths and methods", async () => {
     { url: "http://demo.local/api/reports/course-weekly?courseId=course_ood&format=markdown", method: "GET" },
     { url: "http://demo.local/api/reports/assignments/assignment_1/grading?format=csv", method: "GET" },
     { url: "http://demo.local/api/reports/mistakes/review?studentId=user_student", method: "GET" },
-    { url: "http://demo.local/api/reports/ai-usage?format=html", method: "GET" }
+    { url: "http://demo.local/api/reports/ai-usage?format=html", method: "GET" },
+    { url: "http://demo.local/api/ai/summarize", method: "POST" },
+    { url: "http://demo.local/api/student-ai/daily-plan", method: "POST" },
+    { url: "http://demo.local/api/student-ai/weakness-insight", method: "POST" },
+    { url: "http://demo.local/api/student-ai/task-drafts", method: "POST" },
+    { url: "http://demo.local/api/student-ai/assignment-guide", method: "POST" },
+    { url: "http://demo.local/api/student-ai/submission-check", method: "POST" },
+    { url: "http://demo.local/api/student-ai/note-organize", method: "POST" }
   ]);
+});
+
+test("student route table and selectors expose stable view models", () => {
+  const state = createInitialState();
+  state.user = { id: "user_student", name: "林知夏", role: "student", avatar: "夏" };
+  state.dashboard = {
+    courses: [{ id: "course_ood", title: "面向对象技术与方法" }],
+    goals: [{ id: "goal_1", courseId: "course_ood", title: "完成 UML 复盘", targetDate: "2026-06-21", status: "active" }],
+    tasks: [{ id: "task_1", goalId: "goal_1", title: "整理顺序图", status: "todo", estimateMinutes: 40, dueDate: "2026-06-20" }],
+    notes: [{ id: "note_1", courseId: "course_ood", title: "UML 笔记", content: "对象协作", tags: ["UML"] }],
+    assignments: [
+      { id: "assignment_1", courseId: "course_ood", title: "领域模型作业", description: "提交 UML 图", dueAt: "2026-06-21T23:59:59.000Z", status: "published" }
+    ],
+    metrics: { activeGoals: 1, completionRate: 20, studyMinutes: 40, noteCount: 1 }
+  };
+  state.assessment.assignments = state.dashboard.assignments;
+  state.assessment.practiceSession = { id: "practice_1", questions: [{ id: "q_1", stem: "题干" }, { id: "q_2", stem: "题干2" }], answers: [{ id: "a_1", questionId: "q_1" }] };
+  state.assessment.mistakes = [{ id: "mistake_1", questionId: "q_1", question: { concept: "顺序图", stem: "题目" }, status: "open" }];
+  state.student.assignments.mode = "deadline";
+
+  assert.equal(STUDENT_PRIMARY_ROUTES.length, 5);
+  assert.equal(studentRouteTable["student-ai"].title, "AI 学习台");
+  assert.equal(selectStudentAssignmentsModel(state).deadlineList.length, 1);
+  assert.equal(selectStudentPracticeSessionModel(state).answeredCount, 1);
+  assert.equal(selectStudentAiContext(state, "student-ai").assignments.length, 1);
+});
+
+test("student default route prefers AI workspace for empty hash and dashboard fallback", () => {
+  const student = { role: "student" };
+  const teacher = { role: "teacher" };
+
+  assert.equal(defaultRouteForUser(student, ""), "student-ai");
+  assert.equal(defaultRouteForUser(student, "dashboard"), "student-ai");
+  assert.equal(defaultRouteForUser(student, "unknown-route"), "student-ai");
+  assert.equal(defaultRouteForUser(student, "student-assignments"), "student-assignments");
+  assert.equal(defaultRouteForUser(teacher, ""), "dashboard");
+});
+
+test("teacher runtime defaults to v11 shell and context-aware AI panel", () => {
+  const teacher = { role: "teacher" };
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher", avatar: "周" };
+  state.route = "teacher-home";
+  state.dashboard = {
+    courses: [{ id: "course_ood", title: "面向对象技术与方法", description: "UML 和设计模式。" }],
+    assignments: [{ id: "assignment_ood_model", courseId: "course_ood", title: "领域模型设计作业", description: "提交 UML 图。", dueAt: "2026-06-21T23:59:59.000Z", status: "published" }]
+  };
+  state.assessment.assignments = state.dashboard.assignments;
+  state.assessment.assignmentDetail = {
+    assignment: state.dashboard.assignments[0],
+    submissions: [{ id: "submission_1", studentId: "user_student", studentSnapshot: { name: "林知夏" }, content: "提交正文", status: "submitted", submittedAt: "2026-06-20T00:00:00.000Z" }],
+    submissionSummary: { submitted: 1, graded: 0 }
+  };
+  state.identityAdmin.users = [{ id: "user_student", name: "林知夏", role: "student" }];
+  state.assessmentInsight.riskRegister = { items: [{ studentId: "user_student", risk: { level: "medium" }, assignmentCompletionRate: 60, openMistakes: 2, weakConcepts: [{ concept: "顺序图" }] }] };
+
+  assert.equal(defaultRouteForTeacher(teacher, ""), "teacher-home");
+  assert.equal(defaultRouteForTeacher(teacher, "dashboard"), "teacher-home");
+  assert.equal(defaultRouteForTeacher(teacher, "assignments"), "teacher-assignment");
+
+  const homePanel = selectTeacherAiPanelModel(state, "teacher-home");
+  const studentPanel = selectTeacherAiPanelModel({ ...state, route: "teacher-student", selected: { ...state.selected, studentId: "user_student" } }, "teacher-student");
+  assert.notEqual(homePanel.title, studentPanel.title);
+  assert.notEqual(homePanel.summary, studentPanel.summary);
+
+  const rendered = renderTeacherRoute(state);
+  assert.match(rendered, /teacher-app-shell/);
+  assert.match(rendered, /AI 教学台/);
+  assert.match(rendered, /面向对象技术与方法/);
+  const visibleMarkup = rendered.replace(/\sdata-id="[^"]*"/g, "");
+  assert.doesNotMatch(visibleMarkup, /course_ood|assignment_ood_model|user_student/);
+});
+
+test("teacher workspace hydrates assignment context without falling back to old pages", async () => {
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher" };
+  state.route = "teacher-assignment";
+  state.dashboard = { courses: [{ id: "course_ood", title: "面向对象技术与方法" }] };
+  state.assessment.assignments = [{ id: "assignment_ood_model", courseId: "course_ood", title: "领域模型设计作业", status: "published" }];
+
+  const calls = [];
+  const app = {
+    store: { get: () => state },
+    api: {
+      async assignmentDetail(id) {
+        calls.push(["detail", id]);
+        return {
+          data: {
+            assignment: state.assessment.assignments[0],
+            submissions: [{ id: "submission_1", studentId: "user_student", studentSnapshot: { name: "林知夏" }, content: "提交正文", status: "submitted" }],
+            submissionSummary: { submitted: 1, graded: 0 }
+          }
+        };
+      },
+      async assignmentGradingOverview(id) {
+        calls.push(["overview", id]);
+        return { data: { submissionCount: 1, gradedCount: 0, average: 0, consistency: { status: "stable" }, rows: [] } };
+      }
+    },
+    setState(patch) {
+      Object.assign(state, patch);
+    }
+  };
+
+  await hydrateTeacherWorkspace(app, state);
+
+  assert.deepEqual(calls, [["detail", "assignment_ood_model"], ["overview", "assignment_ood_model"]]);
+  assert.equal(state.assessment.assignmentDetail.submissions.length, 1);
+  const rendered = renderTeacherRoute(state);
+  assert.match(rendered, /teacher-app-shell/);
+  assert.match(rendered, /林知夏/);
+  assert.doesNotMatch(rendered.replace(/\sdata-id="[^"]*"/g, ""), /assignment_ood_model|submission_1|user_student/);
+});
+
+test("StudentAiAdapter prefers official student AI APIs when available", async () => {
+  const calls = [];
+  const adapter = new StudentAiAdapter({
+    api: {
+      async studentAiDailyPlan(input) {
+        calls.push(["daily", input.route]);
+        return {
+          data: {
+            type: "daily_plan",
+            summary: "official daily",
+            actions: [{ label: "查看作业", route: "student-assignments", detail: "优先处理" }],
+            risks: [],
+            evidence: [],
+            questions: [],
+            provider: "official-api",
+            generatedAt: "2026-06-18T00:00:00.000Z"
+          }
+        };
+      },
+      async studentAiWeaknessInsight() {
+        calls.push(["weakness"]);
+        return {
+          data: {
+            type: "weakness_insight",
+            summary: "official weakness",
+            weaknesses: [{ title: "类图关系", score: 62, action: "再练习", evidence: ["错题 3 道"] }],
+            actions: [],
+            risks: [],
+            evidence: [],
+            questions: [],
+            provider: "official-api",
+            generatedAt: "2026-06-18T00:00:00.000Z"
+          }
+        };
+      },
+      async studentAiTaskDraft() {
+        calls.push(["task"]);
+        return {
+          data: {
+            type: "task_draft",
+            summary: "official draft",
+            draft: { title: "复习类图关系", type: "练习巩固", estimateMinutes: 30, dueDate: "2026-06-21", goalId: "goal_1", courseId: "course_ood", steps: ["看笔记"], doneDefinition: ["能解释"] },
+            actions: [],
+            risks: [],
+            evidence: [],
+            questions: [],
+            provider: "official-api",
+            generatedAt: "2026-06-18T00:00:00.000Z"
+          }
+        };
+      },
+      async studentAiAssignmentGuide() {
+        calls.push(["guide"]);
+        return {
+          data: {
+            type: "assignment_guide",
+            summary: "official guide",
+            outline: ["确认交付物"],
+            checklist: ["检查关系说明"],
+            actions: [],
+            risks: [],
+            evidence: [],
+            questions: [],
+            provider: "official-api",
+            generatedAt: "2026-06-18T00:00:00.000Z"
+          }
+        };
+      },
+      async studentAiSubmissionCheck() {
+        calls.push(["check"]);
+        return {
+          data: {
+            type: "submission_check",
+            summary: "official check",
+            completionEstimate: 88,
+            issues: ["补充关系理由"],
+            strengths: ["结构完整"],
+            actions: [],
+            risks: [],
+            evidence: [],
+            questions: [],
+            provider: "official-api",
+            generatedAt: "2026-06-18T00:00:00.000Z"
+          }
+        };
+      },
+      async studentAiNoteOrganize() {
+        calls.push(["note"]);
+        return {
+          data: {
+            type: "note_organize",
+            summary: "official note",
+            cards: [{ front: "Q", back: "A" }],
+            assignmentParagraphs: ["段落"],
+            actions: [],
+            risks: [],
+            evidence: [],
+            questions: [],
+            provider: "official-api",
+            generatedAt: "2026-06-18T00:00:00.000Z"
+          }
+        };
+      }
+    }
+  });
+  const context = {
+    route: "student-ai",
+    goals: [{ id: "goal_1", title: "完成 UML 复盘" }],
+    assignments: [{ id: "assignment_1", title: "领域模型作业" }],
+    submitDraft: { content: "提交正文", attachmentsText: "" },
+    noteDraft: { title: "UML", content: "对象协作" }
+  };
+
+  const dailyPlan = await adapter.buildDailyPlan(context);
+  const weakness = await adapter.buildWeaknessInsight(context);
+  const taskDraft = await adapter.draftLearningTask(context);
+  const guide = await adapter.guideAssignment(context);
+  const check = await adapter.checkSubmissionDraft(context);
+  const organize = await adapter.organizeNote(context);
+
+  assert.equal(dailyPlan.provider, "official-api");
+  assert.equal(weakness.weaknesses[0].title, "类图关系");
+  assert.equal(taskDraft.draft.goalId, "goal_1");
+  assert.equal(guide.outline[0], "确认交付物");
+  assert.equal(check.completionEstimate, 88);
+  assert.equal(organize.cards[0].front, "Q");
+  assert.deepEqual(calls.map((entry) => entry[0]), ["daily", "weakness", "task", "guide", "check", "note"]);
+});
+
+test("StudentAiAdapter returns structured fallback without throwing", async () => {
+  const adapter = new StudentAiAdapter({
+    api: {
+      async askAI() {
+        throw new Error("offline");
+      },
+      async summarizeNote() {
+        throw new Error("offline");
+      }
+    }
+  });
+  const context = {
+    route: "student-ai",
+    user: { id: "user_student", name: "林知夏" },
+    goals: [{ id: "goal_1", title: "完成 UML 复盘", targetDate: "2026-06-21" }],
+    tasks: [{ id: "task_1", title: "整理顺序图", status: "todo" }],
+    assignments: [{ id: "assignment_1", title: "领域模型作业", dueAt: "2026-06-21T23:59:59.000Z" }],
+    mistakes: [{ id: "mistake_1", question: { concept: "顺序图", stem: "题目" } }],
+    submitDraft: { content: "我的提交草稿", attachmentsText: "" },
+    noteDraft: { title: "UML", content: "对象协作", tags: "UML" }
+  };
+
+  const dailyPlan = await adapter.buildDailyPlan(context);
+  const weakness = await adapter.buildWeaknessInsight(context);
+  const taskDraft = await adapter.draftLearningTask(context);
+  const guide = await adapter.guideAssignment(context);
+  const check = await adapter.checkSubmissionDraft(context);
+  const organize = await adapter.organizeNote(context);
+
+  assert.equal(dailyPlan.type, "daily_plan");
+  assert.ok(Array.isArray(dailyPlan.actions));
+  assert.ok(Array.isArray(weakness.weaknesses));
+  assert.ok(taskDraft.draft.title);
+  assert.ok(Array.isArray(guide.outline));
+  assert.equal(typeof check.completionEstimate, "number");
+  assert.ok(Array.isArray(organize.cards));
+});
+
+test("student runtime can auto-hydrate default AI cards for student routes", async () => {
+  const state = createInitialState();
+  state.user = { id: "user_student", name: "林知夏", role: "student", avatar: "夏" };
+  state.route = "student-assignment-detail";
+  state.dashboard = {
+    courses: [{ id: "course_ood", title: "面向对象技术与方法" }],
+    goals: [{ id: "goal_1", courseId: "course_ood", title: "完成 UML 复盘", targetDate: "2026-06-21" }],
+    tasks: [{ id: "task_1", goalId: "goal_1", title: "整理顺序图", status: "todo" }],
+    notes: [],
+    assignments: [{ id: "assignment_1", courseId: "course_ood", title: "领域模型作业", dueAt: "2026-06-21T23:59:59.000Z" }]
+  };
+  state.assessment.assignmentDetail = {
+    assignment: { id: "assignment_1", courseId: "course_ood", title: "领域模型作业", description: "提交 UML 图", dueAt: "2026-06-21T23:59:59.000Z" },
+    submissions: [],
+    rubric: null,
+    submissionSummary: { submitted: 0, graded: 0 }
+  };
+  state.assessment.mistakes = [{ id: "mistake_1", question: { concept: "顺序图", stem: "题目" }, status: "open" }];
+
+  const store = { current: state };
+  const app = {
+    api: {
+      async askAI() {
+        throw new Error("offline");
+      },
+      async summarizeNote() {
+        throw new Error("offline");
+      }
+    },
+    store: {
+      get() {
+        return store.current;
+      }
+    },
+    setState(patch) {
+      store.current = { ...store.current, ...patch };
+    }
+  };
+
+  await hydrateStudentWorkspace(app, state);
+
+  assert.equal(store.current.student.ai.dailyPlan?.type, "daily_plan");
+  assert.equal(store.current.student.ai.assignmentGuide?.type, "assignment_guide");
 });
 
 test("v6 views render as importable ESM modules without build tools", () => {
@@ -352,25 +722,129 @@ test("v6 views render as importable ESM modules without build tools", () => {
   state.settings.health = { service: "gateway-service", status: "up", time: "2026-06-16T00:00:00.000Z", services: [] };
   state.settings.modelConfig = buildModelConfig(state.provider);
   const renderedWorkbench = workbenchView(state);
-  assert.match(renderedWorkbench, /Learning Funnel/);
+  assert.match(renderedWorkbench, /学习漏斗/);
   const renderedKnowledge = knowledgeView(state);
-  assert.match(renderedKnowledge, /Graph Evidence/);
+  assert.match(renderedKnowledge, /知识关联/);
   const renderedAssessmentInsight = assessmentInsightView(state);
-  assert.match(renderedAssessmentInsight, /Teacher Grading Insight/);
+  assert.match(renderedAssessmentInsight, /教师评分洞察/);
   const renderedReports = reportView(state);
-  assert.match(renderedReports, /Report Catalog/);
-  assert.match(renderedReports, /Export Preview/);
+  assert.match(renderedReports, /报告目录/);
+  assert.match(renderedReports, /导出预览/);
   const renderedIdentity = identityAdminView(state);
-  assert.match(renderedIdentity, /User Directory/);
-  assert.match(renderedIdentity, /Role Permission Matrix/);
+  assert.match(renderedIdentity, /用户目录/);
+  assert.match(renderedIdentity, /角色权限矩阵/);
   const renderedOperations = operationsView(state);
-  assert.match(renderedOperations, /Import Preview/);
-  assert.match(renderedOperations, /Audit Digest/);
-  assert.match(renderedOperations, /Deep Portfolio/);
+  assert.match(renderedOperations, /导入预览/);
+  assert.match(renderedOperations, /审计摘要/);
+  assert.match(renderedOperations, /学习档案深度分析/);
 
   assert.match(assignmentManageView(state), /作业列表/);
   assert.match(questionBankManageView(state), /题库列表/);
   assert.match(practiceView(state), /练习历史/);
   assert.match(analyticsView(state), /课程统计/);
   assert.match(settingsView(state), /模型配置说明/);
+  state.route = "student-ai";
+  state.assessment.assignmentDetail = { assignment: state.assessment.assignments[0], submissions: [], rubric: null, submissionSummary: { submitted: 0, graded: 0 } };
+  state.assessmentInsight.mistakeDetail = { question: { stem: "错题", answer: "A", analysis: "解析" }, answer: { answer: "B" }, remediation: { advice: "复盘。" } };
+  state.student.ai.dailyPlan = { summary: "先完成任务。", actions: [], risks: [], evidence: [], questions: [] };
+  state.student.ai.weaknessInsight = { summary: "薄弱点", actions: [], risks: [], evidence: [], questions: [], weaknesses: [{ title: "顺序图", score: 55, action: "再做题", evidence: ["题目"] }] };
+  state.student.ai.assignmentGuide = { summary: "拆解作业", actions: [], risks: [], evidence: [], questions: [], outline: ["步骤"], checklist: ["检查"] };
+  state.student.ai.submissionCheck = { summary: "自检", actions: [], risks: [], evidence: [], questions: [], completionEstimate: 80, issues: [], strengths: [] };
+  state.student.ai.noteOrganizeResult = { summary: "整理完成", actions: [], risks: [], evidence: [], questions: [], cards: [{ front: "Q", back: "A" }], assignmentParagraphs: ["段落"] };
+  state.student.notes.editorDraft = { title: "UML", content: "对象协作", tags: "UML" };
+  state.student.assignments.submitDraft = { assignmentId: "assignment_1", content: "提交正文", attachmentsText: "diagram.png: https://demo.local/file.png", updatedAt: "2026-06-18T00:00:00.000Z" };
+  state.assessment.questionBanks = [{ id: "bank_1", title: "题库", courseId: "course_ood", description: "说明" }];
+  state.assessment.practiceHistory = [{ id: "practice_1", correctRate: 80, startedAt: "2026-06-18T00:00:00.000Z" }];
+  state.assessment.practiceSession = { id: "practice_1", questions: [{ id: "q_1", stem: "题干", choices: [{ id: "A", text: "选项A" }] }], answers: [] };
+
+  assert.match(studentAiView(state), /AI 快捷指令/);
+  assert.match(studentAiInsightView(state), /薄弱点排序/);
+  assert.match(studentLearningView(state), /任务规划区/);
+  assert.match(studentTaskDetailView(state), /任务详情/);
+  assert.match(studentAssignmentsView(state), /作业三视图/);
+  assert.match(studentAssignmentDetailView(state), /作业要求/);
+  assert.match(studentSubmitView(state), /提交内容/);
+  assert.match(studentSubmitPreviewView(state), /提交预览/);
+  assert.match(studentSubmitSuccessView(state), /提交成功/);
+  assert.match(studentAssignmentHistoryView(state), /作业历史/);
+  assert.match(studentFeedbackView(state), /教师反馈/);
+  assert.match(studentPracticeView(state), /练习入口/);
+  assert.match(studentPracticeSessionView(state), /答题卡/);
+  assert.match(studentPracticeResultView(state), /练习结果/);
+  assert.match(studentMistakeDetailView(state), /错题详情/);
+  assert.match(studentNotesView(state), /当前课程笔记/);
+  assert.match(studentNoteEditorView(state), /笔记编辑/);
+  assert.match(studentNoteAiResultView(state), /AI 整理结果/);
+});
+
+test("student detail views escape untrusted HTML content", () => {
+  const state = createInitialState();
+  state.user = { id: "user_student", name: "林知夏", role: "student" };
+  state.assessment.assignmentDetail = {
+    assignment: { id: "assignment_1", courseId: "course_ood", title: "<img src=x onerror=1>", description: "<script>alert(1)</script>", dueAt: "2026-06-21" },
+    submissions: [{ submittedAt: "<b>now</b>", content: "<svg/onload=1>" }],
+    rubric: null,
+    submissionSummary: { submitted: 1, graded: 0 }
+  };
+  state.assessmentInsight.mistakeDetail = {
+    question: { stem: "<iframe>", answer: "<bad>", analysis: "<unsafe>" },
+    answer: { answer: "<mine>" },
+    remediation: { advice: "<advice>" }
+  };
+  state.student.ai.weaknessInsight = {
+    summary: "ok",
+    actions: [],
+    risks: [],
+    evidence: [],
+    questions: [],
+    weaknesses: [{ title: "<weak>", score: 55, action: "<fix>", evidence: ["<proof>"] }]
+  };
+  state.student.ai.noteOrganizeResult = {
+    summary: "ok",
+    actions: [{ label: "查看", route: 'student-assignments" autofocus data-pwn="1', detail: '" onclick="evil()' }],
+    risks: [],
+    evidence: [],
+    questions: [],
+    cards: [{ front: "<front>", back: "<back>" }],
+    assignmentParagraphs: ["<para>"]
+  };
+  state.student.assignments.submitDraft = {
+    assignmentId: "assignment_1",
+    content: "<draft>",
+    attachmentsText: "file:<unsafe>",
+    updatedAt: "2026-06-18T00:00:00.000Z"
+  };
+  state.student.assignments.lastSubmission = {
+    id: '<submission" data-bad="1>',
+    submittedAt: "<just-now>"
+  };
+  state.assessment.practiceSession = {
+    id: "practice_1",
+    questions: [{ id: "q_1", stem: "题干", choices: [] }],
+    answers: []
+  };
+
+  const renderedDetail = studentAssignmentDetailView(state);
+  const renderedInsight = studentAiInsightView(state);
+  const renderedPreview = studentSubmitPreviewView(state);
+  const renderedMistake = studentMistakeDetailView(state);
+  const renderedNotes = studentNoteAiResultView(state);
+  const renderedSuccess = studentSubmitSuccessView(state);
+  const renderedSession = studentPracticeSessionView(state);
+
+  assert.doesNotMatch(renderedDetail, /<script>|<img|<svg|<b>now<\/b>/);
+  assert.match(renderedDetail, /&lt;img src=x onerror=1&gt;/);
+  assert.doesNotMatch(renderedInsight, /<weak>|<fix>|<proof>/);
+  assert.match(renderedInsight, /&lt;weak&gt;/);
+  assert.doesNotMatch(renderedPreview, /<draft>|<unsafe>/);
+  assert.match(renderedPreview, /&lt;draft&gt;/);
+  assert.doesNotMatch(renderedMistake, /<iframe>|<advice>/);
+  assert.match(renderedMistake, /&lt;iframe&gt;/);
+  assert.doesNotMatch(renderedNotes, /<front>|<para>/);
+  assert.match(renderedNotes, /&lt;front&gt;/);
+  assert.doesNotMatch(renderedNotes, /data-route="student-assignments" autofocus|data-detail="" onclick=/);
+  assert.match(renderedNotes, /data-route="student-assignments&quot; autofocus data-pwn=&quot;1"/);
+  assert.doesNotMatch(renderedSuccess, /<li[^>]+data-bad=|<just-now>/);
+  assert.match(renderedSuccess, /&lt;submission&quot; data-bad=&quot;1&gt;/);
+  assert.match(renderedSession, /data-index="0"/);
 });

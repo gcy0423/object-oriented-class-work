@@ -48,7 +48,11 @@ export function createInitialState() {
       operationImport: false,
       operationCommit: false,
       operationJob: false,
-      operationAudit: false
+      operationAudit: false,
+      studentAi: false,
+      studentTask: false,
+      studentSubmission: false,
+      studentNote: false
     },
     errors: {},
     filters: {
@@ -85,7 +89,7 @@ export function createInitialState() {
       reminder: null,
       knowledgePath: { goalText: "object collaboration service boundary", days: 5 },
       knowledgePractice: { conceptIds: "", limit: 4 },
-      knowledgeContext: { question: "How should the AI answer cite retrieved knowledge?", limit: 4 },
+      knowledgeContext: { question: "AI 回答如何引用检索到的知识？", limit: 4 },
       adaptivePlan: { questionCount: 8, bankId: "" },
       collaborationRoom: { title: "", type: "course", description: "" },
       collaborationTask: { title: "", priority: "medium", assigneeId: "" },
@@ -101,13 +105,13 @@ export function createInitialState() {
       groupMember: { groupId: "", userId: "", role: "member", status: "active" },
       identityProfile: { name: "", status: "active", role: "student", department: "", major: "", studentNo: "", teacherNo: "", phone: "" },
       operationImport: {
-        title: "Student evidence import",
+        title: "学生学习证据导入",
         target: "portfolioEvidence",
         format: "json",
-        payload: "[{\"studentId\":\"user_student\",\"courseId\":\"course_ood\",\"type\":\"manual-evidence\",\"summary\":\"Submitted UML class diagram revision\",\"score\":86,\"concept\":\"UML class diagram\"}]"
+        payload: ""
       },
-      operationJob: { title: "Portfolio refresh", type: "portfolio-refresh", priority: "normal" },
-      operationAudit: { action: "operations.manual.note", resourceType: "portfolio", severity: "info", summary: "" }
+      operationJob: { title: "学习档案刷新", type: "portfolio-refresh", priority: "normal" },
+      operationAudit: { action: "手动记录", resourceType: "学习档案", severity: "info", summary: "" }
     },
     ui: {
       activePanel: "",
@@ -129,7 +133,9 @@ export function createInitialState() {
       overview: null,
       teacher: null,
       selectedCourse: null,
-      selectedStudent: null
+      selectedStudent: null,
+      selectedStudentAiResults: [],
+      selectedStudentAiTimeline: []
     },
     workbench: {
       notifications: [],
@@ -215,6 +221,55 @@ export function createInitialState() {
     settings: {
       health: null,
       modelConfig: null
+    },
+    student: {
+      routeStack: [],
+      ai: {
+        dailyPlan: null,
+        weaknessInsight: null,
+        assignmentGuide: null,
+        submissionCheck: null,
+        noteOrganizeResult: null,
+        timeline: [],
+        organizeHistory: [],
+        lastCommand: null
+      },
+      learning: {
+        selectedCourseId: "",
+        selectedTaskId: "",
+        taskDrafts: []
+      },
+      assignments: {
+        mode: "course",
+        selectedAssignmentId: "",
+        selectedSubmissionId: "",
+        submitDraft: {
+          id: "",
+          assignmentId: "",
+          content: "",
+          attachments: [],
+          attachmentsText: "",
+          aiCheckResultId: "",
+          updatedAt: ""
+        },
+        lastSubmission: null
+      },
+      practice: {
+        selectedBankId: "",
+        selectedSessionId: "",
+        focusedQuestionIndex: 0,
+        result: null
+      },
+      notes: {
+        selectedCourseId: "",
+        selectedNoteId: "",
+        query: "",
+        editorDraft: {
+          title: "",
+          content: "",
+          tags: ""
+        }
+      }
     }
   };
 }

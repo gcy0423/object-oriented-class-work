@@ -1,3 +1,5 @@
+import { statusText } from "./utils/format.js";
+
 export function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -20,7 +22,7 @@ export function metric(label, value) {
 
 export function statusBadge(value, tone = "") {
   const resolved = tone || String(value || "").toLowerCase().replaceAll("_", "-");
-  return `<span class="badge ${escapeHtml(resolved)}">${escapeHtml(value || "-")}</span>`;
+  return `<span class="badge ${escapeHtml(resolved)}">${escapeHtml(statusText(value) || "-")}</span>`;
 }
 
 export function emptyState(text) {
@@ -115,12 +117,21 @@ export function messageList(messages = [], users = []) {
     .join("")}</ul>`;
 }
 
+function activitySummary(item = {}) {
+  const summary = String(item.summary || "");
+  if (/system:\s*你是\s*EduMind/i.test(summary)) {
+    return "AI 学习问答已完成";
+  }
+  return summary;
+}
+
 export function activityList(items = []) {
-  if (!items.length) {
+  const visibleItems = items.slice(0, 8);
+  if (!visibleItems.length) {
     return emptyState("暂无活动记录。");
   }
-  return `<ul class="activity-list">${items
-    .map((item) => `<li class="activity-item"><div>${escapeHtml(item.summary)}</div><span class="muted">${formatDate(item.createdAt)}</span></li>`)
+  return `<ul class="activity-list">${visibleItems
+    .map((item) => `<li class="activity-item"><div>${escapeHtml(activitySummary(item))}</div><span class="muted">${formatDate(item.createdAt)}</span></li>`)
     .join("")}</ul>`;
 }
 
@@ -231,7 +242,7 @@ export function practiceSessionView(session) {
 
 export function assignmentDetailView(detail, currentUserRole) {
   if (!detail) {
-    return emptyState("选择一份作业后，这里会显示详情。");
+    return emptyState("请选择作业查看详情。");
   }
   const assignment = detail.assignment || {};
   const submissions = detail.submissions || [];

@@ -14,6 +14,7 @@ import { PortfolioDepthService } from "./application/portfolioDepthService.js";
 import { PracticeService } from "./application/practiceService.js";
 import { QuestionBankService } from "./application/questionBankService.js";
 import { RubricInsightService } from "./application/rubricInsightService.js";
+import { StudentSubmissionWorkspaceService } from "./application/studentSubmissionWorkspaceService.js";
 import * as assignmentModule from "./domain/assignment.js";
 import { createAssessmentRepositories } from "./domain/assessment.js";
 import * as questionModule from "./domain/question.js";
@@ -106,6 +107,16 @@ export function createApp(config = loadConfig()) {
     portfolioDepthService,
     repositories
   });
+  const studentSubmissionWorkspace = new StudentSubmissionWorkspaceService({
+    database,
+    config,
+    assignments: repositories.assignments,
+    submissions: repositories.submissions,
+    submissionDrafts: repositories.submissionDrafts,
+    uploads: repositories.uploads,
+    assignmentService,
+    aiClient
+  });
 
   const services = {
     ready,
@@ -122,7 +133,8 @@ export function createApp(config = loadConfig()) {
     adaptivePracticePlanner,
     assessmentPortfolioService,
     portfolioDepthService,
-    assessment
+    assessment,
+    studentSubmissionWorkspace
   };
 
   const router = new Router();

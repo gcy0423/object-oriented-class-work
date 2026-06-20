@@ -48,9 +48,45 @@ export function registerRoutes(router, config, services) {
     return ok(note);
   });
 
+  router.get("/api/notes", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.learning.listNotes(user, req.query));
+  });
+
+  router.get("/api/notes/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.learning.getNote(user, req.params.id));
+  });
+
+  router.patch("/api/notes/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.learning.updateNote(user, req.params.id, await readJson(req)));
+  });
+
+  router.delete("/api/notes/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.learning.deleteNote(user, req.params.id));
+  });
+
   router.get("/internal/learning/context/:userId", async (req) => {
     await services.ready;
     requireInternal(req, config.internalKey);
     return ok(services.learning.buildLearningContext(req.params.userId));
+  });
+
+  router.post("/internal/learning/users/:userId/tasks", async (req) => {
+    await services.ready;
+    requireInternal(req, config.internalKey);
+    return ok(await services.learning.createTaskForUser(req.params.userId, await readJson(req)));
+  });
+
+  router.post("/internal/learning/users/:userId/notes", async (req) => {
+    await services.ready;
+    requireInternal(req, config.internalKey);
+    return ok(await services.learning.createNoteForUser(req.params.userId, await readJson(req), "ai-service"));
   });
 }

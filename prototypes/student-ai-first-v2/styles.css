@@ -606,6 +606,105 @@ textarea {
   font-size: 28px;
 }
 
+.form-stack {
+  display: grid;
+  gap: 12px;
+}
+
+.form-stack label {
+  display: grid;
+  gap: 6px;
+  font-weight: 900;
+}
+
+.form-stack label span {
+  color: var(--rust);
+  font-size: 13px;
+}
+
+.option-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.option-grid button {
+  min-height: 64px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffaf2;
+  color: var(--ink);
+  text-align: left;
+}
+
+.option-grid button.active {
+  border-color: var(--green);
+  background: var(--green-soft);
+  font-weight: 900;
+}
+
+.option-grid button.danger-choice {
+  border-color: color-mix(in oklch, var(--danger) 42%, var(--line));
+  background: var(--rose-soft);
+  color: var(--danger);
+}
+
+.bar-list {
+  display: grid;
+  gap: 12px;
+}
+
+.bar-list div {
+  display: grid;
+  grid-template-columns: 180px minmax(0, 1fr) 48px;
+  gap: 10px;
+  align-items: center;
+}
+
+.bar-list b {
+  height: 10px;
+  border-radius: 999px;
+  background: var(--green);
+}
+
+.timeline-list {
+  display: grid;
+  gap: 10px;
+}
+
+.timeline-list div {
+  display: grid;
+  grid-template-columns: 110px minmax(0, 1fr);
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fffaf2;
+}
+
+.timeline-list time {
+  color: var(--rust);
+  font-weight: 900;
+}
+
+.timeline-list span {
+  color: var(--muted);
+  line-height: 1.65;
+}
+
+.status-pill {
+  min-height: 30px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .mini-form,
 .type-select,
 .draft-list {
@@ -1025,7 +1124,13 @@ textarea {
   .course-stat-grid,
   .operation-grid,
   .calendar-table,
-  .course-info {
+  .course-info,
+  .option-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bar-list div,
+  .timeline-list div {
     grid-template-columns: 1fr;
   }
 

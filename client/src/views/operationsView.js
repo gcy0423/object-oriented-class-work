@@ -1,4 +1,5 @@
 import { emptyState, escapeHtml, formatDate, metric, statusBadge } from "../components.js";
+import { statusText } from "../utils/format.js";
 
 function asList(value) {
   return Array.isArray(value) ? value : [];
@@ -28,15 +29,15 @@ function catalogJobOptions(catalog, selected = "") {
 }
 
 function operationMetrics(dashboard = {}) {
-  const metrics = dashboard.metrics || {};
+  const metrics = (dashboard || {}).metrics || {};
   return `
     <div class="stats-grid compact-stats operations-metrics">
-      ${metric("Imports", metrics.importBatchCount ?? 0)}
-      ${metric("Committed", metrics.committedImportCount ?? 0)}
-      ${metric("Queued jobs", metrics.queuedJobCount ?? 0)}
-      ${metric("Completed jobs", metrics.completedJobCount ?? 0)}
-      ${metric("Audit events", metrics.auditEventCount ?? 0)}
-      ${metric("Critical", metrics.criticalAuditCount ?? 0)}
+      ${metric("导入批次", metrics.importBatchCount ?? 0)}
+      ${metric("已提交", metrics.committedImportCount ?? 0)}
+      ${metric("排队任务", metrics.queuedJobCount ?? 0)}
+      ${metric("已完成任务", metrics.completedJobCount ?? 0)}
+      ${metric("审计事件", metrics.auditEventCount ?? 0)}
+      ${metric("严重事件", metrics.criticalAuditCount ?? 0)}
     </div>
   `;
 }
@@ -47,26 +48,26 @@ function filterPanel(state) {
   const catalog = state.operations.catalog;
   return `
     <form class="panel form-grid operations-filter" data-form="operations-filter">
-      <label><span>Course</span><select name="courseId">
-        <option value="">All courses</option>
+      <label><span>课程</span><select name="courseId">
+        <option value="">全部课程</option>
         ${courseOptions(courses, filter.courseId)}
       </select></label>
-      <label><span>Import Target</span><select name="target">
-        <option value="">All targets</option>
+      <label><span>导入对象</span><select name="target">
+        <option value="">全部对象</option>
         ${catalogTargetOptions(catalog, filter.target)}
       </select></label>
-      <label><span>Job Type</span><select name="jobType">
-        <option value="">All job types</option>
+      <label><span>任务类型</span><select name="jobType">
+        <option value="">全部任务</option>
         ${catalogJobOptions(catalog, filter.jobType)}
       </select></label>
-      <label><span>Severity</span><select name="severity">
-        <option value="">All severities</option>
-        <option value="info" ${filter.severity === "info" ? "selected" : ""}>Info</option>
-        <option value="warning" ${filter.severity === "warning" ? "selected" : ""}>Warning</option>
-        <option value="critical" ${filter.severity === "critical" ? "selected" : ""}>Critical</option>
+      <label><span>严重程度</span><select name="severity">
+        <option value="">全部级别</option>
+        <option value="info" ${filter.severity === "info" ? "selected" : ""}>提示</option>
+        <option value="warning" ${filter.severity === "warning" ? "selected" : ""}>注意</option>
+        <option value="critical" ${filter.severity === "critical" ? "selected" : ""}>严重</option>
       </select></label>
-      <label><span>Student</span><input name="studentId" value="${escapeHtml(filter.studentId || "")}" placeholder="user_student" /></label>
-      <div class="button-row"><button class="btn primary" type="submit">Apply</button></div>
+      <label><span>学生</span><input name="studentId" value="${escapeHtml(filter.studentId || "")}" placeholder="学生 ID" /></label>
+      <div class="button-row"><button class="btn primary" type="submit">应用筛选</button></div>
     </form>
   `;
 }
@@ -78,34 +79,34 @@ function importForm(state) {
   const draft = state.draft.operationImport || {};
   return `
     <form class="panel form-grid operations-import-form" data-form="operations-import-preview">
-      <div class="panel-header"><h2>Import Preview</h2></div>
-      <label><span>Title</span><input name="title" value="${escapeHtml(draft.title || "")}" required /></label>
-      <label><span>Course</span><select name="courseId">
-        <option value="">No course</option>
+      <div class="panel-header"><h2>导入预览</h2></div>
+      <label><span>标题</span><input name="title" value="${escapeHtml(draft.title || "")}" required /></label>
+      <label><span>课程</span><select name="courseId">
+        <option value="">不关联课程</option>
         ${courseOptions(courses, filter.courseId || draft.courseId)}
       </select></label>
-      <label><span>Target</span><select name="target">
+      <label><span>对象</span><select name="target">
         ${catalogTargetOptions(catalog, filter.target || draft.target || "portfolioEvidence")}
       </select></label>
-      <label><span>Format</span><select name="format">
+      <label><span>格式</span><select name="format">
         <option value="json" ${(draft.format || "json") === "json" ? "selected" : ""}>JSON</option>
         <option value="csv" ${draft.format === "csv" ? "selected" : ""}>CSV</option>
         <option value="tsv" ${draft.format === "tsv" ? "selected" : ""}>TSV</option>
       </select></label>
-      <label><span>Duplicate policy</span><select name="duplicatePolicy">
-        <option value="skip">Skip</option>
-        <option value="replace">Replace</option>
-        <option value="append">Append</option>
+      <label><span>重复处理</span><select name="duplicatePolicy">
+        <option value="skip">跳过</option>
+        <option value="replace">替换</option>
+        <option value="append">追加</option>
       </select></label>
-      <label class="full-span"><span>Payload</span><textarea name="payload" rows="8" required>${escapeHtml(draft.payload || "")}</textarea></label>
-      <div class="button-row"><button class="btn primary" type="submit">Validate Import</button></div>
+      <label class="full-span"><span>数据内容</span><textarea name="payload" rows="8" required>${escapeHtml(draft.payload || "")}</textarea></label>
+      <div class="button-row"><button class="btn primary" type="submit">校验导入</button></div>
     </form>
   `;
 }
 
 function importList(imports = [], selectedId = "") {
   if (!imports.length) {
-    return emptyState("No import batches.");
+    return emptyState("暂无导入批次。");
   }
   return `
     <div class="operations-card-list">
@@ -117,15 +118,15 @@ function importList(imports = [], selectedId = "") {
               <div class="muted">${escapeHtml(batch.target)} / ${escapeHtml(batch.courseId || "global")}</div>
             </div>
             <div class="inline-actions">
-              <button class="btn small" data-action="view-operation-import" data-id="${escapeHtml(batch.id)}">Open</button>
-              ${batch.status !== "committed" ? `<button class="btn small" data-action="commit-operation-import" data-id="${escapeHtml(batch.id)}">Commit</button>` : ""}
+              <button class="btn small" data-action="view-operation-import" data-id="${escapeHtml(batch.id)}">打开</button>
+              ${batch.status !== "committed" ? `<button class="btn small" data-action="commit-operation-import" data-id="${escapeHtml(batch.id)}">提交</button>` : ""}
             </div>
           </div>
           <div class="tag-row">
             ${statusBadge(batch.status || "draft")}
-            <span class="tag">${escapeHtml(batch.summary?.totalRows ?? 0)} rows</span>
-            <span class="tag">${escapeHtml(batch.summary?.validRows ?? 0)} valid</span>
-            <span class="tag">${escapeHtml(batch.summary?.errorRows ?? 0)} errors</span>
+            <span class="tag">${escapeHtml(batch.summary?.totalRows ?? 0)} 行</span>
+            <span class="tag">${escapeHtml(batch.summary?.validRows ?? 0)} 有效</span>
+            <span class="tag">${escapeHtml(batch.summary?.errorRows ?? 0)} 错误</span>
             <span class="tag">${escapeHtml(formatDate(batch.createdAt))}</span>
           </div>
         </article>
@@ -136,15 +137,15 @@ function importList(imports = [], selectedId = "") {
 
 function importDetail(detail) {
   if (!detail) {
-    return emptyState("Open an import batch to inspect normalized rows.");
+    return emptyState("打开导入批次后查看校验结果。");
   }
   const rows = asList(detail.rows);
   return `
     <div class="panel">
-      <div class="panel-header"><h2>Import Rows</h2><span class="tag">${escapeHtml(rows.length)} rows</span></div>
+      <div class="panel-header"><h2>导入明细</h2><span class="tag">${escapeHtml(rows.length)} 行</span></div>
       <div class="table-wrap">
         <table class="data-table">
-          <thead><tr><th>#</th><th>Status</th><th>External ID</th><th>Normalized</th><th>Messages</th></tr></thead>
+          <thead><tr><th>#</th><th>状态</th><th>外部标识</th><th>规范化数据</th><th>消息</th></tr></thead>
           <tbody>${rows.map((row) => `
             <tr>
               <td>${escapeHtml(row.rowNumber)}</td>
@@ -170,30 +171,30 @@ function jobForm(state) {
   const draft = state.draft.operationJob || {};
   return `
     <form class="panel form-grid compact-form" data-form="operations-batch-job">
-      <div class="panel-header"><h2>Create Batch Job</h2></div>
-      <label><span>Title</span><input name="title" value="${escapeHtml(draft.title || "")}" required /></label>
-      <label><span>Course</span><select name="courseId">
-        <option value="">Global</option>
+      <div class="panel-header"><h2>创建批量任务</h2></div>
+      <label><span>标题</span><input name="title" value="${escapeHtml(draft.title || "")}" required /></label>
+      <label><span>课程</span><select name="courseId">
+        <option value="">全局</option>
         ${courseOptions(courses, filter.courseId)}
       </select></label>
-      <label><span>Type</span><select name="type">
+      <label><span>类型</span><select name="type">
         ${catalogJobOptions(catalog, filter.jobType || draft.type || "portfolio-refresh")}
       </select></label>
-      <label><span>Priority</span><select name="priority">
-        <option value="low">Low</option>
-        <option value="normal" selected>Normal</option>
-        <option value="high">High</option>
-        <option value="urgent">Urgent</option>
+      <label><span>优先级</span><select name="priority">
+        <option value="low">低</option>
+        <option value="normal" selected>普通</option>
+        <option value="high">高</option>
+        <option value="urgent">紧急</option>
       </select></label>
-      <label class="full-span"><span>Params JSON</span><textarea name="params" rows="4">{"studentIds":["${escapeHtml(filter.studentId || "user_student")}"],"includeEvidence":true}</textarea></label>
-      <div class="button-row"><button class="btn primary" type="submit">Create Job</button></div>
+      <label class="full-span"><span>参数</span><textarea name="params" rows="4">{"studentIds":["${escapeHtml(filter.studentId || "student-demo")}"],"includeEvidence":true}</textarea></label>
+      <div class="button-row"><button class="btn primary" type="submit">创建任务</button></div>
     </form>
   `;
 }
 
 function jobList(jobs = [], selectedId = "") {
   if (!jobs.length) {
-    return emptyState("No batch jobs.");
+    return emptyState("暂无批量任务。");
   }
   return `<div class="operations-job-list">${jobs.map((job) => `
     <article class="operations-card ${job.id === selectedId ? "is-selected" : ""}">
@@ -203,8 +204,8 @@ function jobList(jobs = [], selectedId = "") {
           <div class="muted">${escapeHtml(job.type)} / ${escapeHtml(job.courseId || "global")}</div>
         </div>
         <div class="inline-actions">
-          <button class="btn small" data-action="view-operation-job" data-id="${escapeHtml(job.id)}">Open</button>
-          ${["queued", "failed"].includes(job.status) ? `<button class="btn small" data-action="run-operation-job" data-id="${escapeHtml(job.id)}">Run</button>` : ""}
+          <button class="btn small" data-action="view-operation-job" data-id="${escapeHtml(job.id)}">打开</button>
+          ${["queued", "failed"].includes(job.status) ? `<button class="btn small" data-action="run-operation-job" data-id="${escapeHtml(job.id)}">执行</button>` : ""}
         </div>
       </div>
       <div class="progress-bar"><span style="width:${Number(job.progress || 0)}%"></span></div>
@@ -220,7 +221,7 @@ function jobList(jobs = [], selectedId = "") {
 
 function jobDetail(detail) {
   if (!detail) {
-    return emptyState("Open a batch job to inspect execution steps.");
+    return emptyState("打开批量任务后查看执行步骤。");
   }
   const job = detail.job || {};
   const steps = asList(detail.steps);
@@ -250,34 +251,34 @@ function auditPanel(state) {
   const draft = state.draft.operationAudit || {};
   return `
     <div class="panel">
-      <div class="panel-header"><h2>Audit Digest</h2><span class="tag">${escapeHtml(digest.total ?? audits.length)} events</span></div>
+      <div class="panel-header"><h2>审计摘要</h2><span class="tag">${escapeHtml(digest.total ?? audits.length)} 条</span></div>
       <div class="operations-digest">
         <section>
-          <h3>Severity</h3>
-          <div class="tag-row">${asList(digest.bySeverity).map((item) => `<span class="tag">${escapeHtml(item.severity)}: ${escapeHtml(item.count)}</span>`).join("")}</div>
+          <h3>严重程度</h3>
+          <div class="tag-row">${asList(digest.bySeverity).map((item) => `<span class="tag">${escapeHtml(statusText(item.severity))}: ${escapeHtml(item.count)}</span>`).join("")}</div>
         </section>
         <section>
-          <h3>Recommendations</h3>
-          ${asList(digest.recommendations).length ? `<ul class="plain-list">${digest.recommendations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : emptyState("No recommendations.")}
+          <h3>建议</h3>
+          ${asList(digest.recommendations).length ? `<ul class="plain-list">${digest.recommendations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : emptyState("暂无建议。")}
         </section>
       </div>
     </div>
     <form class="panel form-grid compact-form" data-form="operations-audit">
-      <div class="panel-header"><h2>Manual Audit Event</h2></div>
-      <label><span>Action</span><input name="action" value="${escapeHtml(draft.action || "")}" required /></label>
-      <label><span>Resource Type</span><input name="resourceType" value="${escapeHtml(draft.resourceType || "")}" required /></label>
-      <label><span>Resource ID</span><input name="resourceId" value="${escapeHtml(filter.studentId || "")}" /></label>
-      <label><span>Course</span><input name="courseId" value="${escapeHtml(filter.courseId || "")}" /></label>
-      <label><span>Severity</span><select name="severity">
-        <option value="info" ${draft.severity === "info" ? "selected" : ""}>Info</option>
-        <option value="warning" ${draft.severity === "warning" ? "selected" : ""}>Warning</option>
-        <option value="critical" ${draft.severity === "critical" ? "selected" : ""}>Critical</option>
+      <div class="panel-header"><h2>手动审计事件</h2></div>
+      <label><span>动作</span><input name="action" value="${escapeHtml(draft.action || "")}" required /></label>
+      <label><span>资源类型</span><input name="resourceType" value="${escapeHtml(draft.resourceType || "")}" required /></label>
+      <label><span>资源标识</span><input name="resourceId" value="${escapeHtml(filter.studentId || "")}" /></label>
+      <label><span>课程</span><input name="courseId" value="${escapeHtml(filter.courseId || "")}" /></label>
+      <label><span>严重程度</span><select name="severity">
+        <option value="info" ${draft.severity === "info" ? "selected" : ""}>提示</option>
+        <option value="warning" ${draft.severity === "warning" ? "selected" : ""}>注意</option>
+        <option value="critical" ${draft.severity === "critical" ? "selected" : ""}>严重</option>
       </select></label>
-      <label class="full-span"><span>Summary</span><textarea name="summary" rows="3" required>${escapeHtml(draft.summary || "")}</textarea></label>
-      <div class="button-row"><button class="btn primary" type="submit">Record Audit</button></div>
+      <label class="full-span"><span>摘要</span><textarea name="summary" rows="3" required>${escapeHtml(draft.summary || "")}</textarea></label>
+      <div class="button-row"><button class="btn primary" type="submit">记录审计</button></div>
     </form>
     <div class="panel">
-      <div class="panel-header"><h2>Audit Trail</h2><span class="tag">${escapeHtml(audits.length)} loaded</span></div>
+      <div class="panel-header"><h2>审计轨迹</h2><span class="tag">${escapeHtml(audits.length)} 条</span></div>
       ${audits.length ? `<ul class="operations-audit-list">${audits.map((event) => `
         <li>
           <div>
@@ -291,7 +292,7 @@ function auditPanel(state) {
           </div>
           ${statusBadge(event.severity || "info", event.severity || "info")}
         </li>
-      `).join("")}</ul>` : emptyState("No audit events.")}
+      `).join("")}</ul>` : emptyState("暂无审计事件。")}
     </div>
   `;
 }
@@ -302,17 +303,17 @@ function deepPortfolioPanel(state) {
   const plan = state.operations.interventionPlan;
   const board = state.operations.portfolioBoard;
   if (!deep && !evidenceMap && !plan && !board) {
-    return emptyState("Deep portfolio analysis will appear after operations refresh.");
+    return emptyState("刷新运维数据后查看学习档案分析。");
   }
   const quality = deep?.quality || {};
   return `
     <div class="panel">
-      <div class="panel-header"><h2>Deep Portfolio</h2><span class="tag">${escapeHtml(quality.tone || "not loaded")}</span></div>
+      <div class="panel-header"><h2>学习档案深度分析</h2><span class="tag">${escapeHtml(statusText(quality.tone || "missing"))}</span></div>
       <div class="stats-grid compact-stats">
-        ${metric("Quality", quality.overallScore ?? 0)}
-        ${metric("Evidence", evidenceMap?.totalEvidence ?? 0)}
-        ${metric("Actions", plan?.actionCount ?? 0)}
-        ${metric("Board students", board?.totalStudents ?? 0)}
+        ${metric("质量", quality.overallScore ?? 0)}
+        ${metric("证据", evidenceMap?.totalEvidence ?? 0)}
+        ${metric("行动", plan?.actionCount ?? 0)}
+        ${metric("看板学生", board?.totalStudents ?? 0)}
       </div>
       ${deep?.defenseNarrative ? `<div class="subpanel">
         <strong>${escapeHtml(deep.defenseNarrative.headline)}</strong>
@@ -327,15 +328,15 @@ function deepPortfolioPanel(state) {
       `).join("")}</div>` : ""}
     </div>
     <div class="panel">
-      <div class="panel-header"><h2>Evidence Gaps & Actions</h2></div>
+      <div class="panel-header"><h2>证据缺口与行动</h2></div>
       <div class="operations-digest">
         <section>
-          <h3>Evidence Gaps</h3>
-          ${asList(evidenceMap?.gaps).length ? `<ul class="plain-list">${evidenceMap.gaps.map((gap) => `<li>${escapeHtml(gap.message)}</li>`).join("")}</ul>` : emptyState("No evidence gaps.")}
+          <h3>证据缺口</h3>
+          ${asList(evidenceMap?.gaps).length ? `<ul class="plain-list">${evidenceMap.gaps.map((gap) => `<li>${escapeHtml(gap.message)}</li>`).join("")}</ul>` : emptyState("暂无证据缺口。")}
         </section>
         <section>
-          <h3>Intervention Actions</h3>
-          ${asList(plan?.actions).length ? `<ul class="plain-list">${plan.actions.map((action) => `<li><strong>${escapeHtml(action.priority)}</strong> ${escapeHtml(action.title)} - ${escapeHtml(action.reason)}</li>`).join("")}</ul>` : emptyState("No actions.")}
+          <h3>干预行动</h3>
+          ${asList(plan?.actions).length ? `<ul class="plain-list">${plan.actions.map((action) => `<li><strong>${escapeHtml(statusText(action.priority))}</strong> ${escapeHtml(action.title)} - ${escapeHtml(action.reason)}</li>`).join("")}</ul>` : emptyState("暂无行动。")}
         </section>
       </div>
     </div>
@@ -351,9 +352,9 @@ export function operationsView(state) {
     <div class="operations-layout">
       <section class="operations-main">
         ${importForm(state)}
-        <div class="panel"><div class="panel-header"><h2>Import Batches</h2><span class="tag">${escapeHtml(state.operations.imports?.length || 0)} batches</span></div>${importList(state.operations.imports || [], selectedImportId)}</div>
+        <div class="panel"><div class="panel-header"><h2>导入批次</h2><span class="tag">${escapeHtml(state.operations.imports?.length || 0)} 个</span></div>${importList(state.operations.imports || [], selectedImportId)}</div>
         ${importDetail(state.operations.selectedImport)}
-        <div class="panel"><div class="panel-header"><h2>Batch Jobs</h2><span class="tag">${escapeHtml(state.operations.jobs?.length || 0)} jobs</span></div>${jobList(state.operations.jobs || [], selectedJobId)}</div>
+        <div class="panel"><div class="panel-header"><h2>批量任务</h2><span class="tag">${escapeHtml(state.operations.jobs?.length || 0)} 个</span></div>${jobList(state.operations.jobs || [], selectedJobId)}</div>
         ${jobDetail(state.operations.selectedJob)}
       </section>
       <aside class="operations-side">

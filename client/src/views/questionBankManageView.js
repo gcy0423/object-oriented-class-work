@@ -33,7 +33,7 @@ function banksTable(banks) {
   return dataTable({
     columns: [
       { key: "title", label: "题库", render: (row) => `<button class="link-button" data-action="select-bank" data-id="${attr(row.id)}">${escapeHtml(row.title)}</button>` },
-      { key: "courseId", label: "课程", render: (row) => escapeHtml(row.courseId) },
+      { key: "courseId", label: "课程", render: (row) => escapeHtml(row.courseTitle || row.courseId) },
       { key: "description", label: "说明", render: (row) => escapeHtml(row.description || "-") },
       { key: "actions", label: "操作", render: (row) => `
         <div class="inline-actions">

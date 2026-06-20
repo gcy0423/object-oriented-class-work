@@ -54,9 +54,14 @@ export class ApiClient {
   me() { return this.request("/api/me"); }
   health() { return this.request("/api/health"); }
   dashboard() { return this.request("/api/dashboard"); }
+  studentDashboard() { return this.dashboard(); }
+  courses() { return this.request("/api/courses"); }
+  studentCourses() { return this.courses(); }
 
   assignments(params = {}) { return this.request(`/api/assignments${toQuery(params)}`); }
+  studentAssignments(params = {}) { return this.assignments(params); }
   assignmentDetail(id) { return this.request(`/api/assignments/${encodeURIComponent(id)}`); }
+  studentAssignmentDetail(id) { return this.assignmentDetail(id); }
   createAssignment(input) { return this.request("/api/assignments", { method: "POST", body: JSON.stringify(input) }); }
   updateAssignment(id, input) { return this.request(`/api/assignments/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
   deleteAssignment(id) { return this.request(`/api/assignments/${encodeURIComponent(id)}`, { method: "DELETE" }); }
@@ -140,9 +145,43 @@ export class ApiClient {
   createTask(input) { return this.request("/api/tasks", { method: "POST", body: JSON.stringify(input) }); }
   completeTask(id) { return this.request(`/api/tasks/${encodeURIComponent(id)}/complete`, { method: "PATCH" }); }
   createNote(input) { return this.request("/api/notes", { method: "POST", body: JSON.stringify(input) }); }
+  notes(params = {}) { return this.request(`/api/notes${toQuery(params)}`); }
+  noteDetail(id) { return this.request(`/api/notes/${encodeURIComponent(id)}`); }
+  updateNote(id, input) { return this.request(`/api/notes/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  deleteNote(id) { return this.request(`/api/notes/${encodeURIComponent(id)}`, { method: "DELETE" }); }
 
   askAI(question) { return this.request("/api/ai/ask", { method: "POST", body: JSON.stringify({ question }) }); }
   generatePlan(goalId) { return this.request("/api/ai/plan", { method: "POST", body: JSON.stringify({ goalId }) }); }
+  summarizeNote(input) { return this.request("/api/ai/summarize", { method: "POST", body: JSON.stringify(input) }); }
+  studentAiDailyPlan(input) { return this.request("/api/student-ai/daily-plan", { method: "POST", body: JSON.stringify(input) }); }
+  studentAiWeaknessInsight(input) { return this.request("/api/student-ai/weakness-insight", { method: "POST", body: JSON.stringify(input) }); }
+  studentAiTaskDraft(input) { return this.request("/api/student-ai/task-drafts", { method: "POST", body: JSON.stringify(input) }); }
+  studentAiAssignmentGuide(input) { return this.request("/api/student-ai/assignment-guide", { method: "POST", body: JSON.stringify(input) }); }
+  studentAiSubmissionCheck(input) { return this.request("/api/student-ai/submission-check", { method: "POST", body: JSON.stringify(input) }); }
+  studentAiNoteOrganize(input) { return this.request("/api/student-ai/note-organize", { method: "POST", body: JSON.stringify(input) }); }
+  studentAiResults(params = {}) { return this.request(`/api/student-ai/results${toQuery(params)}`); }
+  studentAiResult(id) { return this.request(`/api/student-ai/results/${encodeURIComponent(id)}`); }
+  updateStudentAiAction(resultId, actionId, input) { return this.request(`/api/student-ai/results/${encodeURIComponent(resultId)}/actions/${encodeURIComponent(actionId)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  studentAiTimeline(params = {}) { return this.request(`/api/student-ai/timeline${toQuery(params)}`); }
+  studentAiTaskDrafts() { return this.request("/api/student-ai/task-drafts"); }
+  updateStudentAiTaskDraft(id, input) { return this.request(`/api/student-ai/task-drafts/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  deleteStudentAiTaskDraft(id) { return this.request(`/api/student-ai/task-drafts/${encodeURIComponent(id)}`, { method: "DELETE" }); }
+  confirmStudentAiTaskDraft(id) { return this.request(`/api/student-ai/task-drafts/${encodeURIComponent(id)}/confirm`, { method: "POST", body: JSON.stringify({}) }); }
+  noteOrganizeResults() { return this.request("/api/note-organize-results"); }
+  saveOrganizeResultAsNote(id, input) { return this.request(`/api/note-organize-results/${encodeURIComponent(id)}/save-note`, { method: "POST", body: JSON.stringify(input) }); }
+  submissionDraft(params = {}) { return this.request(`/api/assignment-submission-drafts${toQuery(params)}`); }
+  saveSubmissionDraft(input) { return this.request("/api/assignment-submission-drafts", { method: "POST", body: JSON.stringify(input) }); }
+  updateSubmissionDraft(id, input) { return this.request(`/api/assignment-submission-drafts/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  deleteSubmissionDraft(id) { return this.request(`/api/assignment-submission-drafts/${encodeURIComponent(id)}`, { method: "DELETE" }); }
+  submitSubmissionDraft(id) { return this.request(`/api/assignment-submission-drafts/${encodeURIComponent(id)}/submit`, { method: "POST", body: JSON.stringify({}) }); }
+  uploadFile(input) { return this.request("/api/uploads", { method: "POST", body: JSON.stringify(input) }); }
+  uploadDetail(id) { return this.request(`/api/uploads/${encodeURIComponent(id)}`); }
+  deleteUpload(id) { return this.request(`/api/uploads/${encodeURIComponent(id)}`, { method: "DELETE" }); }
+  teacherStudentAiResults(id, params = {}) { return this.request(`/api/teacher/students/${encodeURIComponent(id)}/ai-results${toQuery(params)}`); }
+  teacherStudentAiTimeline(id, params = {}) { return this.request(`/api/teacher/students/${encodeURIComponent(id)}/ai-timeline${toQuery(params)}`); }
+  submissionStudentAiEvidence(id) { return this.request(`/api/submissions/${encodeURIComponent(id)}/student-ai-evidence`); }
+  assignmentStudentAiEvidence(id) { return this.request(`/api/assignments/${encodeURIComponent(id)}/student-ai-evidence`); }
+  createTeacherIntervention(id, input) { return this.request(`/api/teacher/students/${encodeURIComponent(id)}/interventions`, { method: "POST", body: JSON.stringify(input) }); }
 
   messages(params = {}) { return this.request(`/api/collaboration/messages${toQuery(params)}`); }
   sendMessage(input) {

@@ -1,4 +1,5 @@
 import { emptyState, escapeHtml, formatDate, metric, statusBadge } from "../components.js";
+import { roleText } from "../utils/format.js";
 
 function optionList(items = [], selected = "", getValue = (item) => item.id, getLabel = (item) => item.title || item.name || item.id) {
   return items.map((item) => {
@@ -14,7 +15,7 @@ function reportPayload(payload) {
 function metricGrid(report) {
   const metrics = report?.metrics || [];
   if (!metrics.length) {
-    return emptyState("No report metrics.");
+    return emptyState("暂无报告指标。");
   }
   return `<div class="stats-grid report-metrics">${metrics.map((item) => metric(item.label, item.value)).join("")}</div>`;
 }
@@ -36,7 +37,7 @@ function sectionList(report) {
 function recommendationList(report) {
   const recommendations = report?.recommendations || [];
   if (!recommendations.length) {
-    return emptyState("No recommendations.");
+    return emptyState("暂无建议。");
   }
   return `<ul class="report-recommendations">${recommendations.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>`;
 }
@@ -56,7 +57,7 @@ function tablePreview(table) {
 function reportCard(title, payload, type, filter) {
   const report = reportPayload(payload);
   if (!report) {
-    return `<div class="panel"><div class="panel-header"><h2>${escapeHtml(title)}</h2></div>${emptyState("Report not loaded.")}</div>`;
+    return `<div class="panel"><div class="panel-header"><h2>${escapeHtml(title)}</h2></div>${emptyState("报告尚未加载。")}</div>`;
   }
   return `
     <div class="panel report-card">
@@ -73,7 +74,7 @@ function reportCard(title, payload, type, filter) {
       ${metricGrid(report)}
       ${sectionList(report)}
       <div class="subpanel">
-        <strong>Recommendations</strong>
+        <strong>建议</strong>
         ${recommendationList(report)}
       </div>
       ${(report.tables || []).length ? `<div class="subpanel"><strong>${escapeHtml(report.tables[0].title)}</strong>${tablePreview(report.tables[0])}</div>` : ""}
@@ -85,7 +86,7 @@ function reportCard(title, payload, type, filter) {
         <select name="format">
           ${["markdown", "html", "csv"].map((format) => `<option value="${format}" ${filter.format === format ? "selected" : ""}>${format}</option>`).join("")}
         </select>
-        <button class="btn small" type="submit">Build Export</button>
+        <button class="btn small" type="submit">生成导出</button>
       </form>
     </div>
   `;
@@ -95,16 +96,16 @@ function catalogPanel(catalog) {
   const reports = catalog?.reports || [];
   return `
     <div class="panel">
-      <div class="panel-header"><h2>Report Catalog</h2></div>
+      <div class="panel-header"><h2>报告目录</h2></div>
       ${reports.length ? `<div class="report-catalog">${reports.map((item) => `
         <article>
           <strong>${escapeHtml(item.title)}</strong>
           <div class="tag-row">
-            ${(item.roles || []).map((role) => `<span class="tag">${escapeHtml(role)}</span>`).join("")}
+            ${(item.roles || []).map((role) => `<span class="tag">${escapeHtml(roleText(role))}</span>`).join("")}
             ${(item.formats || []).map((format) => `<span class="tag">${escapeHtml(format)}</span>`).join("")}
           </div>
         </article>
-      `).join("")}</div>` : emptyState("No report catalog.")}
+      `).join("")}</div>` : emptyState("暂无报告目录。")}
     </div>
   `;
 }
@@ -117,7 +118,7 @@ function exportPreview(preview) {
     <div class="panel report-export-preview">
       <div class="panel-header">
         <div>
-          <h2>Export Preview</h2>
+          <h2>导出预览</h2>
           <p class="muted">${escapeHtml(preview.export.filename)} · ${escapeHtml(preview.export.contentType)}</p>
         </div>
         ${statusBadge(preview.export.format, "active")}
@@ -134,23 +135,23 @@ function filterForm(state) {
   const assignments = state.assessment?.assignments || [];
   return `
     <form class="filter-toolbar report-filter" data-form="report-filter">
-      <label><span>Course</span><select name="courseId">
-        <option value="">Auto</option>
+      <label><span>课程</span><select name="courseId">
+        <option value="">自动选择</option>
         ${optionList(courses, filter.courseId, (course) => course.id, (course) => course.title)}
       </select></label>
-      <label><span>Student</span><select name="studentId">
-        <option value="">Current</option>
+      <label><span>学生</span><select name="studentId">
+        <option value="">当前学生</option>
         ${optionList(users.filter((user) => user.role === "student"), filter.studentId, (user) => user.id, (user) => user.name)}
       </select></label>
-      <label><span>Assignment</span><select name="assignmentId">
-        <option value="">Auto</option>
+      <label><span>作业</span><select name="assignmentId">
+        <option value="">自动选择</option>
         ${optionList(assignments, filter.assignmentId, (assignment) => assignment.id, (assignment) => assignment.title)}
       </select></label>
-      <label><span>Format</span><select name="format">
+      <label><span>格式</span><select name="format">
         ${["markdown", "html", "csv"].map((format) => `<option value="${format}" ${filter.format === format ? "selected" : ""}>${format}</option>`).join("")}
       </select></label>
       <div class="filter-actions">
-        <button class="btn primary" type="submit">Refresh</button>
+        <button class="btn primary" type="submit">刷新</button>
       </div>
     </form>
   `;
@@ -164,11 +165,11 @@ export function reportView(state) {
     ${filterForm(state)}
     <section class="report-layout">
       <div class="report-main">
-        ${reportCard("Student Learning Weekly Report", reports.studentWeekly, "student-weekly", filter)}
-        ${teacher ? reportCard("Teacher Course Weekly Report", reports.courseWeekly, "course-weekly", filter) : ""}
-        ${teacher ? reportCard("Assignment Grading Report", reports.assignmentGrading, "assignment-grading", filter) : ""}
-        ${reportCard("Mistake Review Report", reports.mistakeReview, "mistake-review", filter)}
-        ${reportCard("AI Usage Report", reports.aiUsage, "ai-usage", filter)}
+        ${reportCard("学生学习周报", reports.studentWeekly, "student-weekly", filter)}
+        ${teacher ? reportCard("教师课程周报", reports.courseWeekly, "course-weekly", filter) : ""}
+        ${teacher ? reportCard("作业评阅报告", reports.assignmentGrading, "assignment-grading", filter) : ""}
+        ${reportCard("错题复盘报告", reports.mistakeReview, "mistake-review", filter)}
+        ${reportCard("AI 使用报告", reports.aiUsage, "ai-usage", filter)}
       </div>
       <aside class="report-side">
         ${catalogPanel(reports.catalog)}

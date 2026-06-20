@@ -25,18 +25,1399 @@
       "updatedAt": "2026-06-16"
     }
   ],
-  "aiRequests": [],
-  "aiResponses": [],
+  "aiRequests": [
+    {
+      "id": "aireq_42c2049e",
+      "createdAt": "2026-06-18T13:40:01.433Z",
+      "updatedAt": "2026-06-18T13:40:01.433Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_e2c3012e",
+      "createdAt": "2026-06-18T13:40:03.457Z",
+      "updatedAt": "2026-06-18T13:40:03.457Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: guide_assignment\nschema: assignmentGuide\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-assignment-detail\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_7b1d5566",
+      "createdAt": "2026-06-18T13:41:23.549Z",
+      "updatedAt": "2026-06-18T13:41:23.549Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_97e6743d",
+      "createdAt": "2026-06-18T13:42:26.490Z",
+      "updatedAt": "2026-06-18T13:42:26.490Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_da398b21",
+      "createdAt": "2026-06-18T13:43:16.485Z",
+      "updatedAt": "2026-06-18T13:43:16.485Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_1dd13ec5",
+      "createdAt": "2026-06-18T13:43:19.465Z",
+      "updatedAt": "2026-06-18T13:43:19.465Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_weakness_insight\nschema: weaknessInsight\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai-insight\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_e7fa18a4",
+      "createdAt": "2026-06-18T13:44:02.561Z",
+      "updatedAt": "2026-06-18T13:44:02.561Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_a1772250",
+      "createdAt": "2026-06-18T13:44:05.464Z",
+      "updatedAt": "2026-06-18T13:44:05.464Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_weakness_insight\nschema: weaknessInsight\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai-insight\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_5d7d3de2",
+      "createdAt": "2026-06-18T13:44:10.971Z",
+      "updatedAt": "2026-06-18T13:44:10.971Z",
+      "actorId": "user_student",
+      "type": "summarize",
+      "input": {
+        "noteId": "note_uml"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_fa6b02b3",
+      "createdAt": "2026-06-18T13:44:47.650Z",
+      "updatedAt": "2026-06-18T13:44:47.650Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_3e53022f",
+      "createdAt": "2026-06-18T13:44:49.284Z",
+      "updatedAt": "2026-06-18T13:44:49.284Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: guide_assignment\nschema: assignmentGuide\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-assignment-detail\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_e3749bc7",
+      "createdAt": "2026-06-18T13:45:27.150Z",
+      "updatedAt": "2026-06-18T13:45:27.150Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_62fef089",
+      "createdAt": "2026-06-18T13:45:29.115Z",
+      "updatedAt": "2026-06-18T13:45:29.115Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_469bbbf3",
+      "createdAt": "2026-06-18T13:45:31.171Z",
+      "updatedAt": "2026-06-18T13:45:31.171Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    },
+    {
+      "id": "aireq_6043d3ce",
+      "createdAt": "2026-06-18T13:45:33.311Z",
+      "updatedAt": "2026-06-18T13:45:33.311Z",
+      "actorId": "user_student",
+      "type": "ask",
+      "input": {
+        "question": "system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。\ntask: build_daily_plan\nschema: dailyPlan\nrule: 只输出 JSON object，不输出 markdown。\ncontext: {\"route\":\"student-ai\",\"userName\":\"林知夏\",\"goalTitles\":[\"完成结课设计文档和可运行系统\"],\"taskTitles\":[\"整理领域模型与用例图\",\"接入 AI 学习问答服务\",\"撰写系统设计文档\"],\"assignmentTitles\":[\"领域模型设计作业\"],\"mistakeConcepts\":[]}"
+      },
+      "provider": "mock-local-llm"
+    }
+  ],
+  "aiResponses": [
+    {
+      "id": "aires_ea0661ad",
+      "createdAt": "2026-06-18T13:40:01.435Z",
+      "updatedAt": "2026-06-18T13:40:01.435Z",
+      "requestId": "aireq_42c2049e",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:40:01.435Z"
+    },
+    {
+      "id": "aires_8d346c58",
+      "createdAt": "2026-06-18T13:40:03.458Z",
+      "updatedAt": "2026-06-18T13:40:03.458Z",
+      "requestId": "aireq_e2c3012e",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: guide_assignment schema: a...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:40:03.458Z"
+    },
+    {
+      "id": "aires_fb42ebea",
+      "createdAt": "2026-06-18T13:41:23.550Z",
+      "updatedAt": "2026-06-18T13:41:23.550Z",
+      "requestId": "aireq_7b1d5566",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:41:23.550Z"
+    },
+    {
+      "id": "aires_8729b9ae",
+      "createdAt": "2026-06-18T13:42:26.491Z",
+      "updatedAt": "2026-06-18T13:42:26.491Z",
+      "requestId": "aireq_97e6743d",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:42:26.491Z"
+    },
+    {
+      "id": "aires_b1548f8f",
+      "createdAt": "2026-06-18T13:43:16.486Z",
+      "updatedAt": "2026-06-18T13:43:16.486Z",
+      "requestId": "aireq_da398b21",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:43:16.486Z"
+    },
+    {
+      "id": "aires_e48080cb",
+      "createdAt": "2026-06-18T13:43:19.466Z",
+      "updatedAt": "2026-06-18T13:43:19.466Z",
+      "requestId": "aireq_1dd13ec5",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_weakness_insight sch...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:43:19.466Z"
+    },
+    {
+      "id": "aires_145803c7",
+      "createdAt": "2026-06-18T13:44:02.562Z",
+      "updatedAt": "2026-06-18T13:44:02.562Z",
+      "requestId": "aireq_e7fa18a4",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:44:02.562Z"
+    },
+    {
+      "id": "aires_c5e1bb1d",
+      "createdAt": "2026-06-18T13:44:05.466Z",
+      "updatedAt": "2026-06-18T13:44:05.466Z",
+      "requestId": "aireq_a1772250",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_weakness_insight sch...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:44:05.466Z"
+    },
+    {
+      "id": "aires_31241bec",
+      "createdAt": "2026-06-18T13:44:10.972Z",
+      "updatedAt": "2026-06-18T13:44:10.972Z",
+      "requestId": "aireq_5d7d3de2",
+      "answer": "我已根据当前学习目标生成建议：笔记标题：UML 复习摘要 笔记正文：用例图强调参与者与系统边界；类图强调类、属性、方法和关系；顺序图强调对象交互时间顺序。\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "提取待办",
+        "生成测验",
+        "标记重点"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:44:10.972Z"
+    },
+    {
+      "id": "aires_6fa5fa19",
+      "createdAt": "2026-06-18T13:44:47.651Z",
+      "updatedAt": "2026-06-18T13:44:47.651Z",
+      "requestId": "aireq_fa6b02b3",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:44:47.651Z"
+    },
+    {
+      "id": "aires_7e64b5d0",
+      "createdAt": "2026-06-18T13:44:49.285Z",
+      "updatedAt": "2026-06-18T13:44:49.285Z",
+      "requestId": "aireq_3e53022f",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: guide_assignment schema: a...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:44:49.285Z"
+    },
+    {
+      "id": "aires_24c03a81",
+      "createdAt": "2026-06-18T13:45:27.152Z",
+      "updatedAt": "2026-06-18T13:45:27.152Z",
+      "requestId": "aireq_e3749bc7",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:45:27.152Z"
+    },
+    {
+      "id": "aires_f83ad740",
+      "createdAt": "2026-06-18T13:45:29.116Z",
+      "updatedAt": "2026-06-18T13:45:29.116Z",
+      "requestId": "aireq_62fef089",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:45:29.116Z"
+    },
+    {
+      "id": "aires_132845ee",
+      "createdAt": "2026-06-18T13:45:31.172Z",
+      "updatedAt": "2026-06-18T13:45:31.172Z",
+      "requestId": "aireq_469bbbf3",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:45:31.172Z"
+    },
+    {
+      "id": "aires_e75a53dd",
+      "createdAt": "2026-06-18T13:45:33.313Z",
+      "updatedAt": "2026-06-18T13:45:33.313Z",
+      "requestId": "aireq_6043d3ce",
+      "answer": "我已根据当前学习目标生成建议：用户问题：system: 你是 EduMind 学生端 AI adapter 的 fallback 结构化输出器。 task: build_daily_plan schema: d...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+      "suggestions": [
+        "加入今日任务",
+        "生成复习卡片",
+        "保存到笔记"
+      ],
+      "provider": "mock-local-llm",
+      "raw": null,
+      "generatedAt": "2026-06-18T13:45:33.313Z"
+    }
+  ],
   "providerHealth": [
     {
       "id": "provider_mock-local-llm",
-      "createdAt": "2026-06-16T11:58:02.803Z",
-      "updatedAt": "2026-06-16T11:58:02.803Z",
+      "createdAt": "2026-06-20T18:11:30.250Z",
+      "updatedAt": "2026-06-20T18:11:30.250Z",
       "provider": "mock-local-llm",
-      "model": "qwopus3.6-27b-v2-mtp@iq4_xs",
+      "model": "mock",
       "status": "up",
       "endpoint": "http://10.108.10.110:1234",
-      "checkedAt": "2026-06-16T11:58:02.803Z"
+      "checkedAt": "2026-06-20T18:11:30.250Z"
     }
-  ]
+  ],
+  "studentAiResults": [
+    {
+      "id": "student_ai_result_686350fc",
+      "createdAt": "2026-06-19T17:46:15.944Z",
+      "updatedAt": "2026-06-20T17:18:42.867Z",
+      "ownerId": "user_student",
+      "type": "daily_plan",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "daily_plan",
+        "summary": "今天优先推进 接入 AI 学习问答服务，并留意 领域模型设计作业。",
+        "actions": [
+          {
+            "type": "open_task",
+            "label": "执行学习任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "high",
+            "reason": "接入 AI 学习问答服务",
+            "detail": "接入 AI 学习问答服务"
+          },
+          {
+            "type": "open_assignment",
+            "label": "查看临近作业",
+            "targetId": "",
+            "route": "student-assignments",
+            "priority": "high",
+            "reason": "领域模型设计作业",
+            "detail": "领域模型设计作业"
+          },
+          {
+            "type": "start_practice",
+            "label": "做一组练习",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "用练习验证理解",
+            "detail": "用练习验证理解"
+          }
+        ],
+        "risks": [
+          {
+            "level": "medium",
+            "title": "存在临近截止作业",
+            "evidence": "领域模型设计作业"
+          }
+        ],
+        "evidence": [
+          "未完成任务 2 个",
+          "待处理作业 1 个"
+        ],
+        "questions": [
+          {
+            "text": "我先做学习任务还是先处理作业？"
+          }
+        ],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-19T17:46:15.944Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=daily_plan schema=daily_plan 只返回一个合法 JSON object，不要返回 ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。"
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "执行学习任务",
+          "route": "student-learning",
+          "detail": "接入 AI 学习问答服务",
+          "kind": "navigate",
+          "status": "converted",
+          "note": "学生标记为 converted",
+          "updatedAt": "2026-06-20T17:18:39.871Z"
+        },
+        {
+          "id": "action_2",
+          "label": "查看临近作业",
+          "route": "student-assignments",
+          "detail": "领域模型设计作业",
+          "kind": "navigate",
+          "status": "converted",
+          "note": "学生标记为 converted",
+          "updatedAt": "2026-06-20T17:18:42.867Z"
+        },
+        {
+          "id": "action_3",
+          "label": "做一组练习",
+          "route": "student-practice",
+          "detail": "用练习验证理解",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-19T17:46:15.944Z"
+    },
+    {
+      "id": "student_ai_result_8df60799",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-19T17:46:22.238Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-19T17:46:22.238Z",
+      "createdAt": "2026-06-19T17:46:22.238Z",
+      "updatedAt": "2026-06-19T17:46:22.238Z"
+    },
+    {
+      "id": "student_ai_result_b1476264",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:13:29.110Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:13:29.110Z",
+      "createdAt": "2026-06-20T17:13:29.111Z",
+      "updatedAt": "2026-06-20T17:13:29.111Z"
+    },
+    {
+      "id": "student_ai_result_4c1ee4e9",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:16:01.662Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:16:01.662Z",
+      "createdAt": "2026-06-20T17:16:01.662Z",
+      "updatedAt": "2026-06-20T17:16:01.662Z"
+    },
+    {
+      "id": "student_ai_result_b322018c",
+      "createdAt": "2026-06-20T17:18:48.535Z",
+      "updatedAt": "2026-06-20T17:18:56.641Z",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:18:48.535Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "completed",
+          "note": "学生标记为 completed",
+          "updatedAt": "2026-06-20T17:18:56.641Z"
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "completed",
+          "note": "学生标记为 completed",
+          "updatedAt": "2026-06-20T17:18:54.186Z"
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:18:48.535Z"
+    },
+    {
+      "id": "student_ai_result_df43d329",
+      "createdAt": "2026-06-20T17:19:05.355Z",
+      "updatedAt": "2026-06-20T17:19:15.479Z",
+      "ownerId": "user_student",
+      "type": "assignment_guide",
+      "courseId": "course_ood",
+      "assignmentId": "assignment_ood_model",
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "assignment_guide",
+        "summary": "先读懂 领域模型设计作业 的要求，再组织提交结构。",
+        "actions": [
+          {
+            "type": "open_assignment",
+            "label": "查看作业详情",
+            "targetId": "",
+            "route": "student-assignment-detail",
+            "priority": "medium",
+            "reason": "领域模型设计作业",
+            "detail": "领域模型设计作业"
+          },
+          {
+            "type": "open_submit",
+            "label": "去提交页完善草稿",
+            "targetId": "",
+            "route": "student-submit",
+            "priority": "medium",
+            "reason": "先写正文再自检",
+            "detail": "先写正文再自检"
+          }
+        ],
+        "risks": [
+          {
+            "level": "medium",
+            "title": "如果只写结论不写依据，教师反馈通常会集中在论证不足。",
+            "evidence": ""
+          }
+        ],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:19:05.355Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=assignment_guide schema=assignment_guide 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "outline": [
+          "确认交付物",
+          "列出核心要点",
+          "补齐例子或图示",
+          "提交前自检"
+        ],
+        "checklist": [
+          "要求已覆盖",
+          "术语使用准确",
+          "结论与证据一致"
+        ]
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "查看作业详情",
+          "route": "student-assignment-detail",
+          "detail": "领域模型设计作业",
+          "kind": "navigate",
+          "status": "converted",
+          "note": "学生标记为 converted",
+          "updatedAt": "2026-06-20T17:19:13.627Z"
+        },
+        {
+          "id": "action_2",
+          "label": "去提交页完善草稿",
+          "route": "student-submit",
+          "detail": "先写正文再自检",
+          "kind": "navigate",
+          "status": "completed",
+          "note": "学生标记为 completed",
+          "updatedAt": "2026-06-20T17:19:15.479Z"
+        }
+      ],
+      "meta": {
+        "route": "student-assignment-detail",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:19:05.355Z"
+    },
+    {
+      "id": "student_ai_result_6d2af841",
+      "ownerId": "user_student",
+      "type": "assignment_guide",
+      "courseId": "course_ood",
+      "assignmentId": "assignment_ood_model",
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "assignment_guide",
+        "summary": "先读懂 领域模型设计作业 的要求，再组织提交结构。",
+        "actions": [
+          {
+            "type": "open_assignment",
+            "label": "查看作业详情",
+            "targetId": "",
+            "route": "student-assignment-detail",
+            "priority": "medium",
+            "reason": "领域模型设计作业",
+            "detail": "领域模型设计作业"
+          },
+          {
+            "type": "open_submit",
+            "label": "去提交页完善草稿",
+            "targetId": "",
+            "route": "student-submit",
+            "priority": "medium",
+            "reason": "先写正文再自检",
+            "detail": "先写正文再自检"
+          }
+        ],
+        "risks": [
+          {
+            "level": "medium",
+            "title": "如果只写结论不写依据，教师反馈通常会集中在论证不足。",
+            "evidence": ""
+          }
+        ],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:19:21.589Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=assignment_guide schema=assignment_guide 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "outline": [
+          "确认交付物",
+          "列出核心要点",
+          "补齐例子或图示",
+          "提交前自检"
+        ],
+        "checklist": [
+          "要求已覆盖",
+          "术语使用准确",
+          "结论与证据一致"
+        ]
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "查看作业详情",
+          "route": "student-assignment-detail",
+          "detail": "领域模型设计作业",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "去提交页完善草稿",
+          "route": "student-submit",
+          "detail": "先写正文再自检",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-assignment-detail",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:19:21.589Z",
+      "createdAt": "2026-06-20T17:19:21.590Z",
+      "updatedAt": "2026-06-20T17:19:21.590Z"
+    },
+    {
+      "id": "student_ai_result_4754f3af",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:24:01.405Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:24:01.405Z",
+      "createdAt": "2026-06-20T17:24:01.405Z",
+      "updatedAt": "2026-06-20T17:24:01.405Z"
+    },
+    {
+      "id": "student_ai_result_5d3f2068",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:24:25.743Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:24:25.743Z",
+      "createdAt": "2026-06-20T17:24:25.743Z",
+      "updatedAt": "2026-06-20T17:24:25.743Z"
+    },
+    {
+      "id": "student_ai_result_ced2bab1",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:28:13.844Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:28:13.844Z",
+      "createdAt": "2026-06-20T17:28:13.845Z",
+      "updatedAt": "2026-06-20T17:28:13.845Z"
+    },
+    {
+      "id": "student_ai_result_216f506f",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:37:07.033Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:37:07.033Z",
+      "createdAt": "2026-06-20T17:37:07.034Z",
+      "updatedAt": "2026-06-20T17:37:07.034Z"
+    },
+    {
+      "id": "student_ai_result_8b94a792",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:50:58.287Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:50:58.287Z",
+      "createdAt": "2026-06-20T17:50:58.288Z",
+      "updatedAt": "2026-06-20T17:50:58.288Z"
+    },
+    {
+      "id": "student_ai_result_c47845c1",
+      "ownerId": "user_student",
+      "type": "weakness_insight",
+      "courseId": "course_ood",
+      "assignmentId": null,
+      "noteId": "note_uml",
+      "relatedSubmissionId": null,
+      "provider": "mock-local-llm",
+      "result": {
+        "type": "weakness_insight",
+        "summary": "当前没有明显错题堆积，可以用练习验证理解。",
+        "actions": [
+          {
+            "type": "start_practice",
+            "label": "进入练习与错题",
+            "targetId": "",
+            "route": "student-practice",
+            "priority": "medium",
+            "reason": "查看薄弱点和错题回放",
+            "detail": "查看薄弱点和错题回放"
+          },
+          {
+            "type": "open_learning",
+            "label": "回到学习页补任务",
+            "targetId": "",
+            "route": "student-learning",
+            "priority": "medium",
+            "reason": "把薄弱点转成学习任务",
+            "detail": "把薄弱点转成学习任务"
+          }
+        ],
+        "risks": [],
+        "evidence": [],
+        "questions": [],
+        "provider": "mock-local-llm",
+        "generatedAt": "2026-06-20T17:51:02.686Z",
+        "rawText": "我已根据当前学习目标生成建议：你是 EduMind 学生端 AI workflow 服务。 task=weakness_insight schema=weakness_insight 只返回一个合法 JSON ...\n1. 先把任务拆成 30-60 分钟可以完成的小块。\n2. 每个学习块结束后记录一个关键结论和一个疑问。\n3. 如果涉及项目开发，优先完成可运行闭环，再补充边界场景和文档证据。",
+        "weaknesses": []
+      },
+      "actions": [
+        {
+          "id": "action_1",
+          "label": "进入练习与错题",
+          "route": "student-practice",
+          "detail": "查看薄弱点和错题回放",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        },
+        {
+          "id": "action_2",
+          "label": "回到学习页补任务",
+          "route": "student-learning",
+          "detail": "把薄弱点转成学习任务",
+          "kind": "navigate",
+          "status": "open",
+          "note": "",
+          "updatedAt": null
+        }
+      ],
+      "meta": {
+        "route": "student-ai-insight",
+        "request": "",
+        "source": "workflow"
+      },
+      "generatedAt": "2026-06-20T17:51:02.686Z",
+      "createdAt": "2026-06-20T17:51:02.686Z",
+      "updatedAt": "2026-06-20T17:51:02.686Z"
+    }
+  ],
+  "studentTaskDrafts": []
 }

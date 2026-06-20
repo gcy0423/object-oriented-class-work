@@ -14,7 +14,28 @@
       "updatedAt": "2026-06-16"
     }
   ],
-  "submissions": [],
+  "submissions": [
+    {
+      "id": "submission_4364a24b",
+      "createdAt": "2026-06-18T13:44:54.167Z",
+      "updatedAt": "2026-06-18T13:44:54.168Z",
+      "assignmentId": "assignment_ood_model",
+      "studentId": "user_student",
+      "studentSnapshot": {
+        "name": "林知夏",
+        "role": "student"
+      },
+      "content": "这是一份用于浏览器验收的作业提交正文。",
+      "attachments": [
+        {
+          "name": "diagram.png",
+          "url": "https"
+        }
+      ],
+      "status": "submitted",
+      "submittedAt": "2026-06-18T13:44:54.167Z"
+    }
+  ],
   "rubrics": [
     {
       "id": "rubric_ood_modeling",
@@ -78,10 +99,22 @@
       "type": "single_choice",
       "stem": "类图中空心三角箭头通常表示什么关系？",
       "choices": [
-        { "id": "A", "text": "继承" },
-        { "id": "B", "text": "组合" },
-        { "id": "C", "text": "依赖" },
-        { "id": "D", "text": "关联" }
+        {
+          "id": "A",
+          "text": "继承"
+        },
+        {
+          "id": "B",
+          "text": "组合"
+        },
+        {
+          "id": "C",
+          "text": "依赖"
+        },
+        {
+          "id": "D",
+          "text": "关联"
+        }
       ],
       "answer": "A",
       "analysis": "空心三角箭头表示泛化，也就是继承关系。",
@@ -97,8 +130,14 @@
       "type": "true_false",
       "stem": "单一职责原则要求一个类只承担一种主要职责。",
       "choices": [
-        { "id": "true", "text": "正确" },
-        { "id": "false", "text": "错误" }
+        {
+          "id": "true",
+          "text": "正确"
+        },
+        {
+          "id": "false",
+          "text": "错误"
+        }
       ],
       "answer": "true",
       "analysis": "单一职责原则强调变化原因单一，降低类的耦合度。",
@@ -114,12 +153,28 @@
       "type": "multiple_choice",
       "stem": "顺序图通常强调哪些信息？",
       "choices": [
-        { "id": "A", "text": "对象间消息顺序" },
-        { "id": "B", "text": "对象生命线" },
-        { "id": "C", "text": "数据库索引" },
-        { "id": "D", "text": "交互时机" }
+        {
+          "id": "A",
+          "text": "对象间消息顺序"
+        },
+        {
+          "id": "B",
+          "text": "对象生命线"
+        },
+        {
+          "id": "C",
+          "text": "数据库索引"
+        },
+        {
+          "id": "D",
+          "text": "交互时机"
+        }
       ],
-      "answer": ["A", "B", "D"],
+      "answer": [
+        "A",
+        "B",
+        "D"
+      ],
       "analysis": "顺序图强调对象、生命线、消息以及时间先后，不涉及数据库索引。",
       "concept": "顺序图",
       "difficulty": "medium",
@@ -133,10 +188,22 @@
       "type": "single_choice",
       "stem": "工厂方法模式最主要的价值是什么？",
       "choices": [
-        { "id": "A", "text": "隐藏对象创建细节" },
-        { "id": "B", "text": "减少数据库查询" },
-        { "id": "C", "text": "取代继承" },
-        { "id": "D", "text": "提升网络带宽" }
+        {
+          "id": "A",
+          "text": "隐藏对象创建细节"
+        },
+        {
+          "id": "B",
+          "text": "减少数据库查询"
+        },
+        {
+          "id": "C",
+          "text": "取代继承"
+        },
+        {
+          "id": "D",
+          "text": "提升网络带宽"
+        }
       ],
       "answer": "A",
       "analysis": "工厂方法把对象创建延迟到子类或工厂中，解耦创建逻辑。",
@@ -160,8 +227,75 @@
       "updatedAt": "2026-06-16"
     }
   ],
-  "practiceSessions": [],
-  "answerRecords": [],
+  "practiceSessions": [
+    {
+      "id": "practice_04bc11a3",
+      "createdAt": "2026-06-18T13:43:20.212Z",
+      "updatedAt": "2026-06-18T13:43:20.212Z",
+      "ownerId": "user_student",
+      "courseId": "course_ood",
+      "bankId": "qbank_ood",
+      "questionIds": [
+        "question_uml_generalization",
+        "question_solid_single",
+        "question_sequence_message",
+        "question_factory_pattern",
+        "question_domain_model_short"
+      ],
+      "status": "active",
+      "score": 0,
+      "correctRate": 0,
+      "startedAt": "2026-06-18T13:43:20.212Z",
+      "finishedAt": null
+    },
+    {
+      "id": "practice_d9c133ff",
+      "createdAt": "2026-06-18T13:44:06.213Z",
+      "updatedAt": "2026-06-18T13:44:08.197Z",
+      "ownerId": "user_student",
+      "courseId": "course_ood",
+      "bankId": "qbank_ood",
+      "questionIds": [
+        "question_uml_generalization",
+        "question_solid_single",
+        "question_sequence_message",
+        "question_factory_pattern",
+        "question_domain_model_short"
+      ],
+      "status": "finished",
+      "score": 1,
+      "correctRate": 100,
+      "startedAt": "2026-06-18T13:44:06.213Z",
+      "finishedAt": "2026-06-18T13:44:08.197Z"
+    }
+  ],
+  "answerRecords": [
+    {
+      "id": "answer_383b9b72",
+      "createdAt": "2026-06-18T13:44:07.262Z",
+      "updatedAt": "2026-06-18T13:44:07.262Z",
+      "sessionId": "practice_d9c133ff",
+      "questionId": "question_uml_generalization",
+      "ownerId": "user_student",
+      "answer": "A",
+      "correct": true,
+      "status": "judged",
+      "explanation": "空心三角箭头表示泛化，也就是继承关系。"
+    }
+  ],
   "mistakeItems": [],
-  "masteryRecords": []
+  "masteryRecords": [
+    {
+      "id": "mastery_220a1df5",
+      "createdAt": "2026-06-18T13:44:07.263Z",
+      "updatedAt": "2026-06-18T13:44:07.264Z",
+      "ownerId": "user_student",
+      "courseId": "course_ood",
+      "concept": "UML 类图",
+      "correctCount": 1,
+      "incorrectCount": 0,
+      "masteryScore": 100,
+      "lastPracticedAt": "2026-06-18T13:44:07.264Z"
+    }
+  ]
 }

@@ -1,0 +1,30 @@
+{
+  "reminderRules": [
+    {
+      "id": "reminder_ood_assignment",
+      "ownerId": "user_student",
+      "createdBy": "user_teacher",
+      "courseId": "course_ood",
+      "title": "Review object-oriented assignment",
+      "message": "Check class responsibility and UML evidence before submission.",
+      "targetType": "assignment",
+      "targetId": "assignment_ood_model",
+      "dueAt": "2026-06-19T13:33:38.676Z",
+      "nextRunAt": "2026-06-19T13:33:38.676Z",
+      "lastRunAt": null,
+      "frequency": "once",
+      "intervalDays": 1,
+      "status": "active",
+      "severity": "warning",
+      "channels": [
+        "in_app"
+      ],
+      "metadata": {
+        "source": "seed"
+      },
+      "createdAt": "2026-06-18T13:33:38.676Z",
+      "updatedAt": "2026-06-18T13:33:38.676Z"
+    }
+  ],
+  "scheduleRuns": []
+}

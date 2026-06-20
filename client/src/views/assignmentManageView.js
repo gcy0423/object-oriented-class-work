@@ -43,7 +43,7 @@ function submissionTable(detail, canManage) {
 
 function assignmentDetailPanel(detail, canManage) {
   if (!detail?.assignment) {
-    return emptyState("选择一份作业后，这里会显示说明、评分规则和提交列表。");
+    return emptyState("请选择作业查看说明、评分规则和提交列表。");
   }
   const assignment = detail.assignment;
   return `
@@ -74,7 +74,7 @@ function assignmentTable(assignments, canManage) {
   return dataTable({
     columns: [
       { key: "title", label: "标题", render: (row) => `<button class="link-button" data-action="select-assignment" data-id="${attr(row.id)}">${escapeHtml(row.title)}</button>` },
-      { key: "courseId", label: "课程", render: (row) => escapeHtml(row.courseId) },
+      { key: "courseId", label: "课程", render: (row) => escapeHtml(row.courseTitle || row.courseId) },
       { key: "status", label: "状态", render: (row) => statusBadge(row.status || "published") },
       { key: "dueAt", label: "截止", render: (row) => escapeHtml(formatDate(row.dueAt)) },
       { key: "submitted", label: "提交数", render: (row) => escapeHtml(row.submissionSummary?.submitted ?? row.submitted ?? 0) },

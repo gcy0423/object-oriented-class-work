@@ -18,6 +18,152 @@
       "updatedAt": "2026-06-16"
     }
   ],
-  "activityLogs": [],
-  "events": []
+  "activityLogs": [
+    {
+      "id": "log_b4c07291",
+      "createdAt": "2026-06-18T13:43:20.229Z",
+      "updatedAt": "2026-06-18T13:43:20.229Z",
+      "actorId": "user_student",
+      "type": "practice.started",
+      "summary": "开始练习：面向对象基础题库",
+      "payload": {
+        "sessionId": "practice_04bc11a3",
+        "bankId": "qbank_ood"
+      }
+    },
+    {
+      "id": "log_2d1d3419",
+      "createdAt": "2026-06-18T13:44:06.223Z",
+      "updatedAt": "2026-06-18T13:44:06.223Z",
+      "actorId": "user_student",
+      "type": "practice.started",
+      "summary": "开始练习：面向对象基础题库",
+      "payload": {
+        "sessionId": "practice_d9c133ff",
+        "bankId": "qbank_ood"
+      }
+    },
+    {
+      "id": "log_6c9a3f60",
+      "createdAt": "2026-06-18T13:44:07.266Z",
+      "updatedAt": "2026-06-18T13:44:07.266Z",
+      "actorId": "user_student",
+      "type": "mastery.changed",
+      "summary": "更新知识点掌握度：UML 类图",
+      "payload": {
+        "masteryId": "mastery_220a1df5",
+        "masteryScore": 100,
+        "concept": "UML 类图"
+      }
+    },
+    {
+      "id": "log_2279bff3",
+      "createdAt": "2026-06-18T13:44:08.200Z",
+      "updatedAt": "2026-06-18T13:44:08.200Z",
+      "actorId": "user_student",
+      "type": "practice.completed",
+      "summary": "完成练习，正确率 100%",
+      "payload": {
+        "sessionId": "practice_d9c133ff",
+        "score": 1,
+        "correctRate": 100
+      }
+    },
+    {
+      "id": "log_3e3ccebb",
+      "createdAt": "2026-06-18T13:44:54.178Z",
+      "updatedAt": "2026-06-18T13:44:54.178Z",
+      "actorId": "user_student",
+      "type": "submission.created",
+      "summary": "提交作业：领域模型设计作业",
+      "payload": {
+        "submissionId": "submission_4364a24b",
+        "assignmentId": "assignment_ood_model"
+      }
+    }
+  ],
+  "events": [
+    {
+      "id": "evt_14e1b3db",
+      "createdAt": "2026-06-18T13:43:20.223Z",
+      "updatedAt": "2026-06-18T13:43:20.223Z",
+      "type": "practice.started",
+      "source": "assessment-service",
+      "actorId": "user_student",
+      "summary": "开始练习：面向对象基础题库",
+      "payload": {
+        "sessionId": "practice_04bc11a3",
+        "bankId": "qbank_ood"
+      },
+      "occurredAt": "2026-06-18T13:43:20.223Z"
+    },
+    {
+      "id": "evt_b694e0f5",
+      "createdAt": "2026-06-18T13:44:06.221Z",
+      "updatedAt": "2026-06-18T13:44:06.221Z",
+      "type": "practice.started",
+      "source": "assessment-service",
+      "actorId": "user_student",
+      "summary": "开始练习：面向对象基础题库",
+      "payload": {
+        "sessionId": "practice_d9c133ff",
+        "bankId": "qbank_ood"
+      },
+      "occurredAt": "2026-06-18T13:44:06.221Z"
+    },
+    {
+      "id": "evt_9bab6f39",
+      "createdAt": "2026-06-18T13:44:07.265Z",
+      "updatedAt": "2026-06-18T13:44:07.265Z",
+      "type": "mastery.changed",
+      "source": "assessment-service",
+      "actorId": "user_student",
+      "summary": "更新知识点掌握度：UML 类图",
+      "payload": {
+        "masteryId": "mastery_220a1df5",
+        "masteryScore": 100,
+        "concept": "UML 类图"
+      },
+      "occurredAt": "2026-06-18T13:44:07.265Z"
+    },
+    {
+      "id": "evt_66df08ad",
+      "createdAt": "2026-06-18T13:44:08.199Z",
+      "updatedAt": "2026-06-18T13:44:08.199Z",
+      "type": "practice.completed",
+      "source": "assessment-service",
+      "actorId": "user_student",
+      "summary": "完成练习，正确率 100%",
+      "payload": {
+        "sessionId": "practice_d9c133ff",
+        "score": 1,
+        "correctRate": 100
+      },
+      "occurredAt": "2026-06-18T13:44:08.199Z"
+    },
+    {
+      "id": "evt_8d31bcee",
+      "createdAt": "2026-06-18T13:44:54.176Z",
+      "updatedAt": "2026-06-18T13:44:54.176Z",
+      "type": "submission.created",
+      "source": "assessment-service",
+      "actorId": "user_student",
+      "summary": "提交作业：领域模型设计作业",
+      "payload": {
+        "submissionId": "submission_4364a24b",
+        "assignmentId": "assignment_ood_model"
+      },
+      "occurredAt": "2026-06-18T13:44:54.176Z"
+    }
+  ],
+  "roomMembers": [],
+  "messageReplies": [],
+  "mentions": [],
+  "collaborationTasks": [],
+  "roomSummaries": [],
+  "roomDecisions": [],
+  "sharedResources": [],
+  "checklistItems": [],
+  "handoffNotes": [],
+  "auditRecords": []
 }

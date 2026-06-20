@@ -45,10 +45,12 @@ export function createAssessmentRepositories(database, assignmentModule, questio
   return {
     assignments: new assignmentModule.AssignmentRepository(database),
     submissions: new assignmentModule.SubmissionRepository(database),
+    submissionDrafts: new assignmentModule.SubmissionDraftRepository(database),
     rubrics: new assignmentModule.RubricRepository(database),
     rubricCriteria: new assignmentModule.RubricCriterionRepository(database),
     grades: new GradeRepository(database),
     feedbackItems: new assignmentModule.FeedbackItemRepository(database),
+    uploads: new assignmentModule.UploadRepository(database),
     questionBanks: new questionModule.QuestionBankRepository(database),
     questions: new questionModule.QuestionRepository(database),
     practiceSessions: new questionModule.PracticeSessionRepository(database),

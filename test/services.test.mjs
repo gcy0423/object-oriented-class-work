@@ -12,6 +12,7 @@ import {
 } from "../shared/auth/userContext.js";
 import { ServiceClient } from "../shared/client/serviceClient.js";
 import { normalizeChatCompletionsEndpoint } from "../services/ai-service/src/domain/ai.js";
+import { StudentAiWorkflowService } from "../services/ai-service/src/application/studentAiWorkflowService.js";
 import { createApp as createAiApp } from "../services/ai-service/src/main.js";
 import { createApp as createAnalyticsApp } from "../services/analytics-service/src/main.js";
 import { createApp as createAssessmentApp } from "../services/assessment-service/src/main.js";
@@ -1510,6 +1511,53 @@ test("ai-service handles ask, plan, summarize, records responses, and exposes pr
   });
 });
 
+test("StudentAiWorkflowService normalizes JSON output and falls back on invalid provider content", async () => {
+  const user = { id: "user_student", role: "student", name: "林知夏" };
+  const input = {
+    route: "student-ai",
+    goals: [{ id: "goal_1", title: "完成 UML 复盘", targetDate: "2026-06-21" }],
+    assignments: [{ id: "assignment_1", title: "领域模型作业", dueAt: "2026-06-21T23:59:59.000Z" }],
+    note: { title: "UML 关系笔记", content: "组合关系会影响生命周期。" },
+    draft: { content: "我补充了类职责和关系说明。", attachments: [] }
+  };
+
+  const workflow = new StudentAiWorkflowService({
+    provider: {
+      async complete() {
+        return {
+          provider: "mock-json-provider",
+          text: JSON.stringify({
+            summary: "先完成领域模型作业，再补强类图关系。",
+            actions: [{ type: "open_assignment", label: "查看作业", route: "student-assignment-detail", priority: "high" }],
+            risks: [{ level: "medium", title: "类图关系仍不稳定", evidence: "最近错题集中在关系辨析" }],
+            questions: [{ text: "是否先做一组类图关系题？" }]
+          })
+        };
+      }
+    }
+  });
+  const validResult = await workflow.buildDailyPlan(user, input);
+  assert.equal(validResult.provider, "mock-json-provider");
+  assert.equal(validResult.type, "daily_plan");
+  assert.equal(validResult.actions[0].route, "student-assignment-detail");
+
+  const fallbackWorkflow = new StudentAiWorkflowService({
+    provider: {
+      async complete() {
+        return {
+          provider: "mock-text-provider",
+          text: "这不是 JSON。"
+        };
+      }
+    }
+  });
+  const fallbackResult = await fallbackWorkflow.checkSubmission(user, input);
+  assert.equal(fallbackResult.type, "submission_check");
+  assert.equal(fallbackResult.provider, "mock-text-provider");
+  assert.ok(Array.isArray(fallbackResult.issues));
+  assert.match(fallbackResult.rawText, /这不是 JSON/);
+});
+
 test("ai-service supports internal submission review with mock provider", async () => {
   await withTempDir(async (dir) => {
     const ai = await startApp(createAiApp, aiConfig(dir, {
@@ -1550,6 +1598,91 @@ test("ai-service supports internal submission review with mock provider", async 
       assert.equal(payload.data.provider, "mock-local-llm");
       assert.equal(payload.data.criteriaFeedback.length, 2);
       assert.equal(typeof payload.data.suggestedScore, "number");
+    } finally {
+      await stopServers([ai.server]);
+    }
+  });
+});
+
+test("ai-service exposes student AI workflow endpoints with structured fallback output", async () => {
+  await withTempDir(async (dir) => {
+    const ai = await startApp(createAiApp, aiConfig(dir, {
+      learningServiceUrl: "http://127.0.0.1:65531"
+    }));
+
+    try {
+      const studentHeaders = {
+        "x-edumind-user-id": "user_student",
+        "x-edumind-user-role": "student",
+        "x-edumind-user-name": encodeUserContextHeader("林知夏"),
+        "content-type": "application/json"
+      };
+      const requests = [
+        {
+          path: "/api/student-ai/daily-plan",
+          body: { tasks: [{ title: "整理顺序图", status: "todo" }], assignments: [{ id: "assignment_1", title: "领域模型作业", dueAt: "2026-06-21T23:59:59.000Z" }] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "daily_plan");
+            assert.ok(Array.isArray(payload.data.actions));
+          }
+        },
+        {
+          path: "/api/student-ai/weakness-insight",
+          body: { mistakes: [{ id: "mistake_1", question: { concept: "类图关系", stem: "题干" } }] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "weakness_insight");
+            assert.ok(Array.isArray(payload.data.weaknesses));
+          }
+        },
+        {
+          path: "/api/student-ai/task-drafts",
+          body: { goals: [{ id: "goal_1", title: "完成 UML 复盘", targetDate: "2026-06-21" }], courses: [{ id: "course_ood", title: "面向对象技术与方法" }] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "task_draft");
+            assert.equal(typeof payload.data.draft.title, "string");
+          }
+        },
+        {
+          path: "/api/student-ai/assignment-guide",
+          body: { assignment: { id: "assignment_1", title: "领域模型作业" } },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "assignment_guide");
+            assert.ok(Array.isArray(payload.data.outline));
+            assert.ok(Array.isArray(payload.data.checklist));
+          }
+        },
+        {
+          path: "/api/student-ai/submission-check",
+          body: { draft: { content: "我补充了类职责和关系说明。", attachments: [] } },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "submission_check");
+            assert.equal(typeof payload.data.completionEstimate, "number");
+            assert.ok(Array.isArray(payload.data.issues));
+          }
+        },
+        {
+          path: "/api/student-ai/note-organize",
+          body: { note: { title: "UML 关系笔记", content: "组合关系会影响生命周期。" } },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "note_organize");
+            assert.ok(Array.isArray(payload.data.cards));
+            assert.ok(Array.isArray(payload.data.assignmentParagraphs));
+          }
+        }
+      ];
+
+      for (const item of requests) {
+        const response = await fetch(`${ai.url}${item.path}`, {
+          method: "POST",
+          headers: studentHeaders,
+          body: JSON.stringify(item.body)
+        });
+        const payload = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(payload.data.provider, "mock-local-llm");
+        assert.equal(typeof payload.data.generatedAt, "string");
+        item.assertPayload(payload);
+      }
     } finally {
       await stopServers([ai.server]);
     }
@@ -3580,6 +3713,51 @@ test("gateway proxies login, AI, collaboration APIs, SSE, and dashboard aggregat
       const summarizePayload = await summarizeResponse.json();
       assert.equal(summarizeResponse.status, 200);
       assert.equal(summarizePayload.data.provider, "mock-local-llm");
+
+      const studentAiChecks = [
+        {
+          path: "/api/student-ai/daily-plan",
+          body: { tasks: [{ title: "完成任务接口代理", status: "todo" }] },
+          type: "daily_plan"
+        },
+        {
+          path: "/api/student-ai/weakness-insight",
+          body: { mistakes: [{ id: "mistake_1", question: { concept: "顺序图", stem: "题目" } }] },
+          type: "weakness_insight"
+        },
+        {
+          path: "/api/student-ai/task-drafts",
+          body: { goals: [{ id: goalPayload.data.id, title: goalPayload.data.title }], courses: coursesPayload.data },
+          type: "task_draft"
+        },
+        {
+          path: "/api/student-ai/assignment-guide",
+          body: { assignment: { id: "assignment_1", title: "领域模型作业" } },
+          type: "assignment_guide"
+        },
+        {
+          path: "/api/student-ai/submission-check",
+          body: { draft: { content: "我补充了顺序图和关系说明。", attachments: [] } },
+          type: "submission_check"
+        },
+        {
+          path: "/api/student-ai/note-organize",
+          body: { note: { title: "UML 关系笔记", content: "组合关系会影响生命周期。" } },
+          type: "note_organize"
+        }
+      ];
+
+      for (const check of studentAiChecks) {
+        const response = await fetch(`${gateway.url}${check.path}`, {
+          method: "POST",
+          headers: authHeaders,
+          body: JSON.stringify(check.body)
+        });
+        const payload = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(payload.data.type, check.type);
+        assert.equal(payload.data.provider, "mock-local-llm");
+      }
 
       const collaborationGetResponse = await fetch(`${gateway.url}/api/collaboration/messages?roomId=room_ood`, {
         headers: {

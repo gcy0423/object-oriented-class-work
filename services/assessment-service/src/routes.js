@@ -59,6 +59,54 @@ export function registerRoutes(router, config, services) {
     return ok(await services.assignmentService.createSubmission(user, req.params.id, await readJson(req)));
   });
 
+  router.get("/api/assignment-submission-drafts", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.studentSubmissionWorkspace.getDraft(user, req.query));
+  });
+
+  router.post("/api/assignment-submission-drafts", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.studentSubmissionWorkspace.saveDraft(user, await readJson(req)));
+  });
+
+  router.patch("/api/assignment-submission-drafts/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.studentSubmissionWorkspace.updateDraft(user, req.params.id, await readJson(req)));
+  });
+
+  router.delete("/api/assignment-submission-drafts/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.studentSubmissionWorkspace.deleteDraft(user, req.params.id));
+  });
+
+  router.post("/api/assignment-submission-drafts/:id/submit", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.studentSubmissionWorkspace.submitDraft(user, req.params.id));
+  });
+
+  router.post("/api/uploads", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.studentSubmissionWorkspace.createUpload(user, await readJson(req)));
+  });
+
+  router.get("/api/uploads/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(services.studentSubmissionWorkspace.getUpload(user, req.params.id));
+  });
+
+  router.delete("/api/uploads/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.studentSubmissionWorkspace.deleteUpload(user, req.params.id));
+  });
+
   router.post("/api/submissions/:id/grade", async (req) => {
     await services.ready;
     const user = requireUserContext(req);
@@ -76,6 +124,20 @@ export function registerRoutes(router, config, services) {
     const user = requireUserContext(req);
     requireTeacher(user);
     return ok(services.rubricInsightService.compareSubmissionGrades(req.params.id));
+  });
+
+  router.get("/api/assignments/:id/student-ai-evidence", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    requireTeacher(user);
+    return ok(await services.studentSubmissionWorkspace.getAssignmentEvidence(user, req.params.id));
+  });
+
+  router.get("/api/submissions/:id/student-ai-evidence", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    requireTeacher(user);
+    return ok(await services.studentSubmissionWorkspace.getSubmissionEvidence(user, req.params.id));
   });
 
   router.post("/api/rubrics", async (req) => {

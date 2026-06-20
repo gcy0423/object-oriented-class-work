@@ -217,6 +217,16 @@ export class AnalyticsService {
     }
 
     const assessment = summarizeAssessmentDashboard(assessmentDashboard, assessmentContext);
+    const ai = await this.aiClient.getStudentActionSummary(studentId).catch(() => ({
+      studentId,
+      totalResults: 0,
+      totalActions: 0,
+      completed: 0,
+      dismissed: 0,
+      converted: 0,
+      completionRate: 0,
+      latestResults: []
+    }));
     return {
       studentId,
       profile: {
@@ -240,6 +250,7 @@ export class AnalyticsService {
         activityCount: (collaboration.activityLogs || []).filter((item) => item.actorId === studentId).length,
         messageCount: (collaboration.messages || []).filter((item) => item.authorId === studentId).length
       },
+      ai,
       recommendations: buildRecommendations({
         learning: learning.metrics || {},
         assessment,
@@ -258,6 +269,12 @@ export class AnalyticsService {
     ]);
     const students = users.filter((item) => item.role === "student");
     const learningContexts = await Promise.all(students.map((student) => this.learningClient.getLearningContext(student.id)));
+    const aiSummaries = await Promise.all(students.map((student) => this.aiClient.getStudentActionSummary(student.id).catch(() => ({
+      studentId: student.id,
+      totalActions: 0,
+      completed: 0,
+      completionRate: 0
+    }))));
 
     return {
       role: user.role,
@@ -281,7 +298,10 @@ export class AnalyticsService {
       },
       ai: {
         provider: aiHealth.provider || "unknown",
-        status: aiHealth.status || "unknown"
+        status: aiHealth.status || "unknown",
+        actionCompletionRate: average(aiSummaries.map((item) => item.completionRate || 0)),
+        completedActions: sum(aiSummaries.map((item) => item.completed || 0)),
+        totalActions: sum(aiSummaries.map((item) => item.totalActions || 0))
       }
     };
   }
@@ -332,6 +352,11 @@ export class AnalyticsService {
           assignmentCount: student.assessment.assignmentCount || 0,
           mistakeCount: student.assessment.mistakeCount || 0,
           masteryScore: student.assessment.masteryScore || 0
+        },
+        ai: {
+          completionRate: student.ai?.completionRate || 0,
+          completed: student.ai?.completed || 0,
+          totalActions: student.ai?.totalActions || 0
         }
       })),
       assignments,

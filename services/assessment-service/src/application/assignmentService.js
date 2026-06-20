@@ -246,6 +246,7 @@ export class AssignmentService {
       },
       content,
       attachments: ensureAttachments(input.attachments),
+      aiCheckResultId: input.aiCheckResultId || null,
       status: "submitted",
       submittedAt: now,
       createdAt: now,
@@ -254,6 +255,7 @@ export class AssignmentService {
 
     submission.content = content;
     submission.attachments = ensureAttachments(input.attachments);
+    submission.aiCheckResultId = input.aiCheckResultId || submission.aiCheckResultId || null;
     submission.status = "submitted";
     submission.submittedAt = now;
     submission.studentSnapshot = {

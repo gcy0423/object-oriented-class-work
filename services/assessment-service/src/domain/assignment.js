@@ -23,8 +23,34 @@ export class Submission extends Entity {
     this.studentSnapshot = record.studentSnapshot || null;
     this.content = record.content || "";
     this.attachments = Array.isArray(record.attachments) ? record.attachments : [];
+    this.aiCheckResultId = record.aiCheckResultId || null;
     this.status = record.status || "submitted";
     this.submittedAt = record.submittedAt || this.createdAt;
+  }
+}
+
+export class SubmissionDraft extends Entity {
+  constructor(record) {
+    super(record);
+    this.assignmentId = record.assignmentId;
+    this.studentId = record.studentId;
+    this.content = record.content || "";
+    this.attachments = Array.isArray(record.attachments) ? record.attachments : [];
+    this.aiCheckResultId = record.aiCheckResultId || null;
+    this.status = record.status || "draft";
+  }
+}
+
+export class UploadRecord extends Entity {
+  constructor(record) {
+    super(record);
+    this.ownerId = record.ownerId;
+    this.name = record.name || "";
+    this.url = record.url || "";
+    this.contentType = record.contentType || "application/octet-stream";
+    this.size = Number(record.size || 0);
+    this.storagePath = record.storagePath || "";
+    this.base64 = record.base64 || "";
   }
 }
 
@@ -116,6 +142,31 @@ export class SubmissionRepository extends AssessmentRepository {
 
   findByAssignmentAndStudent(assignmentId, studentId) {
     return this.findByAssignment(assignmentId).find((submission) => submission.studentId === studentId) || null;
+  }
+}
+
+export class SubmissionDraftRepository extends AssessmentRepository {
+  constructor(database) {
+    super(database, "submissionDrafts", (record) => new SubmissionDraft(record));
+  }
+
+  findByStudent(studentId) {
+    return this.where((draft) => draft.studentId === studentId)
+      .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
+  }
+
+  findByAssignmentAndStudent(assignmentId, studentId) {
+    return this.findByStudent(studentId).find((draft) => draft.assignmentId === assignmentId) || null;
+  }
+}
+
+export class UploadRepository extends AssessmentRepository {
+  constructor(database) {
+    super(database, "uploads", (record) => new UploadRecord(record));
+  }
+
+  findByOwner(ownerId) {
+    return this.where((item) => item.ownerId === ownerId);
   }
 }
 

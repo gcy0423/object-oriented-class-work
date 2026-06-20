@@ -754,6 +754,18 @@ textarea {
   line-height: 1.65;
 }
 
+.status-pill {
+  min-height: 30px;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  padding: 4px 10px;
+  background: var(--green-soft);
+  color: var(--green-dark);
+  font-size: 13px;
+  font-weight: 900;
+}
+
 .mobile-nav {
   display: none;
 }

@@ -1,4 +1,5 @@
 import { escapeHtml } from "../utils/dom.js";
+import { statusText } from "../utils/format.js";
 import { emptyState, metric, sectionCard, statusBadge } from "../widgets/cards.js";
 
 function currentCourseId(state) {
@@ -18,13 +19,21 @@ function tags(items = []) {
   return items.filter(Boolean).map((item) => `<span class="tag">${escapeHtml(item)}</span>`).join("");
 }
 
+function courseSelect(state, selected = currentCourseId(state)) {
+  const courses = state.dashboard?.courses || [];
+  return `<select name="courseId">
+    ${courses.length ? "" : `<option value="">默认课程</option>`}
+    ${courses.map((course) => `<option value="${escapeHtml(course.id)}" ${course.id === selected ? "selected" : ""}>${escapeHtml(course.title)}</option>`).join("")}
+  </select>`;
+}
+
 function summaryMetrics(summary = {}) {
   return `
     <section class="grid metric-grid knowledge-metrics">
-      ${metric("Concepts", summary.concepts ?? 0)}
-      ${metric("Articles", summary.articles ?? 0)}
-      ${metric("Chunks", summary.chunks ?? 0)}
-      ${metric("Relations", summary.relations ?? 0)}
+      ${metric("概念", summary.concepts ?? 0)}
+      ${metric("文章", summary.articles ?? 0)}
+      ${metric("片段", summary.chunks ?? 0)}
+      ${metric("关联", summary.relations ?? 0)}
     </section>
   `;
 }
@@ -34,19 +43,19 @@ function filterForm(state) {
   const courses = state.dashboard?.courses || [];
   return `
     <form class="filter-toolbar knowledge-filter" data-form="knowledge-filter">
-      <label><span>Course</span><select name="courseId">
-        <option value="">First course</option>
+      <label><span>课程</span><select name="courseId">
+        <option value="">默认课程</option>
         ${courses.map((course) => `<option value="${escapeHtml(course.id)}" ${currentCourseId(state) === course.id ? "selected" : ""}>${escapeHtml(course.title)}</option>`).join("")}
       </select></label>
-      <label><span>Query</span><input name="query" value="${escapeHtml(filter.query || "")}" placeholder="sequence diagram, domain object..." /></label>
-      <label><span>Category</span><input name="category" value="${escapeHtml(filter.category || "")}" placeholder="analysis / design" /></label>
-      <label><span>Difficulty</span><select name="difficulty">
-        <option value="">Any</option>
-        ${optionList(["basic", "intermediate", "advanced"], filter.difficulty)}
+      <label><span>关键词</span><input name="query" value="${escapeHtml(filter.query || "")}" placeholder="顺序图、领域对象..." /></label>
+      <label><span>分类</span><input name="category" value="${escapeHtml(filter.category || "")}" placeholder="分析 / 设计" /></label>
+      <label><span>难度</span><select name="difficulty">
+        <option value="">不限</option>
+        ${optionList(["basic", "intermediate", "advanced"], filter.difficulty, statusText)}
       </select></label>
-      <label><span>Tag</span><input name="tag" value="${escapeHtml(filter.tag || "")}" placeholder="UML, RAG, testing" /></label>
+      <label><span>标签</span><input name="tag" value="${escapeHtml(filter.tag || "")}" placeholder="UML、测试、建模" /></label>
       <div class="filter-actions">
-        <button class="btn primary" type="submit">Search</button>
+        <button class="btn primary" type="submit">搜索</button>
       </div>
     </form>
   `;
@@ -56,7 +65,7 @@ function conceptList(state) {
   const concepts = state.knowledge.concepts || [];
   const selectedId = state.filters.knowledge.conceptId;
   if (!concepts.length) {
-    return emptyState("No concepts loaded for this filter.");
+    return emptyState("当前筛选下没有概念。");
   }
   return `<div class="knowledge-concept-list">${concepts.slice(0, 24).map((concept) => `
     <article class="knowledge-concept ${selectedId === concept.id ? "is-selected" : ""}">
@@ -67,8 +76,8 @@ function conceptList(state) {
       <p class="muted">${escapeHtml(concept.summary || "")}</p>
       <div class="tag-row">${tags([concept.category, ...(concept.tags || []).slice(0, 3)])}</div>
       <div class="inline-actions">
-        <button class="btn small" data-action="select-knowledge-concept" data-id="${escapeHtml(concept.id)}">Open</button>
-        <button class="btn small" data-action="focus-knowledge-practice" data-id="${escapeHtml(concept.id)}">Practice</button>
+        <button class="btn small" data-action="select-knowledge-concept" data-id="${escapeHtml(concept.id)}">打开</button>
+        <button class="btn small" data-action="focus-knowledge-practice" data-id="${escapeHtml(concept.id)}">练习</button>
       </div>
     </article>
   `).join("")}</div>`;
@@ -76,7 +85,7 @@ function conceptList(state) {
 
 function searchResults(results = []) {
   if (!results.length) {
-    return emptyState("No search results yet.");
+    return emptyState("输入关键词后查看搜索结果。");
   }
   return `<div class="knowledge-result-list">${results.map((result) => `
     <article class="knowledge-result">
@@ -87,11 +96,11 @@ function searchResults(results = []) {
       <p>${escapeHtml(result.preview || "")}</p>
       <div class="tag-row">
         <span class="tag">${escapeHtml(result.conceptTitle || result.conceptId || "-")}</span>
-        <span class="tag">score ${escapeHtml(result.score ?? 0)}</span>
+        <span class="tag">匹配度 ${escapeHtml(result.score ?? 0)}</span>
         ${(result.matches || []).slice(0, 3).map((item) => `<span class="tag">${escapeHtml(item)}</span>`).join("")}
       </div>
       <div class="inline-actions">
-        <button class="btn small" data-action="select-knowledge-concept" data-id="${escapeHtml(result.conceptId || result.id)}">Open concept</button>
+        <button class="btn small" data-action="select-knowledge-concept" data-id="${escapeHtml(result.conceptId || result.id)}">打开概念</button>
       </div>
     </article>
   `).join("")}</div>`;
@@ -100,7 +109,7 @@ function searchResults(results = []) {
 function graphPanel(state) {
   const graph = state.knowledge.graph;
   if (!graph || !(graph.nodes || []).length) {
-    return emptyState("Select a concept or run a search to inspect graph evidence.");
+    return emptyState("选择概念或搜索后查看知识关联。");
   }
   const nodes = graph.nodes || [];
   const edges = graph.edges || [];
@@ -129,7 +138,7 @@ function graphPanel(state) {
 
 function profilePanel(profile) {
   if (!profile) {
-    return emptyState("Open a concept to view articles, chunks, relations, and review cards.");
+    return emptyState("打开概念后查看文章、片段、关联和复习卡片。");
   }
   return `
     <article class="knowledge-profile">
@@ -143,12 +152,12 @@ function profilePanel(profile) {
       <div class="tag-row">${tags([profile.category, ...(profile.tags || [])])}</div>
       <div class="knowledge-profile-grid">
         <section>
-          <h4>Objectives</h4>
-          ${(profile.learningObjectives || []).length ? `<ul class="plain-list">${profile.learningObjectives.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : emptyState("No objectives.")}
+          <h4>学习目标</h4>
+          ${(profile.learningObjectives || []).length ? `<ul class="plain-list">${profile.learningObjectives.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>` : emptyState("暂无学习目标。")}
         </section>
         <section>
-          <h4>Review Cards</h4>
-          ${(profile.reviewCards || []).length ? `<ul class="plain-list">${profile.reviewCards.slice(0, 4).map((card) => `<li><strong>${escapeHtml(card.question)}</strong><br /><span class="muted">${escapeHtml(card.answer)}</span></li>`).join("")}</ul>` : emptyState("No review cards.")}
+          <h4>复习卡片</h4>
+          ${(profile.reviewCards || []).length ? `<ul class="plain-list">${profile.reviewCards.slice(0, 4).map((card) => `<li><strong>${escapeHtml(card.question)}</strong><br /><span class="muted">${escapeHtml(card.answer)}</span></li>`).join("")}</ul>` : emptyState("暂无复习卡片。")}
         </section>
       </div>
       <div class="knowledge-chunk-list">
@@ -166,7 +175,7 @@ function profilePanel(profile) {
 
 function recommendationList(items = []) {
   if (!items.length) {
-    return emptyState("No recommendations loaded.");
+    return emptyState("暂无推荐概念。");
   }
   return `<div class="knowledge-recommendations">${items.map((item) => `
     <article>
@@ -176,7 +185,7 @@ function recommendationList(items = []) {
         ${(item.nextActions || []).map((action) => `<li>${escapeHtml(action)}</li>`).join("")}
       </ul>
       <div class="inline-actions">
-        <button class="btn small" data-action="select-knowledge-concept" data-id="${escapeHtml(item.conceptId)}">Open</button>
+        <button class="btn small" data-action="select-knowledge-concept" data-id="${escapeHtml(item.conceptId)}">打开</button>
       </div>
     </article>
   `).join("")}</div>`;
@@ -187,24 +196,24 @@ function pathForm(state) {
   const saving = state.saving.knowledgePath;
   return `
     <form class="form-grid compact-form" data-form="knowledge-path">
-      <label><span>Goal</span><textarea name="goalText" rows="3" placeholder="Target concept, weak area, or project goal">${escapeHtml(draft.goalText || "")}</textarea></label>
+      <label><span>目标</span><textarea name="goalText" rows="3" placeholder="目标概念、薄弱点或项目目标">${escapeHtml(draft.goalText || "")}</textarea></label>
       <div class="form-grid two-field-row">
-        <label><span>Course</span><input name="courseId" value="${escapeHtml(currentCourseId(state))}" /></label>
-        <label><span>Days</span><input type="number" min="1" max="21" name="days" value="${escapeHtml(draft.days || 5)}" /></label>
+        <label><span>课程</span>${courseSelect(state)}</label>
+        <label><span>天数</span><input type="number" min="1" max="21" name="days" value="${escapeHtml(draft.days || 5)}" /></label>
       </div>
-      <button class="btn primary" type="submit" ${saving ? "disabled" : ""}>${saving ? "Building..." : "Build path"}</button>
+      <button class="btn primary" type="submit" ${saving ? "disabled" : ""}>${saving ? "生成中..." : "生成路径"}</button>
     </form>
   `;
 }
 
 function pathPanel(path) {
   if (!path) {
-    return emptyState("Build a learning path from the current goal.");
+    return emptyState("根据当前目标生成学习路径。");
   }
   return `
     <div class="stats-grid compact-stats">
-      ${metric("Concepts", path.totalConcepts ?? 0)}
-      ${metric("Minutes", path.totalMinutes ?? 0)}
+      ${metric("概念", path.totalConcepts ?? 0)}
+      ${metric("分钟", path.totalMinutes ?? 0)}
     </div>
     <ol class="knowledge-schedule">
       ${(path.schedule || []).map((day) => `
@@ -230,24 +239,24 @@ function practiceForm(state) {
   const saving = state.saving.knowledgePractice;
   return `
     <form class="form-grid compact-form" data-form="knowledge-practice">
-      <label><span>Concept IDs</span><input name="conceptIds" value="${escapeHtml(draft.conceptIds || state.filters.knowledge.conceptId || "")}" placeholder="kc_sequence,kc_service_boundary" /></label>
+      <label><span>概念</span><input name="conceptIds" value="${escapeHtml(draft.conceptIds || state.filters.knowledge.conceptId || "")}" placeholder="选择概念后自动填入" /></label>
       <div class="form-grid two-field-row">
-        <label><span>Course</span><input name="courseId" value="${escapeHtml(currentCourseId(state))}" /></label>
-        <label><span>Limit</span><input type="number" min="1" max="12" name="limit" value="${escapeHtml(draft.limit || 4)}" /></label>
+        <label><span>课程</span>${courseSelect(state)}</label>
+        <label><span>题数</span><input type="number" min="1" max="12" name="limit" value="${escapeHtml(draft.limit || 4)}" /></label>
       </div>
-      <button class="btn primary" type="submit" ${saving ? "disabled" : ""}>${saving ? "Building..." : "Build practice"}</button>
+      <button class="btn primary" type="submit" ${saving ? "disabled" : ""}>${saving ? "生成中..." : "生成练习"}</button>
     </form>
   `;
 }
 
 function practicePanel(set) {
   if (!set) {
-    return emptyState("Build a practice set from selected concepts.");
+    return emptyState("从选中的概念生成练习。");
   }
   return `
     <div class="stats-grid compact-stats">
-      ${metric("Concepts", set.conceptCount ?? 0)}
-      ${metric("Questions", set.questionCount ?? (set.questions || []).length)}
+      ${metric("概念", set.conceptCount ?? 0)}
+      ${metric("题目", set.questionCount ?? (set.questions || []).length)}
     </div>
     <div class="knowledge-question-list">
       ${(set.questions || []).slice(0, 10).map((question) => `
@@ -270,26 +279,26 @@ function contextForm(state) {
   const saving = state.saving.knowledgeContext;
   return `
     <form class="form-grid compact-form" data-form="knowledge-context">
-      <label><span>Question</span><textarea name="question" rows="4">${escapeHtml(draft.question || "")}</textarea></label>
+      <label><span>问题</span><textarea name="question" rows="4">${escapeHtml(draft.question || "")}</textarea></label>
       <div class="form-grid two-field-row">
-        <label><span>Course</span><input name="courseId" value="${escapeHtml(currentCourseId(state))}" /></label>
-        <label><span>Limit</span><input type="number" min="1" max="8" name="limit" value="${escapeHtml(draft.limit || 4)}" /></label>
+        <label><span>课程</span>${courseSelect(state)}</label>
+        <label><span>数量</span><input type="number" min="1" max="8" name="limit" value="${escapeHtml(draft.limit || 4)}" /></label>
       </div>
-      <button class="btn primary" type="submit" ${saving ? "disabled" : ""}>${saving ? "Building..." : "Build context"}</button>
+      <button class="btn primary" type="submit" ${saving ? "disabled" : ""}>${saving ? "生成中..." : "生成上下文"}</button>
     </form>
   `;
 }
 
 function contextPanel(context) {
   if (!context) {
-    return emptyState("Build AI context to preview retrieval evidence.");
+    return emptyState("生成 AI 上下文后预览检索证据。");
   }
   return `
     <div class="knowledge-context">
-      <p><strong>Query:</strong> ${escapeHtml(context.query || "")}</p>
+      <p><strong>问题：</strong> ${escapeHtml(context.query || "")}</p>
       <div class="knowledge-context-grid">
         <section>
-          <h4>Concept Evidence</h4>
+          <h4>概念证据</h4>
           ${(context.concepts || []).map((concept) => `
             <article>
               <strong>${escapeHtml(concept.title)}</strong>
@@ -298,8 +307,8 @@ function contextPanel(context) {
           `).join("")}
         </section>
         <section>
-          <h4>Prompt Hints</h4>
-          ${(context.promptHints || []).length ? `<ul class="plain-list">${context.promptHints.map((hint) => `<li>${escapeHtml(hint)}</li>`).join("")}</ul>` : emptyState("No prompt hints.")}
+          <h4>提示要点</h4>
+          ${(context.promptHints || []).length ? `<ul class="plain-list">${context.promptHints.map((hint) => `<li>${escapeHtml(hint)}</li>`).join("")}</ul>` : emptyState("暂无提示要点。")}
         </section>
       </div>
     </div>
@@ -313,19 +322,19 @@ export function knowledgeView(state) {
     ${filterForm(state)}
     <section class="knowledge-layout">
       <div class="knowledge-main">
-        ${sectionCard("Search Results", searchResults(knowledge.searchResults || []))}
-        ${sectionCard("Concept Catalog", conceptList(state))}
-        ${sectionCard("Graph Evidence", graphPanel(state))}
-        ${sectionCard("Learning Path", pathPanel(knowledge.learningPath))}
-        ${sectionCard("Practice Set", practicePanel(knowledge.practiceSet))}
+        ${sectionCard("搜索结果", searchResults(knowledge.searchResults || []))}
+        ${sectionCard("概念目录", conceptList(state))}
+        ${sectionCard("知识关联", graphPanel(state))}
+        ${sectionCard("学习路径", pathPanel(knowledge.learningPath))}
+        ${sectionCard("练习集", practicePanel(knowledge.practiceSet))}
       </div>
       <aside class="knowledge-side">
-        ${sectionCard("Concept Profile", profilePanel(knowledge.selectedConcept))}
-        ${sectionCard("Recommendations", recommendationList(knowledge.recommendations || []))}
-        ${sectionCard("Path Builder", pathForm(state))}
-        ${sectionCard("Practice Builder", practiceForm(state))}
-        ${sectionCard("AI Context Builder", contextForm(state))}
-        ${sectionCard("AI Context Preview", contextPanel(knowledge.aiContext))}
+        ${sectionCard("概念详情", profilePanel(knowledge.selectedConcept))}
+        ${sectionCard("推荐概念", recommendationList(knowledge.recommendations || []))}
+        ${sectionCard("路径生成", pathForm(state))}
+        ${sectionCard("练习生成", practiceForm(state))}
+        ${sectionCard("AI 上下文", contextForm(state))}
+        ${sectionCard("上下文预览", contextPanel(knowledge.aiContext))}
       </aside>
     </section>
   `;

@@ -136,6 +136,61 @@ export class LearningService {
   }
 
   async createNote(user, input) {
+    return this.createNoteForUser(user.id, input, user.id);
+  }
+
+  listNotes(user, filters = {}) {
+    return {
+      items: this.notes.findByOwnerWithFilters(user.id, filters)
+    };
+  }
+
+  getNote(user, noteId) {
+    const note = this.requireOwnedNote(user.id, noteId);
+    return note;
+  }
+
+  async updateNote(user, noteId, input) {
+    const note = this.requireOwnedNote(user.id, noteId);
+    if (input.title !== undefined) {
+      note.title = requireText(input.title, "笔记标题");
+    }
+    if (input.content !== undefined) {
+      note.content = requireText(input.content, "笔记内容");
+    }
+    if (input.tags !== undefined) {
+      note.tags = Array.isArray(input.tags) ? input.tags : [];
+    }
+    note.touch();
+    const saved = await this.notes.save(note);
+    await this.publishEvent({
+      type: "note.updated",
+      actorId: user.id,
+      source: "learning-service",
+      summary: `更新学习笔记：${saved.title}`,
+      payload: { noteId: saved.id, courseId: saved.courseId }
+    });
+    return saved;
+  }
+
+  async deleteNote(user, noteId) {
+    const note = this.requireOwnedNote(user.id, noteId);
+    await this.notes.remove(note.id);
+    await this.publishEvent({
+      type: "note.deleted",
+      actorId: user.id,
+      source: "learning-service",
+      summary: `删除学习笔记：${note.title}`,
+      payload: { noteId: note.id, courseId: note.courseId }
+    });
+    return { id: note.id, removed: true };
+  }
+
+  async createTaskForUser(userId, input) {
+    return this.createTask({ id: userId }, input);
+  }
+
+  async createNoteForUser(userId, input, actorId = userId) {
     const courseId = requireText(input.courseId, "课程");
     if (!this.courses.findById(courseId)) {
       throw new NotFoundError("课程不存在。");
@@ -144,7 +199,7 @@ export class LearningService {
     const now = new Date().toISOString();
     const note = new LearningNote({
       id: this.database.nextId("note"),
-      ownerId: user.id,
+      ownerId: userId,
       courseId,
       title: requireText(input.title, "笔记标题"),
       content: requireText(input.content, "笔记内容"),
@@ -156,7 +211,7 @@ export class LearningService {
     const savedNote = await this.notes.save(note);
     await this.publishEvent({
       type: "note.created",
-      actorId: user.id,
+      actorId,
       source: "learning-service",
       summary: `新增学习笔记：${savedNote.title}`,
       payload: { noteId: savedNote.id, courseId: savedNote.courseId }
@@ -183,5 +238,13 @@ export class LearningService {
     } catch (error) {
       this.logger.warn?.(`learning-service event publish failed: ${error.message}`);
     }
+  }
+
+  requireOwnedNote(userId, noteId) {
+    const note = this.notes.findById(noteId);
+    if (!note || note.ownerId !== userId) {
+      throw new NotFoundError("笔记不存在。");
+    }
+    return note;
   }
 }

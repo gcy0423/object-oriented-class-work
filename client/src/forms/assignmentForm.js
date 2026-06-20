@@ -30,7 +30,7 @@ export function assignmentForm({ courses = [], rubrics = [], value = {}, errors 
           <option value="">请选择评分规则</option>
           ${rubrics.map((rubric) => `<option value="${attr(rubric.id)}" ${rubric.id === value.rubricId ? "selected" : ""}>${escapeHtml(rubric.title)}</option>`).join("")}
         </select>
-        <small class="helper">v6 继续复用已有 Rubric 接口。</small>
+        <small class="helper">评分规则会参与学生提交后的自动评阅和人工复核。</small>
         ${fieldError(errors.rubricId)}
       </label>
       <label>

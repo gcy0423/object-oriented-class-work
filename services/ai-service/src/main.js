@@ -3,8 +3,17 @@ import { JsonDatabase } from "../../../shared/data/jsonDatabase.js";
 import { Router } from "../../../shared/http/router.js";
 import { createServiceServer } from "../../../shared/http/server.js";
 import { AITutorService } from "./application/aiTutorService.js";
+import { StudentAiWorkspaceService } from "./application/studentAiWorkspaceService.js";
+import { StudentAiWorkflowService } from "./application/studentAiWorkflowService.js";
 import { loadConfig } from "./config.js";
-import { AIRequestRepository, AIResponseRepository, PromptTemplateRepository, ProviderHealthRepository } from "./domain/ai.js";
+import {
+  AIRequestRepository,
+  AIResponseRepository,
+  PromptTemplateRepository,
+  ProviderHealthRepository,
+  StudentAiResultRepository,
+  StudentTaskDraftRepository
+} from "./domain/ai.js";
 import { KnowledgeClient } from "./infrastructure/clients/knowledgeClient.js";
 import { LearningClient } from "./infrastructure/clients/learningClient.js";
 import { createAiSeed } from "./infrastructure/seed.js";
@@ -17,24 +26,37 @@ export function createApp(config = loadConfig()) {
     templates: new PromptTemplateRepository(database),
     requests: new AIRequestRepository(database),
     responses: new AIResponseRepository(database),
-    providerHealth: new ProviderHealthRepository(database)
+    providerHealth: new ProviderHealthRepository(database),
+    studentAiResults: new StudentAiResultRepository(database),
+    studentTaskDrafts: new StudentTaskDraftRepository(database)
   };
+  const learningClient = new LearningClient({
+    baseUrl: config.learningServiceUrl,
+    internalKey: config.internalKey,
+    timeoutMs: config.llm.timeoutMs
+  });
   const aiTutor = new AITutorService({
     config,
     database,
     ...repositories,
-    learningClient: new LearningClient({
-      baseUrl: config.learningServiceUrl,
-      internalKey: config.internalKey,
-      timeoutMs: config.llm.timeoutMs
-    }),
+    learningClient,
     knowledgeClient: new KnowledgeClient({
       baseUrl: config.knowledgeServiceUrl,
       internalKey: config.internalKey,
       timeoutMs: Math.min(config.llm.timeoutMs, 3000)
     })
   });
-  const services = { ready, database, repositories, aiTutor };
+  const studentAiWorkflow = new StudentAiWorkflowService({
+    provider: aiTutor.provider
+  });
+  const studentAiWorkspace = new StudentAiWorkspaceService({
+    database,
+    results: repositories.studentAiResults,
+    taskDrafts: repositories.studentTaskDrafts,
+    workflow: studentAiWorkflow,
+    learningClient
+  });
+  const services = { ready, database, repositories, aiTutor, studentAiWorkflow, studentAiWorkspace };
   const router = new Router();
   registerRoutes(router, config, services);
   const server = createServiceServer({ router, config });
