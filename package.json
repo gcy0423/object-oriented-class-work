@@ -21,7 +21,8 @@
     "start:scheduler": "node services/scheduler-service/src/main.js",
     "start:services": "node scripts/startServices.mjs",
     "start:services:mock": "node scripts/startServices.mjs --mock",
-    "test": "node --test test/kernel.test.mjs test/client.test.mjs",
+    "test": "node --test test/kernel.test.mjs test/client.test.mjs test/ai-schemas.test.mjs test/ai-workflows.test.mjs test/ai-workspaces.test.mjs test/ai-client-integration.test.mjs test/ai-prompts-domain.test.mjs test/ai-selector-views.test.mjs",
+    "test:ai": "node --test test/ai-schemas.test.mjs test/ai-workflows.test.mjs test/ai-workspaces.test.mjs test/ai-service-routes.test.mjs test/ai-client-integration.test.mjs test/ai-prompts-domain.test.mjs test/ai-route-guards.test.mjs test/ai-selector-views.test.mjs",
     "test:services": "node --test test/services.test.mjs",
     "test:lmstudio": "node scripts/verifyLmStudio.mjs",
     "linecount": "node scripts/linecount.mjs"
