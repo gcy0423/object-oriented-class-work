@@ -16,6 +16,7 @@ from PIL import Image, ImageDraw, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 PROTOTYPES = ROOT / "prototypes"
+REAL_SCREENSHOTS = DOCS / "real-screenshots"
 
 FONT_CJK = "Microsoft YaHei"
 FONT_LATIN = "Calibri"
@@ -514,6 +515,25 @@ def find_screenshots():
     return [(label, path) for label, path in candidates if path.exists()]
 
 
+def find_design_screenshots():
+    return {
+        "overview": REAL_SCREENSHOTS / "live-login-overview.png",
+        "student_ai": REAL_SCREENSHOTS / "live-student-ai.png",
+        "teacher_ai": REAL_SCREENSHOTS / "live-teacher-ai.png",
+        "student_learn": REAL_SCREENSHOTS / "live-student-learning.png",
+        "teacher_assignments": REAL_SCREENSHOTS / "live-teacher-assignments.png",
+        "student_ai_insight": REAL_SCREENSHOTS / "live-student-ai-insight.png",
+        "student_note_ai": REAL_SCREENSHOTS / "live-student-note-ai-result.png",
+        "teacher_ai_plan": REAL_SCREENSHOTS / "live-teacher-ai-plan.png",
+        "teacher_intervention": REAL_SCREENSHOTS / "live-teacher-intervention.png",
+        "teacher_collaboration": REAL_SCREENSHOTS / "live-collaboration.png",
+        "teacher_collaboration_detail": REAL_SCREENSHOTS / "live-collaboration-detail.png",
+        "student_assignment_preview": REAL_SCREENSHOTS / "live-student-assignment-preview.png",
+        "teacher_grading": REAL_SCREENSHOTS / "live-teacher-grading.png",
+        "teacher_analytics": REAL_SCREENSHOTS / "live-report.png",
+    }
+
+
 def build_requirement_doc(diagrams):
     doc = Document()
     title = "系统需求文档"
@@ -704,6 +724,7 @@ def build_requirement_doc(diagrams):
 def build_design_doc(diagrams):
     doc = Document()
     title = "系统设计文档"
+    design_screenshots = find_design_screenshots()
     style_document(doc, title)
     add_title_page(doc, title, "从技术选型、架构、数据、鉴权、AI 接入和部署运行角度说明系统实现。")
 
@@ -721,6 +742,21 @@ def build_design_doc(diagrams):
     add_para(doc, "系统采用前后端分离、领域分层和逻辑服务划分的结构。当前仓库已经有 gateway、identity、learning、assessment、ai、collaboration、analytics、report、operations、knowledge、notification、scheduler 等服务目录；在课程文档中应准确表述为按逻辑服务拆分和可独立运行的轻量服务，而不是夸大为生产级云原生微服务体系。")
     add_image(doc, diagrams["package"], "图 1 包图与逻辑服务划分。")
 
+    add_para(doc, "2.1 应用入口与整体架构对应", style="Heading 2")
+    add_para(doc, "应用入口截图可以帮助说明架构图中的服务边界。前端页面由 Gateway 托管和转发，学生端、教师端看到的是不同业务工作台；后台则按身份、学习、评测、AI、协作和统计报告等逻辑服务组织。")
+    add_image(doc, design_screenshots["overview"], "图 2-1 系统总览入口界面。")
+    add_para(doc, "总览入口体现了系统面向学生和教师两类角色的主路径。页面本身不直接访问各个数据文件，而是通过前端 ApiClient 请求 Gateway，再由 Gateway 按路由转发到对应逻辑服务。")
+    add_image(doc, design_screenshots["student_ai"], "图 2-2 学生端 AI 工作台界面。")
+    add_para(doc, "学生端 AI 工作台集中展示学习计划、薄弱点、任务草稿和行动项。该界面背后主要调用 ai-service 的 student-ai 工作流，同时依赖 learning-service 提供课程、目标、任务和笔记上下文。")
+    add_image(doc, design_screenshots["teacher_ai"], "图 2-3 教师端 AI 工作台界面。")
+    add_para(doc, "教师端 AI 工作台面向教学计划、学生干预、作业讲评和报告摘要等场景。它与学生端共用 Provider 抽象和结构化输出机制，但权限上要求 teacher/admin 角色，并且更多依赖 assessment-service 与 analytics/report 的过程证据。")
+    add_table(doc, ["界面入口", "主要后端服务", "核心数据对象", "设计说明"], [
+        ("学生 AI 工作台", "gateway、ai、learning、assessment", "StudentAiResult、StudentTaskDraft、LearningGoal、StudyTask、Assignment", "AI 建议与学习任务、作业上下文绑定，结果保存后可在时间线和行动项中继续使用。"),
+        ("教师 AI 工作台", "gateway、ai、assessment、analytics、report", "TeacherAiResult、TeacherAiDraft、Submission、Rubric、MasteryRecord", "AI 先生成草稿和建议，由教师确认后再进入反馈、干预或报告流程。"),
+        ("协作与活动入口", "gateway、collaboration、notification", "RoomMessage、ActivityLog、CollaborationEvent、Mention", "协作消息和活动记录通过 SSE 形成轻量实时提示，页面再重新拉取最新数据。"),
+        ("学习与作业入口", "gateway、learning、assessment", "Course、LearningGoal、StudyTask、Assignment、Submission", "课程学习和作业评测保持独立服务边界，页面通过统一 API 组合展示。"),
+    ], [1700, 2200, 3000, 2460])
+
     add_para(doc, "三、子系统/逻辑服务划分", style="Heading 1")
     add_table(doc, ["逻辑服务", "主要职责"], [
         ("gateway-service", "托管前端、统一入口、鉴权转发、聚合 Dashboard 和健康检查。"),
@@ -731,6 +767,20 @@ def build_design_doc(diagrams):
         ("collaboration-service", "协作消息、活动日志、内部事件接收和 SSE 推送。"),
         ("analytics/report/operations", "统计分析、报告导出和运维导入审计等扩展能力。"),
     ], [2200, 7160])
+
+    add_para(doc, "3.1 前端页面与后端服务对应关系", style="Heading 2")
+    add_para(doc, "前端页面不是按后端服务一一拆成多个独立应用，而是在同一个浏览器端项目中按学生端和教师端组织视图。每个视图通过 ApiClient 请求 Gateway，Gateway 再把请求分发给 learning、assessment、ai 或 collaboration 等服务。")
+    add_image(doc, design_screenshots["student_learn"], "图 3-1 学生学习任务页面。")
+    add_para(doc, "学习任务页面主要对应 learning-service。页面展示课程、目标、任务状态和进度，服务端通过 LearningGoal、StudyTask、LearningNote 等领域对象维护学习过程；当任务完成时，还可能产生活动日志事件供 Dashboard 或协作页刷新。")
+    add_image(doc, design_screenshots["teacher_assignments"], "图 3-2 教师作业管理页面。")
+    add_para(doc, "教师作业管理页面主要对应 assessment-service。页面涉及 Assignment、Rubric、Submission、Question 和 PracticeSession 等对象，教师可以从这里进入发布、查看提交、批改和讲评等流程。")
+    add_table(doc, ["页面或入口", "对应服务", "主要接口方向", "说明"], [
+        ("学生学习任务", "learning-service", "目标、任务、笔记、学习路径", "前端把课程学习过程组织成可执行任务，后端负责进度计算和数据保存。"),
+        ("学生作业与练习", "assessment-service", "作业详情、提交、自测、错题和掌握度", "作业、练习和错题保持在评测服务中，便于教师端复用同一组证据。"),
+        ("学生/教师 AI 面板", "ai-service", "student-ai、teacher-ai、provider-health", "AI 结果统一归档，前端按 result、draft、action 渲染卡片和确认操作。"),
+        ("教师作业管理", "assessment-service", "作业发布、批改、Rubric 和反馈", "教师侧页面不直接修改学生 AI 结果，而是读取作业和过程证据后生成反馈。"),
+        ("协作空间", "collaboration-service", "消息、回复、任务、活动日志、SSE", "协作数据独立保存，避免学习和评测服务直接承担消息系统职责。"),
+    ], [1800, 2100, 3000, 2460])
 
     add_para(doc, "四、数据存储方式", style="Heading 1")
     add_para(doc, "项目使用 data 目录下的 JSON 文件保存业务数据。每个服务拥有自己的数据文件或 collection，Repository 负责把普通记录封装成领域对象。JSON 存储便于课程阶段调试，但在真实上线时可以替换为 SQLite、MySQL 或 PostgreSQL。")
@@ -864,6 +914,34 @@ def build_design_doc(diagrams):
         "教师端 AI 草稿已经与发送/保存动作分离，但仍需要更多人工审核提示，避免误把 AI 建议当作事实结论。",
     ])
 
+    add_para(doc, "8.11 学生端 AI 界面设计", style="Heading 2")
+    add_para(doc, "学生端 AI 界面强调“建议可以继续转化为学习动作”。系统不把模型回答当成一段普通文本展示，而是拆成摘要、证据、行动项、任务草稿和可确认操作，让学生可以从 AI 建议继续进入任务、作业或笔记流程。")
+    add_image(doc, design_screenshots["student_ai_insight"], "图 8-1 学生端 AI 薄弱点分析界面。")
+    add_para(doc, "薄弱点分析界面对应 student-ai 的 weakness_insight 工作流。后端根据练习、错题、作业或学习任务证据生成 weaknesses、evidence 和 actions，前端按结构化字段渲染为卡片，而不是直接显示原始模型文本。")
+    add_image(doc, design_screenshots["student_note_ai"], "图 8-2 学生端 AI 笔记整理结果界面。")
+    add_para(doc, "笔记整理界面对应 note_organize 工作流。AI 输出会被 normalize 为 cards 和 assignmentParagraphs，学生确认后可以保存为学习笔记；如果 Provider 不可用，fallback 仍会返回可展示的卡片结构，避免页面流程中断。")
+    add_table(doc, ["学生 AI 界面元素", "后端结构", "设计意义"], [
+        ("分析摘要", "result.summary、weaknesses、score、rank", "把模型判断压缩成页面可快速阅读的信息。"),
+        ("证据列表", "evidence、sourceEvidenceIds、courseId、assignmentId", "说明 AI 建议来自哪些学习或评测数据，减少空泛建议。"),
+        ("行动项", "actions.status、actions.note", "支持 completed、dismissed、converted 等状态，便于后续追踪。"),
+        ("任务草稿", "StudentTaskDraftRecord", "AI 只生成草稿，学生确认后才调用 learning-service 创建正式任务。"),
+        ("笔记卡片", "cards、assignmentParagraphs", "把模型输出转成可保存、可复习的学习资料。"),
+    ], [2100, 3400, 3860])
+
+    add_para(doc, "8.12 教师端 AI 界面设计", style="Heading 2")
+    add_para(doc, "教师端 AI 界面强调“辅助教师判断和生成草稿”。教师看到的 AI 结果一般包含班级或学生证据、风险提示、建议动作和可编辑草稿，最终发送、保存或采用仍需要教师确认。")
+    add_image(doc, design_screenshots["teacher_ai_plan"], "图 8-3 教师端 AI 教学计划详情界面。")
+    add_para(doc, "教学计划详情界面对应 teacher-ai 的 teaching_plan 工作流。后端结合课程进度、班级掌握度和活动数据生成计划草稿，前端把 summary、actions、risks、draft 等字段拆开展示，方便教师检查后再使用。")
+    add_image(doc, design_screenshots["teacher_intervention"], "图 8-4 教师端 AI 干预确认界面。")
+    add_para(doc, "干预确认界面对应 student_intervention 工作流。系统会读取学生 AI timeline、作业提交、练习结果和活动记录生成干预草稿，但 TeacherAiDraftRecord 在确认前只是草稿状态，不会直接变成已发送反馈。")
+    add_table(doc, ["教师 AI 流程", "输入证据", "输出结果", "人工确认点"], [
+        ("教学计划", "课程目标、任务进度、班级统计", "计划摘要、风险、后续动作和草稿", "教师确认是否采用为教学安排。"),
+        ("学生干预", "学生 AI 证据、作业提交、练习和活动日志", "干预话术、建议动作和原因说明", "教师确认后才标记 sent。"),
+        ("作业讲评", "作业、Rubric、提交分布和典型问题", "讲评草稿和改进建议", "教师可编辑后发布或保存。"),
+        ("反馈草稿", "某次提交、Rubric 评分和 AI 初评", "个性化反馈文本", "教师批改页面确认后进入反馈流程。"),
+        ("报告摘要", "统计数据、过程证据和协作记录", "结构化摘要和建议", "教师决定是否写入正式报告。"),
+    ], [1700, 3000, 2700, 1960])
+
     add_para(doc, "九、实时同步机制", style="Heading 1")
     add_para(doc, "系统使用 Server-Sent Events 实现轻量实时同步。项目没有引入 WebSocket 或消息队列，而是把协作消息、活动日志和服务内部事件集中到 collaboration-service，再通过 /api/events 向前端推送。这个方案实现成本低，适合课程项目中“有实时反馈、但不需要复杂双向长连接”的场景。")
 
@@ -921,6 +999,20 @@ def build_design_doc(diagrams):
         "当前取舍：课程项目优先保证可运行和可解释，因此暂不引入 WebSocket、Redis Pub/Sub 或消息队列。",
         "后续扩展：如果需要多进程部署，可把 SyncHub 后面的广播层替换为 Redis、消息队列或数据库事件表。",
     ])
+
+    add_para(doc, "9.7 协作页面中的实时同步落点", style="Heading 2")
+    add_para(doc, "协作页面是实时同步机制最直观的使用位置。消息、回复、协作任务、活动记录和提及提醒都属于 collaboration-service 的数据范围，SSE 负责通知页面“有变化”，页面再通过普通接口重新拉取最新数据。")
+    add_image(doc, design_screenshots["teacher_collaboration"], "图 9-1 通用协作空间界面。")
+    add_para(doc, "协作空间界面展示房间、消息和任务等内容。用户发送消息或更新协作任务后，服务端会保存 RoomMessage、CollaborationTask 或 ActivityLog，并通过 SyncHub 向在线客户端广播事件。")
+    add_image(doc, design_screenshots["teacher_collaboration_detail"], "图 9-2 协作详情与过程记录界面。")
+    add_para(doc, "协作详情界面体现了事件和业务数据的分离：事件只提示变化，具体消息、决策、资源、检查项和交接说明仍然保存在对应 Repository 中。这样即使 SSE 连接短暂断开，刷新页面后也能从普通 API 恢复最新状态。")
+    add_table(doc, ["协作界面元素", "后端对象", "同步方式"], [
+        ("房间消息", "RoomMessage、MessageReply", "消息保存后生成活动记录，并向 SSE 客户端广播 message 或 activity 类型事件。"),
+        ("提及提醒", "Mention", "提及信息随消息保存，页面收到事件后刷新未读和提及列表。"),
+        ("协作任务", "CollaborationTask、ChecklistItem", "任务或检查项变化后记录活动，页面刷新任务状态。"),
+        ("阶段总结和决策", "RoomSummary、RoomDecision", "作为协作过程证据保存，不依赖 SSE 持久化。"),
+        ("活动流", "ActivityLog、CollaborationEvent", "既用于 Dashboard 展示，也作为 SSE 广播的数据来源。"),
+    ], [1800, 3000, 4560])
 
     add_para(doc, "十、日志与故障定位", style="Heading 1")
     add_para(doc, "系统的故障定位主要依靠四类信息：统一错误响应、服务健康检查、活动/审计记录和测试中覆盖的异常场景。项目没有引入 ELK、Prometheus 等生产级监控组件，但在课程项目范围内保留了可以定位问题的结构化线索。")
@@ -1083,6 +1175,34 @@ def build_design_doc(diagrams):
 
     add_para(doc, "12.9 统一错误响应与测试验证", style="Heading 2")
     add_para(doc, "shared/http 中定义了统一响应和错误结构。正常响应返回 ok/data/meta，异常响应返回 ok=false、code、message 和 details。测试中覆盖了登录、服务健康、内部 key、跨用户访问、Provider fallback、下游服务不可用和 Gateway 转发等场景，用来验证接口边界是否稳定。")
+
+    add_para(doc, "12.10 作业提交与批改流程界面", style="Heading 2")
+    add_para(doc, "作业流程贯穿学生端和教师端。学生端负责查看作业要求、提交内容和接收反馈；教师端负责查看提交、Rubric 评分、AI 初评建议和最终反馈。两端共享 assessment-service 中的 Assignment、Submission、Rubric 和 Feedback 等数据对象。")
+    add_image(doc, design_screenshots["student_assignment_preview"], "图 12-1 学生端作业提交预览界面。")
+    add_para(doc, "学生端作业预览界面对应作业详情和提交前检查流程。页面读取 Assignment、Rubric 和已有 Submission，并可调用 student-ai 的 assignment_guide 或 submission_check 工作流生成检查清单，但最终提交仍由 assessment-service 保存。")
+    add_image(doc, design_screenshots["teacher_grading"], "图 12-2 教师端作业批改详情界面。")
+    add_para(doc, "教师端批改详情界面对应 assessment-service 的评分和反馈流程。AI 初评可以作为参考信息进入页面，但教师评分、Rubric 结论和反馈发布仍由教师确认，避免把模型输出直接当作最终成绩。")
+    add_table(doc, ["流程步骤", "涉及服务", "关键对象", "设计要点"], [
+        ("作业查看", "assessment-service", "Assignment、Rubric", "学生端读取作业要求、截止时间、评分标准和提交状态。"),
+        ("提交前自检", "ai-service、assessment-service", "SubmissionCheckResult、Submission", "AI 根据作业要求和草稿内容给出遗漏提示，结果只作为辅助建议。"),
+        ("正式提交", "assessment-service", "Submission", "服务端保存提交记录和学生快照，后续教师批改复用同一份证据。"),
+        ("AI 初评", "ai-service、assessment-service", "AIResponseRecord、Rubric", "AI 结合 Rubric 生成初步反馈或问题提示，异常时返回明确错误或 fallback。"),
+        ("教师确认", "assessment-service", "Grade、Feedback", "教师确认评分和反馈后才形成最终批改结果。"),
+        ("活动记录", "collaboration-service", "ActivityLog、CollaborationEvent", "提交、批改或反馈发布可形成活动流，供 Dashboard 和协作页展示。"),
+    ], [1400, 2300, 2500, 3160])
+
+    add_para(doc, "12.11 数据分析与报告界面", style="Heading 2")
+    add_para(doc, "数据分析和报告功能用于把学习任务、作业结果、练习掌握度、AI 过程证据和协作活动整理成教师可读的信息。当前实现属于课程项目阶段的统计分析和报告导出能力，不写成完整的数据仓库或商业 BI 平台。")
+    add_image(doc, design_screenshots["teacher_analytics"], "图 12-3 报告与导出界面。")
+    add_para(doc, "报告与导出界面主要对应 report-service，并使用 analytics-service、learning-service、assessment-service、ai-service 和 collaboration-service 形成的过程数据。页面把课程周报、作业评阅、AI 使用报告等材料组织成可生成、可预览和可导出的报告条目。")
+    add_table(doc, ["分析内容", "数据来源", "实现意义"], [
+        ("学习进度", "LearningGoal、StudyTask、LearningPath", "反映课程目标完成情况和学生当前任务推进状态。"),
+        ("作业表现", "Assignment、Submission、Rubric、Grade", "帮助教师识别作业中的共性问题和个体差异。"),
+        ("练习掌握度", "PracticeSession、AnswerRecord、MistakeItem、MasteryRecord", "把错题和知识点掌握情况转成后续补练依据。"),
+        ("AI 过程证据", "StudentAiResult、TeacherAiResult、AIRequestRecord", "辅助判断学生是否使用过计划、自检、笔记整理等 AI 支持。"),
+        ("协作活动", "ActivityLog、RoomMessage、CollaborationTask", "展示小组协作和课程过程记录，支持项目文档中的过程证明。"),
+        ("报告输出", "Report、ReportSection、summary payload", "把统计结论整理为可提交或可查看的报告摘要。"),
+    ], [2100, 3500, 3760])
 
     output = DOCS / "系统设计文档.docx"
     doc.save(output)
