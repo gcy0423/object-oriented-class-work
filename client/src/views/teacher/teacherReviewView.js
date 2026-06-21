@@ -11,7 +11,7 @@ export function teacherReviewView(state) {
         <h2>${escapeHtml(model.title)}</h2>
         <p>${escapeHtml(model.insightSummary)}</p>
       </div>
-      ${actionRow([{ label: "回到作业", route: "teacher-assignment" }, { label: "生成讲评", route: "teacher-report", primary: true }])}
+      ${actionRow([{ label: "回到作业", route: "teacher-assignment" }, { label: "生成作业评阅", action: "teacher-generate-assignment-report", primary: true }])}
     </section>
     ${metricStrip(model.metrics)}
     <section class="teacher-page-grid">
@@ -27,7 +27,7 @@ export function teacherReviewView(state) {
               </div>
               <span class="teacher-chip">${escapeHtml(item.status)}</span>
             </div>
-            ${actionRow([{ label: "载入洞察", action: "load-submission-insight", id: item.id }])}
+            ${actionRow([{ label: "载入洞察", action: "teacher-load-submission-insight", id: item.id }, { label: "AI 初评", action: "teacher-run-ai-review", id: item.id, primary: true }])}
           </article>
         `, "暂无待批改提交。")
       })}

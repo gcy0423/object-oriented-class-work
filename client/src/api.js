@@ -182,6 +182,23 @@ export class ApiClient {
   submissionStudentAiEvidence(id) { return this.request(`/api/submissions/${encodeURIComponent(id)}/student-ai-evidence`); }
   assignmentStudentAiEvidence(id) { return this.request(`/api/assignments/${encodeURIComponent(id)}/student-ai-evidence`); }
   createTeacherIntervention(id, input) { return this.request(`/api/teacher/students/${encodeURIComponent(id)}/interventions`, { method: "POST", body: JSON.stringify(input) }); }
+  teacherAiTeachingPlan(input) { return this.request("/api/teacher-ai/teaching-plan", { method: "POST", body: JSON.stringify(input) }); }
+  teacherAiStudentIntervention(input) { return this.request("/api/teacher-ai/student-intervention", { method: "POST", body: JSON.stringify(input) }); }
+  teacherAiAssignmentCommentary(input) { return this.request("/api/teacher-ai/assignment-commentary", { method: "POST", body: JSON.stringify(input) }); }
+  teacherAiFeedbackDraft(input) { return this.request("/api/teacher-ai/feedback-draft", { method: "POST", body: JSON.stringify(input) }); }
+  teacherAiCoursePracticePlan(input) { return this.request("/api/teacher-ai/course-practice-plan", { method: "POST", body: JSON.stringify(input) }); }
+  teacherAiReportSummary(input) { return this.request("/api/teacher-ai/report-summary", { method: "POST", body: JSON.stringify(input) }); }
+  teacherAiResults(params = {}) { return this.request(`/api/teacher-ai/results${toQuery(params)}`); }
+  teacherAiResult(id) { return this.request(`/api/teacher-ai/results/${encodeURIComponent(id)}`); }
+  updateTeacherAiAction(resultId, actionId, input) { return this.request(`/api/teacher-ai/results/${encodeURIComponent(resultId)}/actions/${encodeURIComponent(actionId)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  teacherAiDrafts(params = {}) { return this.request(`/api/teacher-ai/drafts${toQuery(params)}`); }
+  teacherAiDraft(id) { return this.request(`/api/teacher-ai/drafts/${encodeURIComponent(id)}`); }
+  updateTeacherAiDraft(id, input) { return this.request(`/api/teacher-ai/drafts/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(input) }); }
+  deleteTeacherAiDraft(id) { return this.request(`/api/teacher-ai/drafts/${encodeURIComponent(id)}`, { method: "DELETE" }); }
+  sendTeacherAiInterventionDraft(id, input) { return this.request(`/api/teacher-ai/drafts/${encodeURIComponent(id)}/send-intervention`, { method: "POST", body: JSON.stringify(input) }); }
+  saveTeacherAiFeedbackDraft(id, input) { return this.request(`/api/teacher-ai/drafts/${encodeURIComponent(id)}/save-feedback`, { method: "POST", body: JSON.stringify(input) }); }
+  saveTeacherAiCommentaryDraft(id, input) { return this.request(`/api/teacher-ai/drafts/${encodeURIComponent(id)}/save-commentary`, { method: "POST", body: JSON.stringify(input) }); }
+  saveTeacherAiPracticePlanDraft(id, input) { return this.request(`/api/teacher-ai/drafts/${encodeURIComponent(id)}/save-practice-plan`, { method: "POST", body: JSON.stringify(input) }); }
 
   messages(params = {}) { return this.request(`/api/collaboration/messages${toQuery(params)}`); }
   sendMessage(input) {

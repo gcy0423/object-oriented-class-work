@@ -27,7 +27,7 @@ export function teacherAssignmentView(state) {
               </div>
               <span class="teacher-chip">${escapeHtml(item.status)}</span>
             </div>
-            ${actionRow([{ label: "查看 AI 证据", action: "load-submission-insight", id: item.id }])}
+            ${actionRow([{ label: "查看 AI 证据", action: "teacher-load-submission-insight", id: item.id }])}
           </article>
         `, "暂无提交。")
       })}

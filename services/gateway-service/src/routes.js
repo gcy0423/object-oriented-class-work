@@ -26,6 +26,80 @@ function withQuery(path, query) {
   return `${path}${params ? `?${params}` : ""}`;
 }
 
+function teacherAiCommentaryExport(draft, body = {}) {
+  const payload = draft.structuredPayload || {};
+  const title = body.title || draft.title || "教师 AI 草稿";
+  const lines = [
+    `# ${title}`,
+    "",
+    draft.summary || "",
+    "",
+    draft.body || "",
+    ""
+  ];
+  const actions = Array.isArray(payload.actions) ? payload.actions : [];
+  if (actions.length) {
+    lines.push("## 建议动作", "");
+    for (const item of actions) {
+      lines.push(`- ${item.label || item.title || item.type || "待确认动作"}`);
+    }
+    lines.push("");
+  }
+  return {
+    report: {
+      id: `teacher_ai_${draft.id}`,
+      type: draft.type,
+      title,
+      generatedAt: draft.updatedAt || draft.createdAt,
+      summary: draft.summary || "",
+      sections: [
+        {
+          title: "草稿正文",
+          body: draft.body || "",
+          items: []
+        }
+      ],
+      recommendations: actions.map((item) => item.label || item.title || item.type || "待确认动作"),
+      evidence: draft.sourceEvidenceIds || []
+    },
+    export: {
+      filename: `${draft.type}-${draft.id}.md`,
+      contentType: "text/markdown",
+      format: "markdown",
+      body: lines.join("\n").trim()
+    }
+  };
+}
+
+function teacherAiPracticePlanPayload(draft, body = {}) {
+  const payload = draft.structuredPayload || {};
+  const detail = payload.payload || {};
+  const practiceItems = Array.isArray(payload.practiceItems) ? payload.practiceItems : [];
+  const weakConcepts = Array.isArray(payload.weakConcepts) ? payload.weakConcepts : [];
+  return {
+    ownerId: body.studentId || draft.studentId || null,
+    courseId: body.courseId || draft.courseId || payload.courseId || detail.courseId || null,
+    bankId: body.bankId || payload.bankId || detail.bankId || null,
+    targetCount: Number(body.questionCount || payload.questionCount || detail.questionCount || practiceItems.length || 0),
+    selectedCount: practiceItems.length,
+    estimatedMinutes: Number(payload.estimatedMinutes || practiceItems.length * 6 || 0),
+    weakConcepts: weakConcepts.map((item) => ({
+      concept: item.concept || item.title || "未命名知识点",
+      priority: item.priority || "medium",
+      reason: item.reason || ""
+    })),
+    strategy: payload.strategy || draft.summary || "已生成课程补练草稿。",
+    questions: practiceItems.map((item, index) => ({
+      id: item.id || `${draft.id}_practice_${index + 1}`,
+      stem: item.stem || item.title || item.prompt || "补练题目",
+      concept: item.concept || item.title || "未命名知识点",
+      difficulty: item.difficulty || "medium",
+      reason: item.reason || item.note || "用于巩固当前薄弱点"
+    })),
+    sourceDraftId: draft.id
+  };
+}
+
 export function registerRoutes(router, config, services = {}) {
   router.get("/health", () => ok({
     service: config.serviceName,
@@ -397,6 +471,223 @@ export function registerRoutes(router, config, services = {}) {
     });
   });
 
+  router.post("/api/teacher-ai/teaching-plan", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/teacher-ai/teaching-plan", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/teacher-ai/student-intervention", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/teacher-ai/student-intervention", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/teacher-ai/assignment-commentary", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/teacher-ai/assignment-commentary", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/teacher-ai/feedback-draft", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/teacher-ai/feedback-draft", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/teacher-ai/course-practice-plan", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/teacher-ai/course-practice-plan", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/teacher-ai/report-summary", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.post("/api/teacher-ai/report-summary", await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/teacher-ai/results", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(withQuery("/api/teacher-ai/results", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/teacher-ai/results/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(`/api/teacher-ai/results/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/teacher-ai/results/:id/actions/:actionId", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.patch(`/api/teacher-ai/results/${encodeURIComponent(req.params.id)}/actions/${encodeURIComponent(req.params.actionId)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/teacher-ai/drafts", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(withQuery("/api/teacher-ai/drafts", req.query), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.get("/api/teacher-ai/drafts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.get(`/api/teacher-ai/drafts/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.patch("/api/teacher-ai/drafts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.patch(`/api/teacher-ai/drafts/${encodeURIComponent(req.params.id)}`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.delete("/api/teacher-ai/drafts/:id", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.ai.delete(`/api/teacher-ai/drafts/${encodeURIComponent(req.params.id)}`, {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/send-intervention", async (req) => {
+    const user = await services.verifyUser(req);
+    const body = await readJson(req);
+    const draftResult = await services.ai.post(`/api/teacher-ai/drafts/${encodeURIComponent(req.params.id)}/send-intervention`, body, {
+      headers: buildUserHeaders(config, user)
+    });
+    const draft = draftResult.data;
+    const payload = draft.structuredPayload || {};
+    const recipientId = body.studentId || draft.studentId || payload.studentId;
+    if (!recipientId) {
+      throw new AppError("Teacher AI draft is missing studentId.", 400, "VALIDATION_ERROR");
+    }
+    const message = body.message || payload.message || draft.body || "请优先处理当前最关键的一项学习行动。";
+    const reason = body.reason || draft.summary || payload.summary || "教师基于学生 AI 过程证据发起干预。";
+    const courseId = body.courseId || draft.courseId || payload.courseId || null;
+    const dueAt = body.dueAt || payload.dueAt || null;
+    const channels = body.channels || payload.channels || ["in_app"];
+    const notification = await services.notification.post("/api/notifications", {
+      recipientId,
+      title: draft.title || "教师干预建议",
+      body: message,
+      type: "teacher.intervention",
+      category: "system",
+      severity: "warning",
+      channels,
+      data: { reason, courseId, dueAt, teacherAiDraftId: draft.id }
+    }, {
+      headers: buildUserHeaders(config, user)
+    });
+    let reminder = null;
+    if (dueAt) {
+      reminder = await services.scheduler.post("/api/scheduler/reminders", {
+        ownerId: recipientId,
+        createdBy: user.id,
+        courseId,
+        title: draft.title || "教师干预提醒",
+        message,
+        targetType: "teacher_intervention",
+        targetId: notification.data.id,
+        dueAt,
+        channels,
+        severity: "warning",
+        metadata: { reason, teacherAiDraftId: draft.id }
+      }, {
+        headers: buildUserHeaders(config, user)
+      });
+    }
+    return ok({
+      draft,
+      notification: notification.data,
+      reminder: reminder?.data || null
+    });
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/save-feedback", async (req) => {
+    const user = await services.verifyUser(req);
+    const body = await readJson(req);
+    const draftResult = await services.ai.post(`/api/teacher-ai/drafts/${encodeURIComponent(req.params.id)}/save-feedback`, body, {
+      headers: buildUserHeaders(config, user)
+    });
+    const draft = draftResult.data;
+    const payload = draft.structuredPayload || {};
+    const submissionId = body.submissionId || draft.submissionId || payload.submissionId;
+    if (!submissionId) {
+      throw new AppError("Teacher AI feedback draft is missing submissionId.", 400, "VALIDATION_ERROR");
+    }
+    const feedbackResult = await services.assessment.post(`/api/submissions/${encodeURIComponent(submissionId)}/teacher-feedback`, {
+      score: body.score ?? payload.scoreSuggestion ?? payload.payload?.scoreSuggestion ?? payload.suggestedScore ?? 0,
+      summary: body.summary || draft.summary || payload.summary || draft.body || "",
+      feedback: body.feedback || draft.body || payload.body || draft.summary || "",
+      criteriaScores: body.criteriaScores || payload.criteriaScores || payload.criteriaFeedback || payload.payload?.criteriaScores || [],
+      provider: "teacher-ai-draft"
+    }, {
+      headers: buildUserHeaders(config, user)
+    });
+    return ok({
+      draft,
+      savedFeedback: feedbackResult.data
+    });
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/save-commentary", async (req) => {
+    const user = await services.verifyUser(req);
+    const body = await readJson(req);
+    const draftResult = await services.ai.post(`/api/teacher-ai/drafts/${encodeURIComponent(req.params.id)}/save-commentary`, body, {
+      headers: buildUserHeaders(config, user)
+    });
+    return ok({
+      draft: draftResult.data,
+      savedCommentary: teacherAiCommentaryExport(draftResult.data, body)
+    });
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/save-practice-plan", async (req) => {
+    const user = await services.verifyUser(req);
+    const body = await readJson(req);
+    const draftResult = await services.ai.post(`/api/teacher-ai/drafts/${encodeURIComponent(req.params.id)}/save-practice-plan`, body, {
+      headers: buildUserHeaders(config, user)
+    });
+    const draft = draftResult.data;
+    const payload = draft.structuredPayload || {};
+    const detail = payload.payload || {};
+    const courseId = body.courseId || draft.courseId || payload.courseId || detail.courseId;
+    if (!courseId) {
+      throw new AppError("Teacher AI practice draft is missing courseId.", 400, "VALIDATION_ERROR");
+    }
+    const practicePlanResult = await services.assessment.post("/api/adaptive-practice-plan", {
+      courseId,
+      studentId: body.studentId || draft.studentId || null,
+      bankId: body.bankId || payload.bankId || detail.bankId || null,
+      questionCount: body.questionCount || payload.questionCount || detail.questionCount || 6
+    }, {
+      headers: buildUserHeaders(config, user)
+    });
+    const savedPracticePlan = {
+      ...practicePlanResult.data,
+      strategy: draft.summary || practicePlanResult.data.strategy,
+      teacherAiDraftId: draft.id,
+      teacherAiBody: draft.body || ""
+    };
+    return ok({
+      draft,
+      savedPracticePlan: savedPracticePlan.questions?.length ? savedPracticePlan : teacherAiPracticePlanPayload(draft, body)
+    });
+  });
+
   router.post("/api/teacher/students/:id/interventions", async (req) => {
     const user = await services.verifyUser(req);
     const body = await readJson(req);
@@ -752,6 +1043,13 @@ export function registerRoutes(router, config, services = {}) {
   router.post("/api/submissions/:id/grade", async (req) => {
     const user = await services.verifyUser(req);
     return services.assessment.post(`/api/submissions/${encodeURIComponent(req.params.id)}/grade`, await readJson(req), {
+      headers: buildUserHeaders(config, user)
+    });
+  });
+
+  router.post("/api/submissions/:id/teacher-feedback", async (req) => {
+    const user = await services.verifyUser(req);
+    return services.assessment.post(`/api/submissions/${encodeURIComponent(req.params.id)}/teacher-feedback`, await readJson(req), {
       headers: buildUserHeaders(config, user)
     });
   });

@@ -5,7 +5,8 @@ export const TEACHER_PRIMARY_ROUTES = [
   { route: "teacher-review", label: "批改", icon: "批" },
   { route: "teacher-intervention", label: "干预", icon: "干" },
   { route: "teacher-report", label: "报告", icon: "报" },
-  { route: "teacher-student", label: "学生画像", icon: "生" }
+  { route: "teacher-student", label: "学生画像", icon: "生" },
+  { route: "teacher-settings", label: "个人信息", icon: "设" }
 ];
 
 export const teacherRouteTable = {
@@ -15,7 +16,8 @@ export const teacherRouteTable = {
   "teacher-assignment": { title: "作业", parent: "teacher-home" },
   "teacher-review": { title: "批改", parent: "teacher-assignment" },
   "teacher-intervention": { title: "干预队列", parent: "teacher-home" },
-  "teacher-report": { title: "报告", parent: "teacher-home" }
+  "teacher-report": { title: "报告", parent: "teacher-home" },
+  "teacher-settings": { title: "个人信息", parent: "teacher-home" }
 };
 
 export function isTeacherRoute(route) {

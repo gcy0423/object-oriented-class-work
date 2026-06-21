@@ -422,13 +422,13 @@
   "providerHealth": [
     {
       "id": "provider_mock-local-llm",
-      "createdAt": "2026-06-20T18:11:30.250Z",
-      "updatedAt": "2026-06-20T18:11:30.250Z",
+      "createdAt": "2026-06-21T05:02:22.509Z",
+      "updatedAt": "2026-06-21T05:02:22.509Z",
       "provider": "mock-local-llm",
       "model": "mock",
       "status": "up",
       "endpoint": "http://10.108.10.110:1234",
-      "checkedAt": "2026-06-20T18:11:30.250Z"
+      "checkedAt": "2026-06-21T05:02:22.509Z"
     }
   ],
   "studentAiResults": [

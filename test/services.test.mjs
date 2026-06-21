@@ -13,6 +13,7 @@ import {
 import { ServiceClient } from "../shared/client/serviceClient.js";
 import { normalizeChatCompletionsEndpoint } from "../services/ai-service/src/domain/ai.js";
 import { StudentAiWorkflowService } from "../services/ai-service/src/application/studentAiWorkflowService.js";
+import { TeacherAiWorkflowService } from "../services/ai-service/src/application/teacherAiWorkflowService.js";
 import { createApp as createAiApp } from "../services/ai-service/src/main.js";
 import { createApp as createAnalyticsApp } from "../services/analytics-service/src/main.js";
 import { createApp as createAssessmentApp } from "../services/assessment-service/src/main.js";
@@ -1558,6 +1559,59 @@ test("StudentAiWorkflowService normalizes JSON output and falls back on invalid 
   assert.match(fallbackResult.rawText, /这不是 JSON/);
 });
 
+test("TeacherAiWorkflowService normalizes JSON output and falls back on invalid provider content", async () => {
+  const user = { id: "user_teacher", role: "teacher", name: "周老师" };
+  const input = {
+    route: "teacher-student",
+    courseId: "course_ood",
+    studentId: "user_student",
+    evidence: ["AI 行动完成率 50%", "最近一次提交前已做自检"]
+  };
+
+  const workflow = new TeacherAiWorkflowService({
+    provider: {
+      async complete() {
+        return {
+          provider: "mock-json-provider",
+          text: JSON.stringify({
+            summary: "先核对学生证据，再发送提醒。",
+            actions: [{ id: "a1", label: "查看学生画像", route: "teacher-student", type: "generate", kind: "navigate" }],
+            risks: ["提醒必须保留教师确认。"],
+            evidence: ["AI 行动完成率 50%"],
+            draft: {
+              title: "学生干预草稿",
+              body: "建议先补齐当前关键行动。",
+              message: "建议先补齐当前关键行动。",
+              studentId: "user_student",
+              courseId: "course_ood",
+              channels: ["in_app"]
+            }
+          })
+        };
+      }
+    }
+  });
+  const validResult = await workflow.buildStudentIntervention(user, input);
+  assert.equal(validResult.provider, "mock-json-provider");
+  assert.equal(validResult.type, "student_intervention");
+  assert.equal(validResult.draft.studentId, "user_student");
+
+  const fallbackWorkflow = new TeacherAiWorkflowService({
+    provider: {
+      async complete() {
+        return {
+          provider: "mock-text-provider",
+          text: "not json"
+        };
+      }
+    }
+  });
+  const fallbackResult = await fallbackWorkflow.buildReportSummary(user, { route: "teacher-report", report: { title: "课程周报" } });
+  assert.equal(fallbackResult.type, "report_summary");
+  assert.equal(fallbackResult.provider, "mock-text-provider");
+  assert.ok(fallbackResult.draft.body.length > 0);
+});
+
 test("ai-service supports internal submission review with mock provider", async () => {
   await withTempDir(async (dir) => {
     const ai = await startApp(createAiApp, aiConfig(dir, {
@@ -1683,6 +1737,103 @@ test("ai-service exposes student AI workflow endpoints with structured fallback 
         assert.equal(typeof payload.data.generatedAt, "string");
         item.assertPayload(payload);
       }
+    } finally {
+      await stopServers([ai.server]);
+    }
+  });
+});
+
+test("ai-service exposes teacher AI workflow endpoints with structured fallback output", async () => {
+  await withTempDir(async (dir) => {
+    const ai = await startApp(createAiApp, aiConfig(dir, {
+      learningServiceUrl: "http://127.0.0.1:65531"
+    }));
+
+    try {
+      const teacherHeaders = {
+        "x-edumind-user-id": "user_teacher",
+        "x-edumind-user-role": "teacher",
+        "x-edumind-user-name": encodeUserContextHeader("周老师"),
+        "content-type": "application/json"
+      };
+      const requests = [
+        {
+          path: "/api/teacher-ai/teaching-plan",
+          body: { route: "teacher-home", courseId: "course_ood", evidence: ["待批改 4 份"] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "teaching_plan");
+            assert.equal(typeof payload.data.draft.title, "string");
+          }
+        },
+        {
+          path: "/api/teacher-ai/student-intervention",
+          body: { route: "teacher-student", courseId: "course_ood", studentId: "user_student", evidence: ["AI 行动完成率 50%"] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "student_intervention");
+            assert.equal(payload.data.draft.studentId, "user_student");
+          }
+        },
+        {
+          path: "/api/teacher-ai/assignment-commentary",
+          body: { route: "teacher-assignment", assignmentId: "assignment_1", evidence: ["3 份提交缺少依据"] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "assignment_commentary");
+          }
+        },
+        {
+          path: "/api/teacher-ai/feedback-draft",
+          body: { route: "teacher-review", submissionId: "submission_1", evidence: ["学生已完成提交前自检"] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "feedback_draft");
+          }
+        },
+        {
+          path: "/api/teacher-ai/course-practice-plan",
+          body: { route: "teacher-course", courseId: "course_ood", evidence: ["顺序图掌握度偏低"] },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "course_practice_plan");
+          }
+        },
+        {
+          path: "/api/teacher-ai/report-summary",
+          body: { route: "teacher-report", courseId: "course_ood", report: { title: "课程周报" } },
+          assertPayload(payload) {
+            assert.equal(payload.data.type, "report_summary");
+          }
+        }
+      ];
+
+      let lastDraftId = "";
+      for (const item of requests) {
+        const response = await fetch(`${ai.url}${item.path}`, {
+          method: "POST",
+          headers: teacherHeaders,
+          body: JSON.stringify(item.body)
+        });
+        const payload = await response.json();
+        assert.equal(response.status, 200);
+        assert.equal(payload.data.provider, "mock-local-llm");
+        assert.equal(typeof payload.data.generatedAt, "string");
+        assert.equal(typeof payload.data.draft.id, "string");
+        item.assertPayload(payload);
+        lastDraftId = payload.data.draft.id;
+      }
+
+      const draftsResponse = await fetch(`${ai.url}/api/teacher-ai/drafts`, {
+        headers: teacherHeaders
+      });
+      const draftsPayload = await draftsResponse.json();
+      assert.equal(draftsResponse.status, 200);
+      assert.ok(draftsPayload.data.items.length >= 1);
+
+      const confirmResponse = await fetch(`${ai.url}/api/teacher-ai/drafts/${lastDraftId}/save-commentary`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({})
+      });
+      const confirmPayload = await confirmResponse.json();
+      assert.equal(confirmResponse.status, 200);
+      assert.equal(confirmPayload.data.status, "saved");
     } finally {
       await stopServers([ai.server]);
     }
@@ -1875,6 +2026,23 @@ test("assessment-service handles assignments, grading, AI review, practice, mist
       const aiReviewPayload = await aiReviewResponse.json();
       assert.equal(aiReviewResponse.status, 200);
       assert.equal(aiReviewPayload.data.provider, "mock-local-llm");
+
+      const teacherFeedbackResponse = await fetch(`${assessment.url}/api/submissions/${submissionPayload.data.id}/teacher-feedback`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          score: 91,
+          summary: "结构完整，但需要补充判断依据。",
+          criteriaScores: [
+            { criterionId: "criterion_1", score: 55, comment: "结构较完整。" },
+            { criterionId: "criterion_2", score: 36, comment: "表达较清楚。" }
+          ]
+        })
+      });
+      const teacherFeedbackPayload = await teacherFeedbackResponse.json();
+      assert.equal(teacherFeedbackResponse.status, 200);
+      assert.equal(teacherFeedbackPayload.data.grade.score, 91);
+      assert.equal(teacherFeedbackPayload.data.feedbackItem.source, "teacher");
 
       const gradingOverviewResponse = await fetch(`${assessment.url}/api/assignments/${assignmentPayload.data.id}/grading-overview`, {
         headers: teacherHeaders
@@ -4152,6 +4320,69 @@ test("gateway proxies login, AI, collaboration APIs, SSE, and dashboard aggregat
       const gatewayGradingInsightPayload = await gatewayGradingInsightResponse.json();
       assert.equal(gatewayGradingInsightResponse.status, 200);
       assert.ok(gatewayGradingInsightPayload.data.grades.some((grade) => grade.source === "ai"));
+
+      const gatewayFeedbackDraftResponse = await fetch(`${gateway.url}/api/teacher-ai/feedback-draft`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          route: "teacher-review",
+          courseId: "course_ood",
+          assignmentId: createAssignmentPayload.data.id,
+          submissionId: gatewaySubmissionPayload.data.id,
+          evidence: ["学生已提交并完成自检"]
+        })
+      });
+      const gatewayFeedbackDraftPayload = await gatewayFeedbackDraftResponse.json();
+      assert.equal(gatewayFeedbackDraftResponse.status, 200);
+      const gatewaySaveFeedbackResponse = await fetch(`${gateway.url}/api/teacher-ai/drafts/${gatewayFeedbackDraftPayload.data.draft.id}/save-feedback`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({})
+      });
+      const gatewaySaveFeedbackPayload = await gatewaySaveFeedbackResponse.json();
+      assert.equal(gatewaySaveFeedbackResponse.status, 200);
+      assert.equal(gatewaySaveFeedbackPayload.data.savedFeedback.feedbackItem.source, "teacher");
+
+      const gatewayPracticeDraftResponse = await fetch(`${gateway.url}/api/teacher-ai/course-practice-plan`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          route: "teacher-course",
+          courseId: "course_ood",
+          evidence: ["顺序图掌握度偏低"]
+        })
+      });
+      const gatewayPracticeDraftPayload = await gatewayPracticeDraftResponse.json();
+      assert.equal(gatewayPracticeDraftResponse.status, 200);
+      const gatewaySavePracticeResponse = await fetch(`${gateway.url}/api/teacher-ai/drafts/${gatewayPracticeDraftPayload.data.draft.id}/save-practice-plan`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({})
+      });
+      const gatewaySavePracticePayload = await gatewaySavePracticeResponse.json();
+      assert.equal(gatewaySavePracticeResponse.status, 200);
+      assert.ok(gatewaySavePracticePayload.data.savedPracticePlan.questions.length >= 1);
+
+      const gatewayCommentaryDraftResponse = await fetch(`${gateway.url}/api/teacher-ai/assignment-commentary`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({
+          route: "teacher-assignment",
+          courseId: "course_ood",
+          assignmentId: createAssignmentPayload.data.id,
+          evidence: ["高频问题集中在概念边界"]
+        })
+      });
+      const gatewayCommentaryDraftPayload = await gatewayCommentaryDraftResponse.json();
+      assert.equal(gatewayCommentaryDraftResponse.status, 200);
+      const gatewaySaveCommentaryResponse = await fetch(`${gateway.url}/api/teacher-ai/drafts/${gatewayCommentaryDraftPayload.data.draft.id}/save-commentary`, {
+        method: "POST",
+        headers: teacherHeaders,
+        body: JSON.stringify({})
+      });
+      const gatewaySaveCommentaryPayload = await gatewaySaveCommentaryResponse.json();
+      assert.equal(gatewaySaveCommentaryResponse.status, 200);
+      assert.equal(gatewaySaveCommentaryPayload.data.savedCommentary.export.format, "markdown");
 
       const gatewayQuestionBanksResponse = await fetch(`${gateway.url}/api/question-banks?courseId=course_ood`, {
         headers: {

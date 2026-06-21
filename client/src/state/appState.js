@@ -50,6 +50,7 @@ export function createInitialState() {
       operationJob: false,
       operationAudit: false,
       studentAi: false,
+      teacherAi: false,
       studentTask: false,
       studentSubmission: false,
       studentNote: false
@@ -269,6 +270,15 @@ export function createInitialState() {
           content: "",
           tags: ""
         }
+      }
+    },
+    teacher: {
+      ai: {
+        currentResult: null,
+        resultsByRoute: {},
+        drafts: [],
+        lastCommand: null,
+        loading: false
       }
     }
   };

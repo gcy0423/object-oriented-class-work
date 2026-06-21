@@ -1,6 +1,6 @@
 import { selectTeacherReportModel } from "../../state/teacherSelectors.js";
 import { escapeHtml } from "../../utils/dom.js";
-import { actionRow, cardList, panel } from "./shared.js";
+import { actionRow, cardList, metricStrip, panel } from "./shared.js";
 
 export function teacherReportView(state) {
   const model = selectTeacherReportModel(state);
@@ -8,11 +8,16 @@ export function teacherReportView(state) {
     <section class="teacher-hero-panel">
       <div>
         <span class="teacher-eyebrow">报告</span>
-        <h2>把课程、作业、错题和 AI 使用证据整理成可导出的材料。</h2>
-        <p>报告页保留教师确认和导出入口，不显示内部报告编号。</p>
+        <h2>报告与导出</h2>
+        <p>已生成 ${escapeHtml(model.metrics[1].value)} 份报告，当前导出格式为 ${escapeHtml(model.metrics[2].value)}。</p>
       </div>
-      ${actionRow([{ label: "刷新报告", action: "refresh", primary: true }, { label: "回到教学台", route: "teacher-home" }])}
+      ${actionRow([
+        { label: "生成课程周报", action: "teacher-generate-course-report", primary: true },
+        { label: "生成作业评阅", action: "teacher-generate-assignment-report" },
+        { label: "AI 使用报告", action: "teacher-generate-ai-usage-report" }
+      ])}
     </section>
+    ${metricStrip(model.metrics)}
     <section class="teacher-page-grid">
       ${panel({
         eyebrow: "Catalog",

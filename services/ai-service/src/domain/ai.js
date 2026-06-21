@@ -90,6 +90,43 @@ export class StudentTaskDraftRecord extends Entity {
   }
 }
 
+export class TeacherAiResultRecord extends Entity {
+  constructor(record) {
+    super(record);
+    this.ownerId = record.ownerId;
+    this.type = record.type || "teaching_plan";
+    this.route = record.route || "teacher-home";
+    this.courseId = record.courseId || null;
+    this.studentId = record.studentId || null;
+    this.assignmentId = record.assignmentId || null;
+    this.submissionId = record.submissionId || null;
+    this.provider = record.provider || "fallback";
+    this.result = record.result && typeof record.result === "object" ? record.result : {};
+    this.actions = Array.isArray(record.actions) ? record.actions : [];
+    this.sourceEvidenceIds = Array.isArray(record.sourceEvidenceIds) ? record.sourceEvidenceIds : [];
+    this.generatedAt = record.generatedAt || this.createdAt;
+  }
+}
+
+export class TeacherAiDraftRecord extends Entity {
+  constructor(record) {
+    super(record);
+    this.ownerId = record.ownerId;
+    this.type = record.type || "student_intervention";
+    this.status = record.status || "draft";
+    this.title = record.title || "";
+    this.summary = record.summary || "";
+    this.body = record.body || "";
+    this.structuredPayload = record.structuredPayload && typeof record.structuredPayload === "object" ? record.structuredPayload : {};
+    this.courseId = record.courseId || null;
+    this.studentId = record.studentId || null;
+    this.assignmentId = record.assignmentId || null;
+    this.submissionId = record.submissionId || null;
+    this.resultId = record.resultId || null;
+    this.sourceEvidenceIds = Array.isArray(record.sourceEvidenceIds) ? record.sourceEvidenceIds : [];
+  }
+}
+
 export class AIResponse {
   constructor({ answer, suggestions = [], provider = "mock-local-llm", raw = null, generatedAt = undefined }) {
     this.answer = answer;
@@ -259,5 +296,62 @@ export class StudentTaskDraftRepository extends Repository {
   findByOwner(ownerId) {
     return this.where((item) => item.ownerId === ownerId)
       .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)));
+  }
+}
+
+export class TeacherAiResultRepository extends Repository {
+  constructor(database) {
+    super(database, "teacherAiResults", (record) => new TeacherAiResultRecord(record));
+  }
+
+  findByOwner(ownerId, filters = {}) {
+    const limit = Math.max(1, Math.min(50, Number(filters.limit || 20)));
+    return this.where((item) => {
+      if (item.ownerId !== ownerId) {
+        return false;
+      }
+      if (filters.type && item.type !== filters.type) {
+        return false;
+      }
+      if (filters.route && item.route !== filters.route) {
+        return false;
+      }
+      if (filters.courseId && item.courseId !== filters.courseId) {
+        return false;
+      }
+      if (filters.studentId && item.studentId !== filters.studentId) {
+        return false;
+      }
+      if (filters.assignmentId && item.assignmentId !== filters.assignmentId) {
+        return false;
+      }
+      return true;
+    })
+      .sort((a, b) => String(b.generatedAt || b.createdAt).localeCompare(String(a.generatedAt || a.createdAt)))
+      .slice(0, limit);
+  }
+}
+
+export class TeacherAiDraftRepository extends Repository {
+  constructor(database) {
+    super(database, "teacherAiDrafts", (record) => new TeacherAiDraftRecord(record));
+  }
+
+  findByOwner(ownerId, filters = {}) {
+    const limit = Math.max(1, Math.min(50, Number(filters.limit || 20)));
+    return this.where((item) => {
+      if (item.ownerId !== ownerId) {
+        return false;
+      }
+      if (filters.type && item.type !== filters.type) {
+        return false;
+      }
+      if (filters.status && item.status !== filters.status) {
+        return false;
+      }
+      return true;
+    })
+      .sort((a, b) => String(b.updatedAt || b.createdAt).localeCompare(String(a.updatedAt || a.createdAt)))
+      .slice(0, limit);
   }
 }

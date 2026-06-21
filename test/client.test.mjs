@@ -2,10 +2,11 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { ApiClient } from "../client/src/api.js";
 import { StudentAiAdapter } from "../client/src/ai/studentAiAdapter.js";
+import { TeacherAiAdapter } from "../client/src/ai/teacherAiAdapter.js";
 import { createInitialState } from "../client/src/state/appState.js";
 import { buildModelConfig, canManageAssessment, selectPracticeProgress, selectQuestionBankViewModel } from "../client/src/state/selectors.js";
 import { selectStudentAiContext, selectStudentAssignmentsModel, selectStudentPracticeSessionModel } from "../client/src/state/studentSelectors.js";
-import { selectTeacherAiPanelModel } from "../client/src/state/teacherSelectors.js";
+import { selectTeacherAiPanelModel, selectTeacherCourseModel, selectTeacherInterventionModel, selectTeacherReportModel } from "../client/src/state/teacherSelectors.js";
 import { formatDate, formatPercent } from "../client/src/utils/format.js";
 import { toQuery } from "../client/src/utils/query.js";
 import { compactErrors, validateAssignment, validateQuestion } from "../client/src/utils/validation.js";
@@ -39,7 +40,7 @@ import { studentNoteEditorView } from "../client/src/views/student/studentNoteEd
 import { studentNoteAiResultView } from "../client/src/views/student/studentNoteAiResultView.js";
 import { STUDENT_PRIMARY_ROUTES, studentRouteTable } from "../client/src/views/studentRouteTable.js";
 import { defaultRouteForUser, hydrateStudentWorkspace } from "../client/src/studentRuntime.js";
-import { defaultRouteForTeacher, hydrateTeacherWorkspace, renderTeacherRoute } from "../client/src/teacherRuntime.js";
+import { defaultRouteForTeacher, handleTeacherAction, hydrateTeacherWorkspace, renderTeacherRoute } from "../client/src/teacherRuntime.js";
 import { workbenchView } from "../client/src/views/workbenchView.js";
 
 test("format and query utilities support v6 view rendering", () => {
@@ -298,6 +299,7 @@ test("teacher runtime defaults to v11 shell and context-aware AI panel", () => {
   const state = createInitialState();
   state.user = { id: "user_teacher", name: "周老师", role: "teacher", avatar: "周" };
   state.route = "teacher-home";
+  state.loading.dashboard = true;
   state.dashboard = {
     courses: [{ id: "course_ood", title: "面向对象技术与方法", description: "UML 和设计模式。" }],
     assignments: [{ id: "assignment_ood_model", courseId: "course_ood", title: "领域模型设计作业", description: "提交 UML 图。", dueAt: "2026-06-21T23:59:59.000Z", status: "published" }]
@@ -314,6 +316,7 @@ test("teacher runtime defaults to v11 shell and context-aware AI panel", () => {
   assert.equal(defaultRouteForTeacher(teacher, ""), "teacher-home");
   assert.equal(defaultRouteForTeacher(teacher, "dashboard"), "teacher-home");
   assert.equal(defaultRouteForTeacher(teacher, "assignments"), "teacher-assignment");
+  assert.equal(defaultRouteForTeacher(teacher, "settings"), "teacher-settings");
 
   const homePanel = selectTeacherAiPanelModel(state, "teacher-home");
   const studentPanel = selectTeacherAiPanelModel({ ...state, route: "teacher-student", selected: { ...state.selected, studentId: "user_student" } }, "teacher-student");
@@ -322,10 +325,22 @@ test("teacher runtime defaults to v11 shell and context-aware AI panel", () => {
 
   const rendered = renderTeacherRoute(state);
   assert.match(rendered, /teacher-app-shell/);
+  assert.match(rendered, /正在同步课程、作业和学情数据/);
   assert.match(rendered, /AI 教学台/);
   assert.match(rendered, /面向对象技术与方法/);
   const visibleMarkup = rendered.replace(/\sdata-id="[^"]*"/g, "");
   assert.doesNotMatch(visibleMarkup, /course_ood|assignment_ood_model|user_student/);
+
+  const intervention = renderTeacherRoute({ ...state, route: "teacher-intervention" });
+  assert.match(intervention, /候选学生/);
+  assert.match(intervention, /待确认建议/);
+  const report = renderTeacherRoute({ ...state, route: "teacher-report" });
+  assert.match(report, /报告类型/);
+  assert.match(report, /预览状态/);
+  const settings = renderTeacherRoute({ ...state, route: "teacher-settings" });
+  assert.match(settings, /个人信息/);
+  assert.match(settings, /账号助手/);
+  assert.doesNotMatch(settings.replace(/\sdata-id="[^"]*"/g, ""), /user_teacher/);
 });
 
 test("teacher workspace hydrates assignment context without falling back to old pages", async () => {
@@ -367,6 +382,308 @@ test("teacher workspace hydrates assignment context without falling back to old 
   assert.match(rendered, /teacher-app-shell/);
   assert.match(rendered, /林知夏/);
   assert.doesNotMatch(rendered.replace(/\sdata-id="[^"]*"/g, ""), /assignment_ood_model|submission_1|user_student/);
+});
+
+test("teacher submission insight action stays inside v11 review shell", async () => {
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher" };
+  state.route = "teacher-assignment";
+  state.filters.assessmentInsight = { assignmentId: "assignment_ood_model" };
+
+  const routes = [];
+  const calls = [];
+  const app = {
+    store: { get: () => state },
+    api: {
+      async submissionGradingInsight(id) {
+        calls.push(["insight", id]);
+        return {
+          data: {
+            assignment: { title: "领域模型设计作业" },
+            submission: { studentId: "user_student", submittedAt: "2026-06-20T00:00:00.000Z" },
+            recommendation: "评分稳定。"
+          }
+        };
+      },
+      async submissionStudentAiEvidence(id) {
+        calls.push(["evidence", id]);
+        return { data: { items: [{ title: "自检记录", summary: "学生已完成提交前自检。" }] } };
+      }
+    },
+    writeRoute(route) {
+      routes.push(route);
+    },
+    setState(patch) {
+      Object.assign(state, patch);
+    },
+    toast(message) {
+      throw new Error(message);
+    }
+  };
+
+  const handled = await handleTeacherAction(app, {
+    dataset: { action: "teacher-load-submission-insight", id: "submission_1" }
+  });
+
+  assert.equal(handled, true);
+  assert.deepEqual(routes, ["teacher-review"]);
+  assert.deepEqual(calls, [["insight", "submission_1"], ["evidence", "submission_1"]]);
+  assert.equal(state.route, "teacher-review");
+  assert.equal(state.filters.assessmentInsight.submissionId, "submission_1");
+  assert.equal(state.assessmentInsight.submissionInsight.aiEvidence.items[0].title, "自检记录");
+  const rendered = renderTeacherRoute(state);
+  assert.match(rendered, /teacher-app-shell/);
+  assert.match(rendered, /批改助手/);
+  assert.doesNotMatch(rendered, /assessment-insight|旧工作台/);
+});
+
+test("teacher intervention send requires teacher confirmation", async () => {
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher" };
+  state.route = "teacher-intervention";
+  state.selected.studentId = "user_student";
+
+  let sent = false;
+  let refreshed = false;
+  const app = {
+    store: { get: () => state },
+    api: {
+      async createTeacherIntervention() {
+        sent = true;
+      }
+    },
+    confirm() {
+      return false;
+    },
+    async refreshApp() {
+      refreshed = true;
+    },
+    toast(message) {
+      throw new Error(message);
+    }
+  };
+
+  const handled = await handleTeacherAction(app, {
+    dataset: { action: "teacher-send-intervention", id: "user_student" }
+  });
+
+  assert.equal(handled, true);
+  assert.equal(sent, false);
+  assert.equal(refreshed, false);
+});
+
+test("teacher AI actions call services and stay in v11 routes", async () => {
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher" };
+  state.route = "teacher-review";
+  state.dashboard = { courses: [{ id: "course_ood", title: "面向对象技术与方法" }] };
+  state.assessment.assignments = [{ id: "assignment_ood_model", courseId: "course_ood", title: "领域模型设计作业" }];
+  state.selected.assignmentId = "assignment_ood_model";
+  const calls = [];
+  const routes = [];
+  const toasts = [];
+  const app = {
+    store: { get: () => state },
+    api: {
+      async reviewSubmissionWithAI(id) {
+        calls.push(["ai-review", id]);
+        return { data: { ok: true } };
+      },
+      async submissionGradingInsight(id) {
+        calls.push(["insight", id]);
+        return { data: { recommendation: "评分稳定。" } };
+      },
+      async submissionStudentAiEvidence(id) {
+        calls.push(["evidence", id]);
+        return { data: { items: [] } };
+      },
+      async adaptivePracticePlan(input) {
+        calls.push(["practice-plan", input.courseId, input.questionCount]);
+        return { data: { selectedCount: 1, targetCount: 8, estimatedMinutes: 10, strategy: "先复盘顺序图。", questions: [{ concept: "顺序图", stem: "画出一次消息交互。", reason: "薄弱点" }] } };
+      },
+      async assignmentGradingReport(id, params) {
+        calls.push(["assignment-report", id, params.format]);
+        return { data: { report: { title: "领域模型设计作业 Grading Report", summary: "ok", generatedAt: "2026-06-21T00:00:00.000Z" } } };
+      }
+    },
+    writeRoute(route) {
+      routes.push(route);
+    },
+    setState(patch) {
+      Object.assign(state, patch);
+    },
+    toast(message) {
+      toasts.push(message);
+    }
+  };
+
+  await handleTeacherAction(app, { dataset: { action: "teacher-run-ai-review", id: "submission_1" } });
+  assert.equal(state.route, "teacher-review");
+  assert.equal(state.assessmentInsight.submissionInsight.recommendation, "评分稳定。");
+
+  await handleTeacherAction(app, { dataset: { action: "teacher-build-practice-plan" } });
+  assert.equal(state.route, "teacher-course");
+  assert.equal(selectTeacherCourseModel(state).adaptivePlan.questions[0].concept, "顺序图");
+
+  await handleTeacherAction(app, { dataset: { action: "teacher-generate-assignment-report" } });
+  assert.equal(state.route, "teacher-report");
+  assert.equal(state.reports.assignmentGrading.report.title, "领域模型设计作业 Grading Report");
+  assert.deepEqual(routes, ["teacher-review", "teacher-report"]);
+  assert.deepEqual(calls, [
+    ["ai-review", "submission_1"],
+    ["insight", "submission_1"],
+    ["evidence", "submission_1"],
+    ["practice-plan", "course_ood", 8],
+    ["assignment-report", "assignment_ood_model", "markdown"]
+  ]);
+  assert.match(toasts.join("\n"), /AI 初评已完成/);
+  assert.match(toasts.join("\n"), /补练建议已生成/);
+  assert.match(toasts.join("\n"), /作业评阅报告已生成/);
+});
+
+test("teacher AI draft confirmations write results back into teacher route state", async () => {
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher" };
+  state.route = "teacher-review";
+  state.teacher.ai.drafts = [{
+    id: "draft_feedback",
+    type: "feedback_draft",
+    title: "批改反馈草稿",
+    summary: "请补充关键依据。",
+    body: "建议补充关键判断依据。",
+    structuredPayload: {},
+    submissionId: "submission_1"
+  }];
+
+  const app = {
+    store: { get: () => state },
+    api: {
+      async saveTeacherAiFeedbackDraft() {
+        return {
+          data: {
+            draft: { ...state.teacher.ai.drafts[0], status: "saved" },
+            savedFeedback: {
+              submissionId: "submission_1",
+              grade: { score: 88 },
+              feedbackItem: { summary: "建议补充关键判断依据。" }
+            }
+          }
+        };
+      },
+      async teacherAiDrafts() {
+        return { data: { items: [] } };
+      }
+    },
+    setState(patch) {
+      Object.assign(state, patch);
+    },
+    toast() {},
+    patchSaving() {}
+  };
+
+  await handleTeacherAction(app, {
+    dataset: { action: "teacher-confirm-ai-draft", command: "save-feedback" }
+  });
+
+  assert.equal(state.assessmentInsight.submissionInsight.teacherFeedback.grade.score, 88);
+  assert.equal(state.assessmentInsight.submissionInsight.recommendation, "请补充关键依据。");
+
+  state.route = "teacher-course";
+  state.teacher.ai.drafts = [{
+    id: "draft_practice",
+    type: "course_practice_plan",
+    title: "课程补练草稿",
+    summary: "先补顺序图，再补边界识别。",
+    body: "安排 6 题短练习。",
+    structuredPayload: {}
+  }];
+  app.api.saveTeacherAiPracticePlanDraft = async () => ({
+    data: {
+      draft: { ...state.teacher.ai.drafts[0], status: "saved" },
+      savedPracticePlan: {
+        selectedCount: 2,
+        targetCount: 6,
+        estimatedMinutes: 18,
+        strategy: "先补顺序图，再补边界识别。",
+        questions: [{ concept: "顺序图", stem: "题目", reason: "薄弱点" }]
+      }
+    }
+  });
+
+  await handleTeacherAction(app, {
+    dataset: { action: "teacher-confirm-ai-draft", command: "save-practice-plan" }
+  });
+
+  assert.equal(state.assessmentInsight.adaptivePlan.strategy, "先补顺序图，再补边界识别。");
+  assert.equal(state.assessmentInsight.adaptivePlan.questions[0].concept, "顺序图");
+
+  state.route = "teacher-assignment";
+  state.teacher.ai.drafts = [{
+    id: "draft_commentary",
+    type: "assignment_commentary",
+    title: "作业讲评草稿",
+    summary: "重点讲解概念边界。",
+    body: "全班需要补强概念边界与举例。",
+    structuredPayload: {}
+  }];
+  app.api.saveTeacherAiCommentaryDraft = async () => ({
+    data: {
+      draft: { ...state.teacher.ai.drafts[0], status: "saved" },
+      savedCommentary: {
+        report: { title: "作业讲评草稿", summary: "重点讲解概念边界。" },
+        export: { filename: "commentary.md", format: "markdown", body: "# 作业讲评草稿" }
+      }
+    }
+  });
+
+  await handleTeacherAction(app, {
+    dataset: { action: "teacher-confirm-ai-draft", command: "save-commentary" }
+  });
+
+  assert.equal(state.reports.exportPreview.report.title, "作业讲评草稿");
+  assert.equal(state.reports.assignmentGrading.report.summary, "重点讲解概念边界。");
+});
+
+test("teacher selectors localize backend report and intervention copy", () => {
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher" };
+  state.operations.interventionPlan = {
+    actions: [{ title: "Recover missing assignment evidence", reason: "1 assignment(s) have no submission evidence.", priority: "high" }]
+  };
+  state.reports.catalog = {
+    reports: [{ title: "Teacher Course Weekly Report", formats: ["json", "markdown"] }]
+  };
+  state.reports.courseWeekly = {
+    report: {
+      title: "面向对象技术与方法 Teacher Weekly Report",
+      summary: "Weekly course report with assignment progress, grading throughput, practice engagement, collaboration activity, and AI provider status.",
+      generatedAt: "2026-06-21T00:00:00.000Z"
+    }
+  };
+  state.reports.assignmentGrading = {
+    report: {
+      title: "领域模型设计作业 Grading Report",
+      summary: "Grading report for 领域模型设计作业, including submission coverage, score distribution, rubric insight, and collaboration evidence.",
+      generatedAt: "2026-06-21T00:00:00.000Z"
+    }
+  };
+  state.reports.mistakeReview = {
+    report: {
+      title: "周老师 Mistake Review Report",
+      summary: "Mistake review report with concept-level load, open mistake queue, reviewed items, and mastery alignment.",
+      generatedAt: "2026-06-21T00:00:00.000Z"
+    }
+  };
+
+  const intervention = selectTeacherInterventionModel(state);
+  assert.equal(intervention.actions[0].title, "补齐缺失作业证据");
+  assert.equal(intervention.actions[0].reason, "1 份作业缺少提交证据。");
+  const report = selectTeacherReportModel(state);
+  assert.equal(report.catalog[0].title, "教师课程周报");
+  assert.equal(report.reports[0].title, "面向对象技术与方法教师周报");
+  assert.equal(report.reports[1].title, "领域模型设计作业评阅报告");
+  assert.equal(report.reports[2].title, "周老师错题复盘报告");
+  assert.doesNotMatch(JSON.stringify(report), /Teacher Weekly Report|Grading Report|Mistake Review Report|Weekly course report|Grading report for/);
 });
 
 test("StudentAiAdapter prefers official student AI APIs when available", async () => {
@@ -534,6 +851,74 @@ test("StudentAiAdapter returns structured fallback without throwing", async () =
   assert.ok(Array.isArray(guide.outline));
   assert.equal(typeof check.completionEstimate, "number");
   assert.ok(Array.isArray(organize.cards));
+});
+
+test("TeacherAiAdapter prefers official teacher AI APIs when available", async () => {
+  const adapter = new TeacherAiAdapter({
+    api: {
+      async teacherAiTeachingPlan() {
+        return {
+          data: {
+            id: "teacher_ai_result_1",
+            summary: "先批改，再干预。",
+            actions: [{ id: "a1", label: "打开批改页", route: "teacher-review", type: "generate", kind: "navigate" }],
+            risks: ["风险学生需要二次核对。"],
+            evidence: ["待批改 4 份"],
+            draft: { title: "今日教学方案", body: "1. 先批改。\n2. 再看风险学生。" },
+            provider: "official-api",
+            generatedAt: "2026-06-21T00:00:00.000Z"
+          }
+        };
+      }
+    }
+  });
+
+  const result = await adapter.buildTeachingPlan({ route: "teacher-home", evidence: ["待批改 4 份"] });
+  assert.equal(result.summary, "先批改，再干预。");
+  assert.equal(result.actions[0].route, "teacher-review");
+  assert.equal(result.draft.title, "今日教学方案");
+});
+
+test("TeacherAiAdapter returns structured fallback without throwing", async () => {
+  const adapter = new TeacherAiAdapter({
+    api: {
+      async askAI() {
+        throw new Error("offline");
+      }
+    }
+  });
+
+  const result = await adapter.buildStudentIntervention({
+    route: "teacher-student",
+    courseId: "course_ood",
+    studentId: "user_student",
+    studentName: "林知夏"
+  });
+
+  assert.equal(result.type, "student_intervention");
+  assert.equal(result.draft.studentId, "user_student");
+  assert.ok(Array.isArray(result.actions));
+});
+
+test("teacher AI panel exposes route-specific quick commands", () => {
+  const state = createInitialState();
+  state.user = { id: "user_teacher", name: "周老师", role: "teacher" };
+  state.dashboard = { courses: [{ id: "course_ood", title: "面向对象技术与方法" }], assignments: [] };
+  state.assessment.assignments = [{ id: "assignment_1", courseId: "course_ood", title: "领域模型设计作业" }];
+  state.analytics.selectedStudent = {
+    student: { id: "user_student", name: "林知夏", ai: { completionRate: 75 }, risk: { level: "medium" } },
+    recommendations: ["先检查自检证据。"]
+  };
+  state.teacher.ai.resultsByRoute = {
+    "teacher-home": { summary: "home result", draft: { title: "今日教学方案" } },
+    "teacher-student": { summary: "student result", draft: { title: "学生干预草稿" } }
+  };
+
+  const homePanel = selectTeacherAiPanelModel({ ...state, route: "teacher-home" }, "teacher-home");
+  const studentPanel = selectTeacherAiPanelModel({ ...state, route: "teacher-student" }, "teacher-student");
+
+  assert.equal(homePanel.commands[0].label, "生成今日方案");
+  assert.equal(studentPanel.commands[0].label, "生成干预草稿");
 });
 
 test("student runtime can auto-hydrate default AI cards for student routes", async () => {

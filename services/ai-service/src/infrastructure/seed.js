@@ -31,6 +31,8 @@ export function createAiSeed(now = new Date()) {
     aiResponses: [],
     providerHealth: [],
     studentAiResults: [],
-    studentTaskDrafts: []
+    studentTaskDrafts: [],
+    teacherAiResults: [],
+    teacherAiDrafts: []
   };
 }

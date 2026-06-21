@@ -80,6 +80,19 @@
         "submissionId": "submission_4364a24b",
         "assignmentId": "assignment_ood_model"
       }
+    },
+    {
+      "id": "log_7532253e",
+      "createdAt": "2026-06-21T05:02:21.222Z",
+      "updatedAt": "2026-06-21T05:02:21.222Z",
+      "actorId": "user_teacher",
+      "type": "submission.ai-reviewed",
+      "summary": "完成 AI 初评：领域模型设计作业",
+      "payload": {
+        "submissionId": "submission_4364a24b",
+        "assignmentId": "assignment_ood_model",
+        "provider": "mock-local-llm"
+      }
     }
   ],
   "events": [
@@ -154,6 +167,21 @@
         "assignmentId": "assignment_ood_model"
       },
       "occurredAt": "2026-06-18T13:44:54.176Z"
+    },
+    {
+      "id": "evt_76a81cf7",
+      "createdAt": "2026-06-21T05:02:21.220Z",
+      "updatedAt": "2026-06-21T05:02:21.220Z",
+      "type": "submission.ai-reviewed",
+      "source": "assessment-service",
+      "actorId": "user_teacher",
+      "summary": "完成 AI 初评：领域模型设计作业",
+      "payload": {
+        "submissionId": "submission_4364a24b",
+        "assignmentId": "assignment_ood_model",
+        "provider": "mock-local-llm"
+      },
+      "occurredAt": "2026-06-21T05:02:21.220Z"
     }
   ],
   "roomMembers": [],

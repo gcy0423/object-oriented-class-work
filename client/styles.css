@@ -2099,9 +2099,9 @@ textarea:focus-visible,
 
 .teacher-hero-panel h2 {
   margin: 6px 0 8px;
-  max-width: 860px;
-  font-size: clamp(24px, 3vw, 40px);
-  line-height: 1.12;
+  max-width: 720px;
+  font-size: clamp(22px, 2.2vw, 32px);
+  line-height: 1.18;
 }
 
 .teacher-metric-strip {
@@ -2277,6 +2277,19 @@ textarea:focus-visible,
   padding: 10px 0;
 }
 
+.teacher-loading-strip {
+  min-height: 48px;
+  padding: 12px 14px;
+  border: 1px solid rgba(13, 128, 120, 0.18);
+  border-radius: 14px;
+  background: rgba(220, 236, 229, 0.84);
+  color: #153f38;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+}
+
 .teacher-export-preview {
   max-height: 420px;
   overflow: auto;
@@ -2327,14 +2340,33 @@ textarea:focus-visible,
 @media (max-width: 1180px) {
   .teacher-app-shell {
     grid-template-columns: 228px minmax(0, 1fr);
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
   }
 
   .teacher-ai-panel {
-    display: none;
+    grid-column: 2;
+    position: relative;
+    top: auto;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    border-left: 0;
+    border-top: 1px solid rgba(23, 71, 143, 0.12);
+    border-radius: 18px;
+    margin: 0 22px 24px;
+    box-shadow: 0 18px 36px rgba(20, 38, 67, 0.08);
   }
 
   .teacher-page-grid {
     grid-template-columns: 1fr;
+  }
+
+  .teacher-ai-panel__body {
+    overflow: visible;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: stretch;
   }
 
   .student-app-shell {
@@ -2377,6 +2409,15 @@ textarea:focus-visible,
     min-height: 100dvh;
     height: auto;
     overflow: visible;
+  }
+
+  .teacher-ai-panel {
+    grid-column: 1;
+    margin: 0 22px 24px;
+  }
+
+  .teacher-ai-panel__body {
+    grid-template-columns: 1fr;
   }
 
   .teacher-sidebar {
@@ -2457,7 +2498,7 @@ textarea:focus-visible,
 
 @media (max-width: 640px) {
   .teacher-main {
-    padding: 16px 12px calc(96px + env(safe-area-inset-bottom, 0px));
+    padding: 16px 12px 18px;
   }
 
   .teacher-sidebar {
@@ -2513,8 +2554,14 @@ textarea:focus-visible,
 
   .teacher-hero-panel,
   .teacher-panel,
-  .teacher-list-card {
+  .teacher-list-card,
+  .teacher-ai-panel {
     box-shadow: none;
+  }
+
+  .teacher-ai-panel {
+    margin: 0 12px calc(96px + env(safe-area-inset-bottom, 0px));
+    padding: 16px;
   }
 
   .teacher-bottom-nav {

@@ -1,6 +1,6 @@
 import { selectTeacherInterventionModel } from "../../state/teacherSelectors.js";
 import { escapeHtml } from "../../utils/dom.js";
-import { actionRow, cardList, panel } from "./shared.js";
+import { actionRow, cardList, metricStrip, panel } from "./shared.js";
 
 export function teacherInterventionView(state) {
   const model = selectTeacherInterventionModel(state);
@@ -13,6 +13,7 @@ export function teacherInterventionView(state) {
       </div>
       ${actionRow([{ label: "查看学生画像", route: "teacher-student", primary: true }, { label: "查看课程学情", route: "teacher-course" }])}
     </section>
+    ${metricStrip(model.metrics)}
     <section class="teacher-page-grid">
       ${panel({
         eyebrow: "Candidates",

@@ -78,8 +78,66 @@
       "updatedAt": "2026-06-16"
     }
   ],
-  "grades": [],
-  "feedbackItems": [],
+  "grades": [
+    {
+      "id": "grade_ce5ea903",
+      "createdAt": "2026-06-21T05:02:21.210Z",
+      "updatedAt": "2026-06-21T05:02:21.210Z",
+      "submissionId": "submission_4364a24b",
+      "graderId": "user_teacher",
+      "score": 80,
+      "feedback": "林知夏的提交整体结构较完整，重点内容已覆盖，建议补充更具体的建模依据和关键设计取舍。",
+      "criteriaScores": [
+        {
+          "criterionId": "criterion_model_integrity",
+          "score": 32,
+          "comment": "模型完整性表现稳定，建议继续补充与“领域模型设计作业”更贴合的说明。"
+        },
+        {
+          "criterionId": "criterion_responsibility",
+          "score": 24,
+          "comment": "职责划分表现稳定，建议继续补充与“领域模型设计作业”更贴合的说明。"
+        },
+        {
+          "criterionId": "criterion_expression",
+          "score": 24,
+          "comment": "文档表达表现稳定，建议继续补充与“领域模型设计作业”更贴合的说明。"
+        }
+      ],
+      "source": "ai",
+      "provider": "mock-local-llm"
+    }
+  ],
+  "feedbackItems": [
+    {
+      "id": "feedback_70323d69",
+      "createdAt": "2026-06-21T05:02:21.210Z",
+      "updatedAt": "2026-06-21T05:02:21.210Z",
+      "submissionId": "submission_4364a24b",
+      "gradeId": "grade_ce5ea903",
+      "actorId": "user_teacher",
+      "source": "ai",
+      "summary": "林知夏的提交整体结构较完整，重点内容已覆盖，建议补充更具体的建模依据和关键设计取舍。",
+      "criteriaFeedback": [
+        {
+          "criterionId": "criterion_model_integrity",
+          "score": 32,
+          "comment": "模型完整性表现稳定，建议继续补充与“领域模型设计作业”更贴合的说明。"
+        },
+        {
+          "criterionId": "criterion_responsibility",
+          "score": 24,
+          "comment": "职责划分表现稳定，建议继续补充与“领域模型设计作业”更贴合的说明。"
+        },
+        {
+          "criterionId": "criterion_expression",
+          "score": 24,
+          "comment": "文档表达表现稳定，建议继续补充与“领域模型设计作业”更贴合的说明。"
+        }
+      ],
+      "provider": "mock-local-llm"
+    }
+  ],
   "questionBanks": [
     {
       "id": "qbank_ood",
@@ -297,5 +355,6 @@
       "masteryScore": 100,
       "lastPracticedAt": "2026-06-18T13:44:07.264Z"
     }
-  ]
+  ],
+  "submissionDrafts": []
 }

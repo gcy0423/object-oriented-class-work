@@ -13,7 +13,7 @@ export function teacherCourseView(state) {
       </div>
       ${actionRow([
         { label: "查看风险学生", route: "teacher-intervention", primary: true },
-        { label: "进入题库补练", route: "teacher-review" }
+        { label: "生成补练建议", action: "teacher-build-practice-plan" }
       ])}
     </section>
     ${metricStrip(model.metrics)}
@@ -53,12 +53,12 @@ export function teacherCourseView(state) {
       ${panel({
         eyebrow: "Question bank",
         title: "题库与补练",
-        text: "承接原型的题库缺口分析，把练习入口和题库状态放在学情页内。",
+        text: "根据薄弱知识点和错题负载补齐练习材料。",
         body: cardList(model.questionBanks, (item) => `
           <article class="teacher-list-card">
             <h3>${escapeHtml(item.title)}</h3>
             <p>${escapeHtml(item.description)}</p>
-            ${actionRow([{ label: "查看批改关联", route: "teacher-review" }])}
+            ${actionRow([{ label: "生成补练建议", action: "teacher-build-practice-plan" }])}
           </article>
         `, "暂无题库。")
       })}
@@ -67,6 +67,22 @@ export function teacherCourseView(state) {
         title: "练习与错题",
         text: "用于判断是否需要补练或干预。",
         body: `
+          ${model.adaptivePlan ? `
+            <article class="teacher-list-card">
+              <div class="teacher-list-card__head">
+                <div>
+                  <h3>补练建议</h3>
+                  <p>已选 ${escapeHtml(model.adaptivePlan.selectedCount)}/${escapeHtml(model.adaptivePlan.targetCount)} 题，预计 ${escapeHtml(model.adaptivePlan.estimatedMinutes)} 分钟。${escapeHtml(model.adaptivePlan.strategy)}</p>
+                </div>
+                <span class="teacher-chip">AI</span>
+              </div>
+              ${model.adaptivePlan.questions.length ? `
+                <ul class="teacher-plain-list">
+                  ${model.adaptivePlan.questions.map((item) => `<li><strong>${escapeHtml(item.concept)}</strong>：${escapeHtml(item.stem)} · ${escapeHtml(item.reason)}</li>`).join("")}
+                </ul>
+              ` : `<div class="teacher-empty">暂无补练题目。</div>`}
+            </article>
+          ` : ""}
           ${cardList(model.practice, (item) => `
             <article class="teacher-list-card">
               <div class="teacher-list-card__head">

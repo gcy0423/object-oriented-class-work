@@ -3,6 +3,8 @@ import { JsonDatabase } from "../../../shared/data/jsonDatabase.js";
 import { Router } from "../../../shared/http/router.js";
 import { createServiceServer } from "../../../shared/http/server.js";
 import { AITutorService } from "./application/aiTutorService.js";
+import { TeacherAiWorkflowService } from "./application/teacherAiWorkflowService.js";
+import { TeacherAiWorkspaceService } from "./application/teacherAiWorkspaceService.js";
 import { StudentAiWorkspaceService } from "./application/studentAiWorkspaceService.js";
 import { StudentAiWorkflowService } from "./application/studentAiWorkflowService.js";
 import { loadConfig } from "./config.js";
@@ -11,6 +13,8 @@ import {
   AIResponseRepository,
   PromptTemplateRepository,
   ProviderHealthRepository,
+  TeacherAiDraftRepository,
+  TeacherAiResultRepository,
   StudentAiResultRepository,
   StudentTaskDraftRepository
 } from "./domain/ai.js";
@@ -28,7 +32,9 @@ export function createApp(config = loadConfig()) {
     responses: new AIResponseRepository(database),
     providerHealth: new ProviderHealthRepository(database),
     studentAiResults: new StudentAiResultRepository(database),
-    studentTaskDrafts: new StudentTaskDraftRepository(database)
+    studentTaskDrafts: new StudentTaskDraftRepository(database),
+    teacherAiResults: new TeacherAiResultRepository(database),
+    teacherAiDrafts: new TeacherAiDraftRepository(database)
   };
   const learningClient = new LearningClient({
     baseUrl: config.learningServiceUrl,
@@ -56,7 +62,16 @@ export function createApp(config = loadConfig()) {
     workflow: studentAiWorkflow,
     learningClient
   });
-  const services = { ready, database, repositories, aiTutor, studentAiWorkflow, studentAiWorkspace };
+  const teacherAiWorkflow = new TeacherAiWorkflowService({
+    provider: aiTutor.provider
+  });
+  const teacherAiWorkspace = new TeacherAiWorkspaceService({
+    database,
+    results: repositories.teacherAiResults,
+    drafts: repositories.teacherAiDrafts,
+    workflow: teacherAiWorkflow
+  });
+  const services = { ready, database, repositories, aiTutor, studentAiWorkflow, studentAiWorkspace, teacherAiWorkflow, teacherAiWorkspace };
   const router = new Router();
   registerRoutes(router, config, services);
   const server = createServiceServer({ router, config });

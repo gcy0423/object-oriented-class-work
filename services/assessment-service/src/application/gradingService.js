@@ -73,6 +73,79 @@ export class GradingService {
     return saved;
   }
 
+  async saveTeacherFeedbackDraft(user, submissionId, input = {}) {
+    requireTeacher(user);
+    const submission = this.submissions.findById(submissionId);
+    if (!submission) {
+      throw new NotFoundError("提交不存在。");
+    }
+    const assignment = this.assignments.findById(submission.assignmentId);
+    if (!assignment) {
+      throw new NotFoundError("作业不存在。");
+    }
+
+    const scoreInput = input.score ?? input.suggestedScore ?? 0;
+    const score = requireNumber(scoreInput, "总分");
+    const criteriaScores = Array.isArray(input.criteriaScores) ? input.criteriaScores.map((item) => ({
+      criterionId: item.criterionId || null,
+      score: requireNumber(item.score, "维度分数"),
+      comment: String(item.comment || "").trim()
+    })) : [];
+    const summary = String(input.summary || input.feedback || "").trim();
+    const now = new Date().toISOString();
+
+    const grade = new Grade({
+      id: this.database.nextId("grade"),
+      submissionId: submission.id,
+      graderId: user.id,
+      score,
+      feedback: summary,
+      criteriaScores,
+      source: "teacher",
+      createdAt: now,
+      updatedAt: now
+    });
+    const savedGrade = await this.grades.save(grade);
+
+    const feedback = new FeedbackItem({
+      id: this.database.nextId("feedback"),
+      submissionId: submission.id,
+      gradeId: savedGrade.id,
+      actorId: user.id,
+      source: "teacher",
+      summary,
+      criteriaFeedback: criteriaScores.map((item) => ({
+        criterionId: item.criterionId,
+        score: item.score,
+        comment: item.comment
+      })),
+      provider: input.provider || "teacher-ai-draft",
+      createdAt: now,
+      updatedAt: now
+    });
+    const savedFeedback = await this.feedbackItems.save(feedback);
+
+    await this.publishEvent({
+      type: "submission.feedback.saved",
+      actorId: user.id,
+      source: "assessment-service",
+      summary: `保存教师反馈草稿：${assignment.title}`,
+      payload: {
+        submissionId: submission.id,
+        assignmentId: assignment.id,
+        gradeId: savedGrade.id,
+        feedbackId: savedFeedback.id
+      }
+    });
+
+    return {
+      submissionId: submission.id,
+      assignmentId: assignment.id,
+      grade: savedGrade.toJSON(),
+      feedbackItem: savedFeedback.toJSON()
+    };
+  }
+
   async reviewSubmissionByAi(user, submissionId) {
     requireTeacher(user);
     const submission = this.submissions.findById(submissionId);

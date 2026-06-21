@@ -113,6 +113,12 @@ export function registerRoutes(router, config, services) {
     return ok(await services.gradingService.gradeSubmission(user, req.params.id, await readJson(req)));
   });
 
+  router.post("/api/submissions/:id/teacher-feedback", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.gradingService.saveTeacherFeedbackDraft(user, req.params.id, await readJson(req)));
+  });
+
   router.post("/api/submissions/:id/ai-review", async (req) => {
     await services.ready;
     const user = requireUserContext(req);

@@ -138,6 +138,108 @@ export function registerRoutes(router, config, services) {
     return ok(await services.studentAiWorkspace.buildTimeline(user, { ...req.query, studentId: req.params.id }));
   });
 
+  router.post("/api/teacher-ai/teaching-plan", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.buildAndStore(user, "teaching_plan", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/student-intervention", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.buildAndStore(user, "student_intervention", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/assignment-commentary", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.buildAndStore(user, "assignment_commentary", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/feedback-draft", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.buildAndStore(user, "feedback_draft", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/course-practice-plan", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.buildAndStore(user, "course_practice_plan", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/report-summary", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.buildAndStore(user, "report_summary", await readJson(req)));
+  });
+
+  router.get("/api/teacher-ai/results", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.listResults(user, req.query));
+  });
+
+  router.get("/api/teacher-ai/results/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.getResult(user, req.params.id));
+  });
+
+  router.patch("/api/teacher-ai/results/:id/actions/:actionId", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.updateAction(user, req.params.id, req.params.actionId, await readJson(req)));
+  });
+
+  router.get("/api/teacher-ai/drafts", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.listDrafts(user, req.query));
+  });
+
+  router.get("/api/teacher-ai/drafts/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.getDraft(user, req.params.id));
+  });
+
+  router.patch("/api/teacher-ai/drafts/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.updateDraft(user, req.params.id, await readJson(req)));
+  });
+
+  router.delete("/api/teacher-ai/drafts/:id", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.deleteDraft(user, req.params.id));
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/send-intervention", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.confirmDraft(user, req.params.id, "send-intervention", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/save-feedback", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.confirmDraft(user, req.params.id, "save-feedback", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/save-commentary", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.confirmDraft(user, req.params.id, "save-commentary", await readJson(req)));
+  });
+
+  router.post("/api/teacher-ai/drafts/:id/save-practice-plan", async (req) => {
+    await services.ready;
+    const user = requireUserContext(req);
+    return ok(await services.teacherAiWorkspace.confirmDraft(user, req.params.id, "save-practice-plan", await readJson(req)));
+  });
+
   router.get("/internal/student-ai/students/:id/results", async (req) => {
     await services.ready;
     requireInternal(req, config.internalKey);

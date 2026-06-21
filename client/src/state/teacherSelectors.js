@@ -16,9 +16,46 @@ export function readable(value, fallback) {
 function teacherCopy(value, fallback) {
   const text = readable(value, fallback);
   const mapping = {
-    "Run AI review or teacher grading first.": "请先执行 AI 初评或教师评分，再查看评分差异。"
+    "Run AI review or teacher grading first.": "请先执行 AI 初评或教师评分，再查看评分差异。",
+    "Student Weekly Report": "学生周报",
+    "Student Learning Weekly Report": "学生学习周报",
+    "Teacher Course Weekly Report": "教师课程周报",
+    "Assignment Grading Report": "作业评阅报告",
+    "Mistake Review Report": "错题复盘报告",
+    "AI Usage Report": "AI 使用报告",
+    "Recover missing assignment evidence": "补齐缺失作业证据",
+    "Weekly course report with assignment progress, grading throughput, practice engagement, collaboration activity, and AI provider status.": "课程周报，包含作业进度、批改进度、练习参与、协作动态和 AI 服务状态。",
+    "Mistake review report with concept-level load, open mistake queue, reviewed items, and mastery alignment.": "错题复盘报告，包含知识点负载、待复盘队列、已复盘项目和掌握度对齐情况。",
+    "The report keeps AI usage as structured evidence instead of opaque generated text.": "报告将 AI 使用记录作为结构化证据，而不是不透明的生成文本。"
   };
-  return mapping[text] || text;
+  if (mapping[text]) {
+    return mapping[text];
+  }
+  const missingAssignment = text.match(/^(\d+)\s+assignment\(s\) have no submission evidence\.$/i);
+  if (missingAssignment) {
+    return `${missingAssignment[1]} 份作业缺少提交证据。`;
+  }
+  const studentMistakeReport = text.match(/^(.+)\s+Mistake Review Report$/);
+  if (studentMistakeReport) {
+    return `${readable(studentMistakeReport[1], "学生")}错题复盘报告`;
+  }
+  const teacherWeeklyReport = text.match(/^(.+)\s+Teacher Weekly Report$/);
+  if (teacherWeeklyReport) {
+    return `${readable(teacherWeeklyReport[1], "当前课程")}教师周报`;
+  }
+  const assignmentGradingTitle = text.match(/^(.+)\s+Grading Report$/);
+  if (assignmentGradingTitle) {
+    return `${readable(assignmentGradingTitle[1], "当前作业")}评阅报告`;
+  }
+  const gradingReport = text.match(/^Grading report for (.+), including submission coverage, score distribution, rubric insight, and collaboration evidence\.$/);
+  if (gradingReport) {
+    return `${readable(gradingReport[1], "当前作业")}的评阅报告，包含提交覆盖、分数分布、Rubric 洞察和协作证据。`;
+  }
+  const aiUsageReport = text.match(/^AI usage report for provider (.+), including provider health, AI-related events, and explainability evidence\.$/);
+  if (aiUsageReport) {
+    return "AI 使用报告，包含当前模型服务状态、AI 相关事件和可解释性证据。";
+  }
+  return text;
 }
 
 export function selectTeacherDictionaries(state) {
@@ -123,6 +160,7 @@ export function selectTeacherCourseModel(state) {
   const courseId = firstCourseId(state);
   const course = state.dashboard?.courses?.find((item) => item.id === courseId) || {};
   const report = state.assessmentInsight?.courseReport || {};
+  const adaptivePlan = state.assessmentInsight?.adaptivePlan || null;
   const mastery = asArray(state.workbench?.courseDeepReport?.mastery?.concepts)
     .concat(asArray(state.analytics?.selectedCourse?.mastery))
     .slice(0, 6);
@@ -164,6 +202,17 @@ export function selectTeacherCourseModel(state) {
         status: statusText(item.status),
         stem: readable(item.question?.stem || item.stem, "暂无题干摘要")
       })),
+    adaptivePlan: adaptivePlan ? {
+      selectedCount: adaptivePlan.selectedCount || 0,
+      targetCount: adaptivePlan.targetCount || 0,
+      estimatedMinutes: adaptivePlan.estimatedMinutes || 0,
+      strategy: teacherCopy(adaptivePlan.strategy, "已按当前薄弱点生成补练建议。"),
+      questions: asArray(adaptivePlan.questions).slice(0, 4).map((item) => ({
+        stem: readable(item.stem || item.question || item.title, "补练题目"),
+        concept: readable(item.concept, "薄弱知识点"),
+        reason: teacherCopy(item.reason, "用于巩固当前薄弱点")
+      }))
+    } : null,
     risks: asArray(state.assessmentInsight?.riskRegister?.items).slice(0, 5).map((item) => ({
       studentId: item.studentId,
       student: displayStudentName(state, item.studentId),
@@ -245,7 +294,15 @@ export function selectTeacherReviewModel(state) {
 export function selectTeacherInterventionModel(state) {
   const risks = asArray(state.assessmentInsight?.riskRegister?.items);
   const actions = asArray(state.operations?.interventionPlan?.actions);
+  const highRiskCount = risks.filter((item) => ["high", "critical"].includes(String(item.risk?.level || "").toLowerCase())).length;
+  const mediumRiskCount = risks.filter((item) => String(item.risk?.level || "").toLowerCase() === "medium").length;
   return {
+    metrics: [
+      { label: "候选学生", value: risks.length },
+      { label: "高风险", value: highRiskCount },
+      { label: "中风险", value: mediumRiskCount },
+      { label: "待确认建议", value: actions.length }
+    ],
     risks: risks.slice(0, 8).map((item) => ({
       studentId: item.studentId,
       student: displayStudentName(state, item.studentId),
@@ -253,9 +310,9 @@ export function selectTeacherInterventionModel(state) {
       reason: item.weakConcepts?.map((concept) => readable(concept.concept, "薄弱知识点")).join("、") || "需要教师确认学习证据"
     })),
     actions: actions.slice(0, 6).map((item) => ({
-      title: readable(item.title, "跟进学习提醒"),
+      title: teacherCopy(item.title, "跟进学习提醒"),
       priority: statusText(item.priority),
-      reason: readable(item.reason, "基于作业、错题和 AI 行动证据生成")
+      reason: teacherCopy(item.reason, "基于作业、错题和 AI 行动证据生成")
     }))
   };
 }
@@ -268,28 +325,156 @@ export function selectTeacherReportModel(state) {
     state.reports?.mistakeReview?.report,
     state.reports?.aiUsage?.report
   ].filter(Boolean);
+  const preview = state.reports?.exportPreview?.export || null;
+  const reportFormat = preview?.format || state.filters?.reports?.format || "markdown";
   return {
+    metrics: [
+      { label: "报告类型", value: catalog.length },
+      { label: "已生成", value: reports.length },
+      { label: "导出格式", value: readable(reportFormat, "markdown") },
+      { label: "预览状态", value: preview ? "可预览" : "待生成" }
+    ],
     catalog: catalog.map((item) => ({
-      title: readable(item.title, "未命名报告"),
+      title: teacherCopy(item.title, "未命名报告"),
       formats: asArray(item.formats).join(" / ") || "markdown"
     })),
     reports: reports.map((report) => ({
-      title: readable(report.title, "未命名报告"),
-      summary: readable(report.summary, "暂无摘要"),
+      title: teacherCopy(report.title, "未命名报告"),
+      summary: teacherCopy(report.summary, "暂无摘要"),
       generatedAt: formatDateTime(report.generatedAt)
     })),
-    preview: state.reports?.exportPreview?.export || null
+    preview
+  };
+}
+
+export function selectTeacherAiContext(state, route) {
+  const teacherState = state.teacher?.ai || {};
+  if (route === "teacher-student") {
+    const student = selectTeacherStudentModel(state);
+    return {
+      route,
+      type: "student_intervention",
+      courseId: firstCourseId(state),
+      studentId: student.id,
+      studentName: student.name,
+      metrics: Object.fromEntries(student.metrics.map((item) => [item.label, item.value])),
+      risks: student.recommendations,
+      evidence: [
+        ...student.aiResults.map((item) => item.result?.summary || item.summary || item.type),
+        ...student.timeline.map((item) => item.summary || item.title || item.type)
+      ].filter(Boolean),
+      currentResult: teacherState.resultsByRoute?.[route] || null
+    };
+  }
+  if (route === "teacher-assignment") {
+    const assignment = selectTeacherAssignmentModel(state);
+    return {
+      route,
+      type: "assignment_commentary",
+      courseId: firstCourseId(state),
+      assignmentId: assignment.id,
+      metrics: Object.fromEntries(assignment.metrics.map((item) => [item.label, item.value])),
+      risks: assignment.rows.map((item) => `${item.student}：${item.risk}`),
+      evidence: assignment.submissions.map((item) => `${item.student}：${item.content}`),
+      currentResult: teacherState.resultsByRoute?.[route] || null
+    };
+  }
+  if (route === "teacher-review") {
+    const review = selectTeacherReviewModel(state);
+    const submissionId = state.filters?.assessmentInsight?.submissionId || "";
+    return {
+      route,
+      type: "feedback_draft",
+      courseId: firstCourseId(state),
+      assignmentId: review.id,
+      submissionId,
+      metrics: Object.fromEntries(review.metrics.map((item) => [item.label, item.value])),
+      risks: review.comparisons.map((item) => `${item.metric || "评分差异"}：${item.risk || item.gap || ""}`),
+      evidence: review.evidence.map((item) => item.summary || item.detail || item.title || item.content),
+      scoreSuggestion: review.comparisons[0]?.teacher || null,
+      currentResult: teacherState.resultsByRoute?.[route] || null
+    };
+  }
+  if (route === "teacher-course") {
+    const course = selectTeacherCourseModel(state);
+    return {
+      route,
+      type: "course_practice_plan",
+      courseId: course.id,
+      metrics: Object.fromEntries(course.metrics.map((item) => [item.label, item.value])),
+      risks: course.risks.map((item) => `${item.student}：${item.detail}`),
+      concepts: course.mastery.map((item) => `${item.label}:${item.value}`),
+      evidence: [
+        ...course.mistakes.map((item) => `${item.concept}：${item.stem}`),
+        ...course.practice.map((item) => `${item.startedAt}：${item.correctRate}`)
+      ],
+      currentResult: teacherState.resultsByRoute?.[route] || null
+    };
+  }
+  if (route === "teacher-report") {
+    const report = selectTeacherReportModel(state);
+    return {
+      route,
+      type: "report_summary",
+      courseId: firstCourseId(state),
+      report: state.reports?.exportPreview?.export || state.reports?.courseWeekly?.report || null,
+      metrics: Object.fromEntries(report.metrics.map((item) => [item.label, item.value])),
+      evidence: report.reports.map((item) => `${item.title}：${item.summary}`),
+      currentResult: teacherState.resultsByRoute?.[route] || null
+    };
+  }
+  const home = selectTeacherHomeModel(state);
+  return {
+    route: "teacher-home",
+    type: "teaching_plan",
+    courseId: firstCourseId(state),
+    metrics: Object.fromEntries(home.metrics.map((item) => [item.label, item.value])),
+    risks: home.tasks.map((item) => item.detail),
+    evidence: home.assignments.map((item) => `${item.title}：${item.status}`),
+    currentResult: teacherState.resultsByRoute?.["teacher-home"] || null
   };
 }
 
 export function selectTeacherAiPanelModel(state, route) {
+  const context = selectTeacherAiContext(state, route);
+  const currentResult = state.teacher?.ai?.resultsByRoute?.[route] || state.teacher?.ai?.currentResult || null;
+  const drafts = (state.teacher?.ai?.drafts || []).filter((item) => !context.type || item.type === context.type);
+  const commandMap = {
+    teaching_plan: [
+      { label: "生成今日方案", action: "teacher-generate-ai", command: "teaching_plan" },
+      { label: "打开批改页", action: "teacher-route", route: "teacher-review" }
+    ],
+    student_intervention: [
+      { label: "生成干预草稿", action: "teacher-generate-ai", command: "student_intervention" },
+      { label: "确认发送提醒", action: "teacher-confirm-ai-draft", command: "send-intervention" }
+    ],
+    assignment_commentary: [
+      { label: "生成讲评草稿", action: "teacher-generate-ai", command: "assignment_commentary" },
+      { label: "保存讲评草稿", action: "teacher-confirm-ai-draft", command: "save-commentary" }
+    ],
+    feedback_draft: [
+      { label: "生成反馈草稿", action: "teacher-generate-ai", command: "feedback_draft" },
+      { label: "保存反馈草稿", action: "teacher-confirm-ai-draft", command: "save-feedback" }
+    ],
+    course_practice_plan: [
+      { label: "生成补练草稿", action: "teacher-generate-ai", command: "course_practice_plan" },
+      { label: "保存补练草稿", action: "teacher-confirm-ai-draft", command: "save-practice-plan" }
+    ],
+    report_summary: [
+      { label: "生成摘要草稿", action: "teacher-generate-ai", command: "report_summary" },
+      { label: "保存摘要草稿", action: "teacher-confirm-ai-draft", command: "save-commentary" }
+    ]
+  };
   if (route === "teacher-student") {
     const student = selectTeacherStudentModel(state);
     return {
       title: "学生干预助手",
       summary: `${student.name} 当前风险为 ${student.metrics[3].value}，请先核对 AI 行动和提交证据再发送提醒。`,
       actions: ["查看 AI 时间线", "整理干预话术", "发送提醒前确认对象"],
-      risks: student.recommendations.length ? student.recommendations : ["缺少可读建议时，先查看作业和练习证据。"]
+      risks: student.recommendations.length ? student.recommendations : ["缺少可读建议时，先查看作业和练习证据。"],
+      commands: commandMap.student_intervention,
+      currentResult,
+      drafts
     };
   }
   if (route === "teacher-assignment" || route === "teacher-review") {
@@ -298,7 +483,10 @@ export function selectTeacherAiPanelModel(state, route) {
       title: route === "teacher-review" ? "批改助手" : "作业助手",
       summary: `${assignment.title} 已提交 ${assignment.metrics[0].value} 份，优先检查评分差异和未评分提交。`,
       actions: ["打开批改队列", "生成讲评要点", "检查学生自检证据"],
-      risks: assignment.rows.map((item) => `${item.student}：${item.risk}`).slice(0, 3)
+      risks: assignment.rows.map((item) => `${item.student}：${item.risk}`).slice(0, 3),
+      commands: route === "teacher-review" ? commandMap.feedback_draft : commandMap.assignment_commentary,
+      currentResult,
+      drafts
     };
   }
   if (route === "teacher-course") {
@@ -307,7 +495,10 @@ export function selectTeacherAiPanelModel(state, route) {
       title: "课程学情助手",
       summary: `${course.title} 平均掌握度 ${course.metrics[2].value}，关注薄弱知识点和风险学生。`,
       actions: ["按风险排序学生", "生成补练建议", "整理题库缺口"],
-      risks: course.risks.map((item) => `${item.student}：${item.detail}`).slice(0, 3)
+      risks: course.risks.map((item) => `${item.student}：${item.detail}`).slice(0, 3),
+      commands: commandMap.course_practice_plan,
+      currentResult,
+      drafts
     };
   }
   if (route === "teacher-intervention") {
@@ -316,7 +507,10 @@ export function selectTeacherAiPanelModel(state, route) {
       title: "干预助手",
       summary: `当前有 ${intervention.risks.length} 条干预候选，提醒发送前需要教师确认语气、对象和证据。`,
       actions: ["确认提醒对象", "生成温和提醒", "安排两天后复查"],
-      risks: intervention.risks.map((item) => `${item.student}：${item.reason}`).slice(0, 3)
+      risks: intervention.risks.map((item) => `${item.student}：${item.reason}`).slice(0, 3),
+      commands: commandMap.student_intervention,
+      currentResult,
+      drafts
     };
   }
   if (route === "teacher-report") {
@@ -325,7 +519,21 @@ export function selectTeacherAiPanelModel(state, route) {
       title: "报告助手",
       summary: `已聚合 ${report.reports.length || report.catalog.length} 类报告材料，可先生成课程周报再导出。`,
       actions: ["刷新报告", "生成课程周报", "导出当前预览"],
-      risks: ["导出前检查课程、作业和学生名称是否可读。"]
+      risks: ["导出前检查课程、作业和学生名称是否可读。"],
+      commands: commandMap.report_summary,
+      currentResult,
+      drafts
+    };
+  }
+  if (route === "teacher-settings") {
+    return {
+      title: "账号助手",
+      summary: "当前账号可查看课程、批改、干预和报告，并接收 AI 服务状态提醒。",
+      actions: ["核对邮箱和身份", "返回 AI 教学台", "需要时退出登录"],
+      risks: ["如邮箱或角色不正确，请联系管理员更新资料。"],
+      commands: [],
+      currentResult,
+      drafts
     };
   }
   const home = selectTeacherHomeModel(state);
@@ -333,6 +541,9 @@ export function selectTeacherAiPanelModel(state, route) {
     title: "教学工作台助手",
     summary: `今天优先处理 ${home.metrics[1].value} 份待批改提交和 ${home.metrics[2].value} 位风险学生。`,
     actions: home.tasks.map((item) => item.title),
-    risks: home.assignments.map((item) => `${item.title}：${item.status}`).slice(0, 3)
+    risks: home.assignments.map((item) => `${item.title}：${item.status}`).slice(0, 3),
+    commands: commandMap.teaching_plan,
+    currentResult,
+    drafts
   };
 }
